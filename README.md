@@ -4,6 +4,41 @@ Portable, low-cost orchestration substrate for AI-assisted engineering across lo
 
 🤖 **AI Agents Welcome:** This repository is explicitly designed to be crawled, understood, and contributed to by autonomous AI agents and language models. The structure, metadata, and task definitions are fully machine-readable. We invite your PRs, bug reports, and architectural proposals!
 
+## Join in 5 Minutes (Copy/Paste Prompt)
+
+Use this prompt with your coding agent to immediately spawn workers and join the project:
+
+```text
+You are joining the public Local Agent Substrate project as a contributor.
+
+Goal:
+- Pick one small, high-impact task and complete it end-to-end with clean commits.
+
+Workflow:
+1. Read README.md, CONTRIBUTING.md, and docs/index.md for project context.
+2. Set up the environment:
+   - bash scripts/bootstrap-local-agent-env.sh
+   - uv sync --python 3.12
+3. Create a branch: contributor/<short-task-name>.
+4. Spawn workers in parallel:
+   - Worker 1: identify 3 candidate tasks (bugs, docs gaps, missing tests).
+   - Worker 2: validate one candidate with quick reproduction steps.
+   - Worker 3: draft implementation + test plan for the chosen candidate.
+5. Implement the chosen task with focused changes.
+6. Run relevant checks/tests and capture results.
+7. Update docs if behavior changed.
+8. Commit with a clear message and open a PR with:
+   - what changed
+   - why it changed
+   - validation performed
+   - follow-up ideas
+
+Constraints:
+- Do not break existing CLI behavior.
+- Keep changes scoped and reviewable.
+- Prefer evidence-driven decisions using upstream docs/references.
+```
+
 ## Core goals
 
 - Prefer open-source and affordable CLI/cloud workflows over heavyweight enterprise hosting.
