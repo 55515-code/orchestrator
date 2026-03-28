@@ -1,0 +1,16 @@
+[Unit]
+Description=Substrate Community Cycle Autonomous Agent
+After=network.target
+
+[Service]
+Type=simple
+User=ahron
+WorkingDirectory=/home/ahron/codespace
+ExecStart=/bin/bash /home/ahron/codespace/scripts/auto_community_cycle.sh
+Restart=on-failure
+RestartSec=120
+StandardOutput=append:/home/ahron/codespace/memory/community-sim/logs/systemd_service.log
+StandardError=append:/home/ahron/codespace/memory/community-sim/logs/systemd_service_error.log
+
+[Install]
+WantedBy=multi-user.target

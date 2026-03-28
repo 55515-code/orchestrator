@@ -1,0 +1,14 @@
+services:
+  substrate-ops:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: substrate-ops:latest
+    ports:
+      - "8090:8090"
+    volumes:
+      - ../memory:/app/memory
+      - ../state:/app/state
+      - ../.research:/app/.research
+    restart: unless-stopped
+

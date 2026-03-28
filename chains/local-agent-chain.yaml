@@ -1,0 +1,22 @@
+name: local-agent-chain
+description: Sequential chain for local environment analysis, planning, execution, and review.
+
+defaults:
+  provider: local
+  models:
+    local: roo-router
+
+context_files:
+  - docs/setup.md
+  - docs/system-probe.md
+
+steps:
+  - id: scope
+    prompt: prompts/01_scope.md
+  - id: research
+    prompt: prompts/02_research.md
+  - id: execute
+    prompt: prompts/03_execute.md
+  - id: review
+    prompt: prompts/04_review.md
+

@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Substrate Ops Panel</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-topline">
+          <div>
+            <h1>Substrate Ops Panel</h1>
+            <p class="lede">
+              Portable orchestration control plane with environment-aware, non-disruptive defaults.
+            </p>
+          </div>
+          <div class="status-cluster">
+            <span class="status-pill status-pill--good" id="panel-status">Connected</span>
+            <span class="status-pill status-pill--muted" id="panel-last-refresh">Fresh</span>
+          </div>
+        </div>
+        <div class="hero-meta">
+          <p class="muted">
+            Stage flow: {{ stage_sequence | join(" → ") }} | Passes: {{ pass_sequence | join(" → ") }}
+          </p>
+          <div class="tags">
+            {% for tag in environment.tags %}
+              <span class="tag">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        </div>
+      </header>
+
+      <section class="card banner banner--quiet">
+        <strong>Operator posture:</strong>
+        <span>observe mode by default, mutation mode only with explicit approval and staged promotion.</span>
+      </section>
+
+      <section class="dashboard-layout">
+        <div class="dashboard-main">
+          <section class="grid metrics metrics--hero">
+            <article class="card metric metric--accent metric--primary">
+              <h2>Runs</h2>
+              <p class="value" id="metric-runs">{{ metrics.runs_total }}</p>
+              <p class="muted">Total recorded orchestration runs.</p>
+            </article>
+            <article class="card metric">
+              <h2>Success Rate</h2>
+              <p class="value" id="metric-success-rate">{{ metrics.success_rate }}%</p>
+              <div class="bar-wrap">
+                <span class="bar" id="metric-success-bar" style="width: {{ metrics.success_rate }}%"></span>
+              </div>
+              <p class="muted">Health over recent runs.</p>
+            </article>
+            <article class="card metric">
+              <h2>Repositories</h2>
+              <p class="value" id="metric-repos">{{ metrics.repositories_total }}</p>
+              <p class="muted">Registered or auto-discovered workspaces.</p>
+            </article>
+            <article class="card metric">
+              <h2>Sources</h2>
+              <p class="value" id="metric-sources">{{ metrics.sources_total }}</p>
+              <p class="muted">Fact-backed upstream projects in the evidence store.</p>
+            </article>
+          </section>
+
+          <section class="grid tables">
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Repositories</h2>
+                <span class="section-note">Read-only inventory across configured and discovered repos.</span>
+              </div>
+              <div class="table-wrap">
+                <table id="repositories-table">
+                  <thead>
+                    <tr>
+                      <th>Slug</th>
+                      <th>Branch</th>
+                      <th>Dirty</th>
+                      <th>Last Commit</th>
+                      <th>Remote</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if repositories %}
+                      {% for repo in repositories %}
+                        <tr>
+                          <td><span class="mono">{{ repo.repo_slug }}</span></td>
+                          <td>{{ repo.branch or "-" }}</td>
+                          <td><span class="status-pill {{ 'status-pill--warn' if repo.dirty else 'status-pill--good' }}">{{ "dirty" if repo.dirty else "clean" }}</span></td>
+                          <td>{{ repo.last_commit_at or "-" }}</td>
+                          <td class="truncate">{{ repo.remote_url or "-" }}</td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No repository snapshots yet. Use "Scan Repositories" to populate this view.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Runs</h2>
+                <span class="section-note">Latest execution records with live refresh support.</span>
+              </div>
+              <div class="table-wrap">
+                <table id="runs-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Type</th>
+                      <th>Repo</th>
+                      <th>Status</th>
+                      <th>Stage</th>
+                      <th>Mode</th>
+                      <th>Open</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if runs %}
+                      {% for run in runs %}
+                        <tr>
+                          <td class="mono">{{ run.started_at }}</td>
+                          <td>{{ run.run_type }}</td>
+                          <td><span class="mono">{{ run.repo_slug or "-" }}</span></td>
+                          <td><span class="status-pill status-pill--{{ 'good' if run.status == 'success' else 'warn' if run.status == 'running' else 'bad' }}">{{ run.status }}</span></td>
+                          <td>{{ run.stage or "-" }}</td>
+                          <td>{{ run.mode }}</td>
+                          <td><a href="/runs/{{ run.run_id }}">details</a></td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="7" class="empty-state">No runs yet. Start a chain or task to generate history.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Source Projects</h2>
+                <span class="section-note">Open-source and affordable tooling favored by default.</span>
+              </div>
+              <div class="table-wrap">
+                <table id="sources-table">
+                  <thead>
+                    <tr>
+                      <th>Slug</th>
+                      <th>Stars</th>
+                      <th>Pushed</th>
+                      <th>License</th>
+                      <th>URL</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if sources %}
+                      {% for source in sources %}
+                        <tr>
+                          <td><span class="mono">{{ source.slug }}</span></td>
+                          <td>{{ source.stars or "-" }}</td>
+                          <td>{{ source.pushed_at or "-" }}</td>
+                          <td>{{ source.license or "-" }}</td>
+                          <td class="truncate"><a href="{{ source.repo_url }}" target="_blank" rel="noopener">{{ source.repo_url }}</a></td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No source facts loaded yet. Refresh source facts to populate this table.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Config Inventory</h2>
+                <span class="section-note">Tracked local configs with checksum and backup status.</span>
+              </div>
+              <div class="dotfiles-summary" id="dotfiles-summary">
+                <span class="status-pill status-pill--muted" id="dotfiles-total">0 items</span>
+                <span class="status-pill status-pill--muted" id="dotfiles-changed">0 changed</span>
+                <span class="status-pill status-pill--muted" id="dotfiles-backed-up">0 backed up</span>
+              </div>
+              <div class="table-wrap">
+                <table id="dotfiles-table">
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th>Type</th>
+                      <th>Checksum / Changed</th>
+                      <th>Last Backup</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="4" class="empty-state">No configs loaded yet. Run scan to populate the inventory.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Trusted Standards</h2>
+                <span class="section-note">Community-maintained formats integrated before custom backend design.</span>
+              </div>
+              <p class="muted">
+                Tracks: <span id="standards-tracks">{{ standards_summary.tracks_total if standards_summary else 0 }}</span>
+                | Standards: <span id="standards-count">{{ standards_summary.standards_total if standards_summary else 0 }}</span>
+              </p>
+              <div class="table-wrap">
+                <table id="standards-table">
+                  <thead>
+                    <tr>
+                      <th>Track</th>
+                      <th>Standard</th>
+                      <th>Format</th>
+                      <th>Maintained By</th>
+                      <th>Source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if standards %}
+                      {% for track in standards %}
+                        {% for standard in track.standards %}
+                          <tr>
+                            <td>{{ track.name }}</td>
+                            <td>{{ standard.name }}</td>
+                            <td>{{ standard.format }}</td>
+                            <td>{{ standard.maintained_by }}</td>
+                            <td class="truncate"><a href="{{ standard.source_url }}" target="_blank" rel="noopener">{{ standard.source_url }}</a></td>
+                          </tr>
+                        {% endfor %}
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No standards catalog loaded. Add entries in standards.yaml.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Optional Tool Profiles</h2>
+                <span class="section-note">Minimal base package with first-use dependency assembly plans.</span>
+              </div>
+              <p class="muted" id="tooling-managers">
+                Available package managers:
+                {% if tooling and tooling.available_managers %}
+                  {{ tooling.available_managers | join(", ") }}
+                {% else %}
+                  none detected
+                {% endif %}
+              </p>
+              <div class="table-wrap">
+                <table id="tooling-table">
+                  <thead>
+                    <tr>
+                      <th>Profile</th>
+                      <th>Tool</th>
+                      <th>Binary</th>
+                      <th>Status</th>
+                      <th>Install Plan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if tooling and tooling.profiles %}
+                      {% for profile in tooling.profiles %}
+                        {% for tool in profile.tools %}
+                          <tr>
+                            <td>{{ profile.name }}</td>
+                            <td>{{ tool.name }}</td>
+                            <td><span class="mono">{{ tool.binary }}</span></td>
+                            <td>
+                              <span class="status-pill status-pill--{{ 'good' if tool.installed else 'warn' }}">
+                                {{ "installed" if tool.installed else "missing" }}
+                              </span>
+                            </td>
+                            <td class="truncate">
+                              {% if tool.install_commands %}
+                                <span class="mono">{{ tool.install_commands[0] }}</span>
+                              {% else %}
+                                -
+                              {% endif %}
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No tool profile catalog loaded. Add entries in tool_profiles.yaml.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Integrations</h2>
+                <span class="section-note">Default read-only external access with explicit write directives.</span>
+              </div>
+              <div class="table-wrap">
+                <table id="integrations-table">
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th>Availability</th>
+                      <th>API Status</th>
+                      <th>Connected</th>
+                      <th>Mode</th>
+                      <th>Scopes</th>
+                      <th>Auth</th>
+                      <th>Login / Docs</th>
+                      <th>Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if integrations and integrations.services %}
+                      {% for service in integrations.services %}
+                        <tr>
+                          <td>{{ service.name }}</td>
+                          <td>{{ service.availability or "-" }}</td>
+                          <td>{{ service.api_status or "-" }}</td>
+                          <td>
+                            <span class="status-pill status-pill--{{ 'good' if service.connected else 'muted' }}">
+                              {{ "yes" if service.connected else "no" }}
+                            </span>
+                          </td>
+                          <td><span class="status-pill status-pill--{{ 'warn' if service.mode == 'write' else 'good' }}">{{ service.mode }}</span></td>
+                          <td class="truncate">{{ service.granted_scopes | join(", ") if service.granted_scopes else "-" }}</td>
+                          <td>{{ service.auth_method or "-" }}</td>
+                          <td class="truncate">
+                            {% if service.auth.login_url %}
+                              <a href="{{ service.auth.login_url }}" target="_blank" rel="noopener">login</a>
+                            {% else %}
+                              -
+                            {% endif %}
+                            {% if service.auth.docs_url %}
+                              | <a href="{{ service.auth.docs_url }}" target="_blank" rel="noopener">docs</a>
+                            {% endif %}
+                          </td>
+                          <td class="truncate">{{ service.notes or "-" }}</td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="9" class="empty-state">No integration catalog loaded. Add entries in integrations.yaml.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Known Good Paths</h2>
+                <span class="section-note">Automatically indexed successful local commands and tests.</span>
+              </div>
+              <p class="muted">
+                Tests:
+                {% if learning and learning.summary and learning.summary.tests %}
+                  {{ learning.summary.tests.passed }}/{{ learning.summary.tests.total }} passed
+                {% else %}
+                  0/0 passed
+                {% endif %}
+                | Known good commands:
+                {% if learning and learning.summary and learning.summary.known_good %}
+                  {{ learning.summary.known_good.total }}
+                {% else %}
+                  0
+                {% endif %}
+              </p>
+              <div class="table-wrap">
+                <table id="known-good-table">
+                  <thead>
+                    <tr>
+                      <th>Command</th>
+                      <th>Successes</th>
+                      <th>Repo</th>
+                      <th>Stage</th>
+                      <th>Last Success</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if learning and learning.known_good %}
+                      {% for item in learning.known_good %}
+                        <tr>
+                          <td class="truncate"><span class="mono">{{ item.command }}</span></td>
+                          <td>{{ item.success_count }}</td>
+                          <td>{{ item.repo_slug or "-" }}</td>
+                          <td>{{ item.stage or "-" }}</td>
+                          <td>{{ item.last_success_at or "-" }}</td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No known-good commands recorded yet.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card wide">
+              <div class="section-head">
+                <h2>Error Index</h2>
+                <span class="section-note">Recurring failures and their recorded resolutions.</span>
+              </div>
+              <form id="learning-resolve-form" class="stack" data-endpoint="/api/learning/resolve">
+                <label>Error signature
+                  <input type="text" name="signature" placeholder="signature id from table below" required />
+                </label>
+                <label>Resolution note
+                  <input type="text" name="resolution" placeholder="Known good fix path" required />
+                </label>
+                <label>Reference path/command
+                  <input type="text" name="path_reference" placeholder="docs/..., script, or command" />
+                </label>
+                <button type="submit">Store Resolution</button>
+              </form>
+              <div class="table-wrap">
+                <table id="error-index-table">
+                  <thead>
+                    <tr>
+                      <th>Signature</th>
+                      <th>Count</th>
+                      <th>Last Seen</th>
+                      <th>Command</th>
+                      <th>Snippet</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if learning and learning.errors %}
+                      {% for item in learning.errors %}
+                        <tr>
+                          <td><span class="mono">{{ item.signature }}</span></td>
+                          <td>{{ item.count }}</td>
+                          <td>{{ item.last_seen or "-" }}</td>
+                          <td class="truncate"><span class="mono">{{ item.command or "-" }}</span></td>
+                          <td class="truncate">{{ item.error_snippet or "-" }}</td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr><td colspan="5" class="empty-state">No recurring error signatures recorded.</td></tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <aside class="dashboard-rail">
+          <article class="card command-card">
+            <div class="section-head">
+              <h2>Command Deck</h2>
+              <span class="section-note">Controls are grouped here so the landing page stays stats-first.</span>
+            </div>
+            <div class="control-overview">
+              <span class="status-pill status-pill--muted">Inventory</span>
+              <span class="status-pill status-pill--muted">Orchestration</span>
+              <span class="status-pill status-pill--muted">Payloads</span>
+              <span class="status-pill status-pill--muted">Integrations</span>
+              <span class="status-pill status-pill--muted">Backup &amp; Sync</span>
+            </div>
+
+            <details class="advanced-toggle control-group" open>
+              <summary>
+                <span>Inventory</span>
+                <span class="summary-chip">scan + refresh</span>
+              </summary>
+              <div class="control-body">
+                <div class="button-row button-row--stacked">
+                  <form id="scan-form" class="stack" data-endpoint="/api/actions/scan">
+                    <button type="submit">Scan Repositories</button>
+                  </form>
+                  <form id="sources-form" class="stack" data-endpoint="/api/actions/refresh-sources">
+                    <button type="submit">Refresh Source Facts</button>
+                  </form>
+                </div>
+                <p class="muted">
+                  Evidence refresh checks upstream project health before mutation-mode work.
+                </p>
+              </div>
+            </details>
+
+            <details class="advanced-toggle control-group">
+              <summary>
+                <span>Run Orchestration</span>
+                <span class="summary-chip">chain + task</span>
+              </summary>
+              <div class="control-body">
+                <form id="run-chain-form" class="stack" data-endpoint="/api/actions/run-chain">
+                  <label>Repository
+                    <select name="repo_slug" required>
+                      {% for slug in workspace_repositories %}
+                        <option value="{{ slug }}">{{ slug }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>Objective
+                    <input type="text" name="objective" value="Repository health audit" required />
+                  </label>
+                  <label>Provider
+                    <input type="text" name="provider" value="mock" />
+                  </label>
+                  <label>Model
+                    <input type="text" name="model" value="mock-model" />
+                  </label>
+                  <details class="advanced-toggle">
+                    <summary>Advanced options</summary>
+                    <div class="advanced-grid">
+                      <label>Mode
+                        <select name="mode">
+                          <option value="observe">observe</option>
+                          <option value="mutate">mutate</option>
+                        </select>
+                      </label>
+                      <label>Stage
+                        <select name="stage">
+                          {% for stage in stage_sequence %}
+                            <option value="{{ stage }}">{{ stage }}</option>
+                          {% endfor %}
+                        </select>
+                      </label>
+                      <label class="checkbox"><input type="checkbox" name="dry_run" checked /> Dry run</label>
+                      <label class="checkbox"><input type="checkbox" name="allow_mutations" /> Allow mutations</label>
+                      <label class="checkbox"><input type="checkbox" name="allow_stage_skip" /> Allow stage skip</label>
+                    </div>
+                  </details>
+                  <button type="submit">Start Chain</button>
+                </form>
+
+                <form id="run-task-form" class="stack" data-endpoint="/api/actions/run-task">
+                  <label>Repository
+                    <select name="repo_slug" required>
+                      {% for slug in workspace_repositories %}
+                        <option value="{{ slug }}">{{ slug }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>Task
+                    <input type="text" name="task_id" placeholder="probe_system" required />
+                  </label>
+                  <details class="advanced-toggle">
+                    <summary>Advanced options</summary>
+                    <div class="advanced-grid">
+                      <label>Mode
+                        <select name="mode">
+                          <option value="observe">observe</option>
+                          <option value="mutate">mutate</option>
+                        </select>
+                      </label>
+                      <label>Stage
+                        <select name="stage">
+                          {% for stage in stage_sequence %}
+                            <option value="{{ stage }}">{{ stage }}</option>
+                          {% endfor %}
+                        </select>
+                      </label>
+                      <label class="checkbox"><input type="checkbox" name="allow_mutations" /> Allow mutations</label>
+                      <label class="checkbox"><input type="checkbox" name="allow_stage_skip" /> Allow stage skip</label>
+                    </div>
+                  </details>
+                  <button type="submit">Run Task</button>
+                </form>
+              </div>
+            </details>
+
+            <details class="advanced-toggle control-group">
+              <summary>
+                <span>Payload Deck</span>
+                <span class="summary-chip">device style</span>
+              </summary>
+              <div class="control-body">
+                <form id="run-payload-form" class="stack" data-endpoint="/api/actions/run-payload">
+                  <label>Payload
+                    <select name="payload_id" id="payload-id-select" required>
+                      {% if payloads %}
+                        {% for payload in payloads %}
+                          <option value="{{ payload.id }}">{{ payload.name }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </label>
+                  <label>Repository (optional)
+                    <select name="repo_slug" id="payload-repo-select">
+                      <option value="">(none)</option>
+                      {% for slug in workspace_repositories %}
+                        <option value="{{ slug }}">{{ slug }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <details class="advanced-toggle">
+                    <summary>Advanced options</summary>
+                    <div class="advanced-grid">
+                      <label>Stage
+                        <select name="stage">
+                          {% for stage in stage_sequence %}
+                            <option value="{{ stage }}">{{ stage }}</option>
+                          {% endfor %}
+                        </select>
+                      </label>
+                      <label>Port
+                        <input type="number" min="1" max="65535" name="port" value="8090" />
+                      </label>
+                      <label>Dependency profile
+                        <select name="deps_profile" id="deps-profile-select">
+                          <option value="">(none)</option>
+                          {% if tooling and tooling.profiles %}
+                            {% for profile in tooling.profiles %}
+                              <option value="{{ profile.id }}">{{ profile.name }}</option>
+                            {% endfor %}
+                          {% endif %}
+                        </select>
+                      </label>
+                      <label class="checkbox"><input type="checkbox" name="allow_stage_skip" /> Allow stage skip</label>
+                      <label class="checkbox"><input type="checkbox" name="deps_apply" /> Apply dependency install plan</label>
+                    </div>
+                  </details>
+                  <button type="submit">Launch Payload</button>
+                </form>
+                <p class="muted">
+                  Device-inspired workflow runner: scans, evidence refresh, staged dry-runs, and pinch artifacts.
+                </p>
+                <p class="muted mono" id="payload-job-status">No payload job active.</p>
+              </div>
+            </details>
+
+            <details class="advanced-toggle control-group">
+              <summary>
+                <span>Integrations</span>
+                <span class="summary-chip">read first</span>
+              </summary>
+              <div class="control-body">
+                <p class="muted">
+                  {{ integrations.defaults.write_policy if integrations and integrations.defaults else "Write operations require explicit directives." }}
+                </p>
+                <form id="integration-connect-form" class="stack" data-endpoint="/api/integrations/connect">
+                  <label>Service
+                    <select name="service_id" id="integration-service-select" required>
+                      {% if integrations and integrations.services %}
+                        {% for service in integrations.services %}
+                          <option value="{{ service.id }}">{{ service.name }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </label>
+                  <label>Auth method
+                    <input type="text" name="auth_method" placeholder="oauth2 / token type" />
+                  </label>
+                  <label>Token reference
+                    <input type="text" name="token_ref" placeholder="ENV_VAR_OR_SECRET_REF" />
+                  </label>
+                  <label>Granted scopes
+                    <input type="text" name="granted_scopes" placeholder="scope1, scope2" />
+                  </label>
+                  <details class="advanced-toggle">
+                    <summary>Access mode</summary>
+                    <div class="advanced-grid">
+                      <label>Mode
+                        <select name="access_mode">
+                          <option value="read">read (default)</option>
+                          <option value="write">write (requires directive)</option>
+                        </select>
+                      </label>
+                      <label>Write directive
+                        <input type="text" name="write_directive" placeholder="Explicit external write intent" />
+                      </label>
+                    </div>
+                  </details>
+                  <button type="submit">Save Integration</button>
+                </form>
+                <form id="integration-disconnect-form" class="stack" data-endpoint="/api/integrations/disconnect">
+                  <label>Disconnect service
+                    <select name="service_id" id="integration-disconnect-select" required>
+                      {% if integrations and integrations.services %}
+                        {% for service in integrations.services %}
+                          <option value="{{ service.id }}">{{ service.name }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </label>
+                  <button type="submit">Disconnect</button>
+                </form>
+              </div>
+            </details>
+
+            <details class="advanced-toggle control-group">
+              <summary>
+                <span>Backup &amp; Sync</span>
+                <span class="summary-chip">portable configs</span>
+              </summary>
+              <div class="control-body">
+                <p class="muted">
+                  Back up, organize, and prepare configs for other environments with read-only defaults and explicit deploy directives.
+                </p>
+                <form id="dotfiles-form" class="stack" data-endpoint="/api/config-sync/scan">
+                  <div class="dotfiles-grid">
+                    <label>Target environment
+                      <select name="target_env" id="dotfiles-target-env">
+                        <option value="linux">linux</option>
+                        <option value="mac">mac</option>
+                        <option value="windows">windows</option>
+                      </select>
+                    </label>
+                    <label>Profile
+                      <select name="profiles" id="dotfiles-profile">
+                        <option value="">all profiles</option>
+                        {% if config_sync and config_sync.catalog and config_sync.catalog.profiles %}
+                          {% for profile in config_sync.catalog.profiles %}
+                            <option value="{{ profile.id }}">{{ profile.name }}</option>
+                          {% endfor %}
+                        {% endif %}
+                      </select>
+                    </label>
+                    <label>Line endings
+                      <select name="line_endings" id="dotfiles-line-endings">
+                        <option value="preserve">preserve</option>
+                        <option value="lf">lf</option>
+                        <option value="crlf">crlf</option>
+                      </select>
+                    </label>
+                    <label>Conversion mode
+                      <select name="conversion_mode" id="dotfiles-conversion-mode">
+                        <option value="preserve">preserve</option>
+                        <option value="portable">portable</option>
+                        <option value="canonicalize">canonicalize</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Explicit write directive
+                    <input
+                      type="text"
+                      name="write_directive"
+                      id="dotfiles-write-directive"
+                      placeholder="Describe the approved external deploy target"
+                    />
+                  </label>
+                  <div class="button-row dotfiles-actions">
+                    <button type="submit" id="dotfiles-scan-button" data-endpoint="/api/config-sync/scan">Scan</button>
+                    <button type="submit" id="dotfiles-backup-button" data-endpoint="/api/config-sync/backup">Backup</button>
+                    <button type="submit" id="dotfiles-plan-button" data-endpoint="/api/config-sync/plan">Plan Deploy</button>
+                    <button type="submit" id="dotfiles-deploy-button" data-endpoint="/api/config-sync/deploy">Deploy</button>
+                  </div>
+                </form>
+                <div class="dotfiles-preview" id="dotfiles-preview">
+                  Select a target and generate a plan to preview deployment steps.
+                </div>
+                <p class="muted mono" id="dotfiles-status">No backup &amp; sync action has run yet.</p>
+              </div>
+            </details>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <div class="toast" id="toast"></div>
+    <div class="banner banner--error hidden" id="network-banner" role="status" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,110 @@
+version: 1
+
+policy:
+  default_mode: mutate
+  require_source_facts_before_mutation: true
+  source_freshness_days: 30
+  enforce_stage_flow: true
+  stage_sequence:
+    - local
+    - hosted_dev
+    - production
+  pass_sequence:
+    - research
+    - development
+    - testing
+  rc1_openclaw_internal_assist_enabled: true
+  rc1_openclaw_manual_trigger_required: false
+  rc1_openclaw_revetting_required: true
+  rc1_openclaw_allowed_stages:
+    - local
+    - hosted_dev
+  rc1_openclaw_allowed_passes:
+    - research
+  rc1_openclaw_allowed_data_classes:
+    - synthetic
+    - redacted
+  rc1_bounded_validation_enabled: true
+  rc1_hardware_probe_enabled: false
+  rc1_validation_max_attempts: 2
+  rc1_validation_attempt_timeout_seconds: 20
+  rc1_validation_deadline_seconds: 60
+  rc1_watchdog_enabled: true
+  rc1_respawn_enabled: true
+  rc1_watchdog_max_respawns: 1
+  rc1_watchdog_heartbeat_timeout_seconds: 5.0
+  rc1_watchdog_stuck_confirmation_seconds: 2.0
+  rc1_watchdog_poll_interval_seconds: 0.5
+  rc1_watchdog_terminate_grace_seconds: 1.0
+
+discovery:
+  enabled: true
+  roots:
+    - .
+  max_depth: 2
+
+ignored_paths:
+  - .git
+  - .venv
+  - .direnv
+  - node_modules
+  - aosp-eos-asteroids
+  - work
+  - tmp
+  - downloads
+  - tools
+  - site
+
+repositories:
+  - slug: substrate-core
+    path: .
+    allow_mutations: true
+    default_mode: mutate
+    tasks:
+      probe_system:
+        description: Generate cross-platform host profile.
+        mode: mutate
+        command:
+          default:
+            - python
+            - scripts/probe_system.py
+            - docs/system-probe.md
+      chain_run:
+        description: Run chain with live provider.
+        mode: mutate
+        command:
+          default:
+            - python
+            - scripts/run_chain.py
+            - --objective
+            - Repository health audit
+      developer_polish:
+        description: Run professional style and readability polish workflow.
+        mode: mutate
+        command:
+          default:
+            - bash
+            - scripts/developer_polish.sh
+      docs_serve:
+        description: Serve docs locally.
+        mode: mutate
+        command:
+          default:
+            - python
+            - -m
+            - mkdocs
+            - serve
+            - -a
+            - 127.0.0.1:8000
+      ops_panel:
+        description: Start orchestration control panel.
+        mode: mutate
+        command:
+          default:
+            - python
+            - scripts/substrate_cli.py
+            - serve
+            - --host
+            - 127.0.0.1
+            - --port
+            - "8090"

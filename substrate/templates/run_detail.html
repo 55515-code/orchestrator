@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Run {{ run.run_id }}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="page detail">
+      <header class="hero detail-hero">
+        <div class="detail-title">
+          <h1>Run {{ run.run_id }}</h1>
+          <span class="status-pill status-pill--{{ 'good' if run.status == 'success' else 'warn' if run.status == 'running' else 'bad' }}">{{ run.status }}</span>
+        </div>
+        <p class="lede">{{ run.run_type }} | {{ run.repo_slug or "-" }} | stage {{ run.stage }}</p>
+        <a class="back-link" href="/">Back to dashboard</a>
+      </header>
+
+      <section class="card">
+        <h2>Summary</h2>
+        <dl class="summary-grid">
+          <dt>Mode</dt><dd><span class="status-pill status-pill--muted">{{ run.mode }}</span></dd>
+          <dt>Stage</dt><dd><span class="mono">{{ run.stage }}</span></dd>
+          <dt>Objective</dt><dd>{{ run.objective or "-" }}</dd>
+          <dt>Started</dt><dd><span class="mono">{{ run.started_at }}</span></dd>
+          <dt>Finished</dt><dd><span class="mono">{{ run.finished_at or "-" }}</span></dd>
+          <dt>Provider</dt><dd>{{ run.provider or "-" }}</dd>
+          <dt>Model</dt><dd>{{ run.model or "-" }}</dd>
+          <dt>Artifact</dt><dd class="truncate"><span class="mono">{{ run.run_dir or "-" }}</span></dd>
+          <dt>Error</dt><dd>{{ run.error_text or "-" }}</dd>
+          <dt>Passes</dt><dd>{{ (run.metadata.get("pass_sequence") | join(" → ")) if run.metadata and run.metadata.get("pass_sequence") else "-" }}</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <h2>Events</h2>
+          <span class="section-note">Chronological run log with error details when available.</span>
+        </div>
+        {% if events %}
+          <ul class="event-list">
+            {% for event in events %}
+              <li>
+                <span class="event-time">{{ event.ts }}</span>
+                <strong class="event-level">{{ event.level }}</strong>
+                <span class="event-msg">{{ event.message }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty-state">No events were recorded for this run.</div>
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>

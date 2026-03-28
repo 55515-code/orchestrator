@@ -1,0 +1,11 @@
+:443 {
+  encode zstd gzip
+
+  reverse_proxy 127.0.0.1:8090
+
+  # Add your auth layer for exposed ops endpoints.
+  # basicauth * {
+  #   ops-user <bcrypt-hash>
+  # }
+}
+

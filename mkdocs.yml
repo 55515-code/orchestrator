@@ -1,0 +1,24 @@
+site_name: Local Agent Substrate
+site_description: Local automation substrate for AI-agent workflows
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.sections
+    - content.code.copy
+
+nav:
+  - Overview: index.md
+  - Setup: setup.md
+  - Tooling Rationale: tooling-rationale.md
+  - Orchestrator: orchestrator.md
+  - Community Cycle: community-cycle.md
+  - Lifecycle: lifecycle.md
+  - Integrations: integrations.md
+  - Learning: learning.md
+  - Backup & Sync: dotfiles.md
+  - Deployment: deployment.md
+  - Chains: chains.md
+  - Standards: standards.md
+  - System Probe: system-probe.md
+  - References: references.md

@@ -1,0 +1,158 @@
+version: 1
+
+defaults:
+  stage_notes:
+    local: Keep work local-first, isolated, and reversible.
+    hosted_dev: Promote only after local evidence exists and keep scope constrained.
+    production: Require explicit approvals, audit logs, and rollback plans.
+  pass_notes:
+    research: Collect upstream facts and current documentation before implementation.
+    development: Reuse upstream formats and reference implementations instead of inventing new schemas.
+    testing: Validate behavior in a controlled target and store reproducible evidence.
+
+principles:
+  - id: authorized_scope_only
+    text: Run only on systems and targets you are explicitly authorized to assess.
+  - id: source_before_custom
+    text: Prefer maintained community standards and formats before custom backend design.
+  - id: minimal_base_on_demand_tools
+    text: Keep the base package lean and assemble optional tooling on first use.
+  - id: lifecycle_enforced
+    text: Apply the 3x3 lifecycle in order (local -> hosted_dev -> production, and research -> development -> testing).
+
+tracks:
+  - id: device_inspired_ops
+    name: Device-Inspired Operations
+    description: Rubber Ducky and Flipper-style workflows adapted to software orchestration patterns.
+    tags: [ducky, flipper, payloads, automation]
+    standards:
+      - id: duckyscript3
+        name: DuckyScript 3.0
+        format: DuckyScript source compiled to payload binaries.
+        source_url: https://docs.hak5.org/hak5-usb-rubber-ducky/usb-rubber-ducky-by-hak5/
+        repo_url: https://github.com/hak5/usbrubberducky-payloads
+        maintained_by: Hak5 + community payload contributors
+        notes: Use official DuckyScript compatibility and payload conventions as baseline behavior.
+      - id: flipper_badusb
+        name: Flipper BadUSB Script Format
+        format: Text script format with delay/default-delay and keycode controls.
+        source_url: https://developer.flipper.net/flipperzero/doxygen/badusb_file_format.html
+        repo_url: https://github.com/flipperdevices/flipperzero-firmware
+        maintained_by: Flipper Devices
+        notes: Keep parser/adapter compatibility with documented BadUSB directives.
+      - id: flipper_subghz
+        name: Flipper Sub-GHz Key File Format
+        format: Structured key file format for captured/saved sub-GHz data.
+        source_url: https://developer.flipper.net/flipperzero/doxygen/subghz_file_format.html
+        repo_url: https://github.com/flipperdevices/flipperzero-firmware
+        maintained_by: Flipper Devices
+        notes: Reuse official file field names when modeling RF metadata in workflows.
+
+  - id: distro_baselines
+    name: Distro Baselines
+    description: Kali/Parrot packaging and maintenance norms for trusted offensive-security toolchains.
+    tags: [kali, parrot, packaging, maintenance]
+    standards:
+      - id: kali_metapackages
+        name: Kali Metapackages
+        format: Debian metapackages that bundle tool categories.
+        source_url: https://www.kali.org/docs/general-use/metapackages/
+        repo_url: https://gitlab.com/kalilinux/packages/kali-meta
+        maintained_by: Kali Linux
+        notes: Prefer metapackage-based composition over ad-hoc tool lists.
+      - id: kali_tool_lifecycle
+        name: Kali Tool Curation Lifecycle
+        format: Documented add/remove criteria for tools.
+        source_url: https://www.kali.org/docs/tools/removed-tools/
+        repo_url: https://www.kali.org/docs/tools/submitting-tools/
+        maintained_by: Kali Linux
+        notes: Mirror this model by pruning stale integrations and requiring maintenance signals.
+      - id: parrot_signed_mirrors
+        name: Parrot Signed Mirror Distribution
+        format: Mirror network with centralized digital signature checks.
+        source_url: https://www.parrotsec.org/docs/mirrors/mirrors-list/
+        repo_url: https://github.com/ParrotSec
+        maintained_by: Parrot Security
+        notes: Align remote package intake with signed and centrally controlled update flows.
+
+  - id: threat_research_formats
+    name: Threat Research Formats
+    description: Widely used open standards for adversary mapping, atomic tests, detections, and templates.
+    tags: [mitre, detection, templates, research]
+    standards:
+      - id: mitre_attack
+        name: MITRE ATT&CK
+        format: Structured adversary knowledge base and mappings.
+        source_url: https://attack.mitre.org/resources/
+        repo_url: https://github.com/mitre-attack
+        maintained_by: MITRE ATT&CK
+        notes: Map automation intents to ATT&CK technique references for traceability.
+      - id: atomic_red_team
+        name: Atomic Red Team
+        format: Atomic test definitions mapped to ATT&CK.
+        source_url: https://github.com/redcanaryco/atomic-red-team
+        repo_url: https://github.com/redcanaryco/atomic-red-team
+        maintained_by: Red Canary + community
+        notes: Reuse existing atomic tests for validation before writing custom test harnesses.
+      - id: sigma_rules
+        name: Sigma Detection Rule Format
+        format: YAML-based generic detection rule schema.
+        source_url: https://sigmahq.io/
+        repo_url: https://github.com/SigmaHQ/sigma
+        maintained_by: SigmaHQ
+        notes: Keep detection content in Sigma-compatible YAML to stay backend-agnostic.
+      - id: nuclei_templates
+        name: Nuclei Template Format
+        format: YAML templates for repeatable security checks.
+        source_url: https://docs.projectdiscovery.io/templates/introduction
+        repo_url: https://github.com/projectdiscovery/nuclei-templates
+        maintained_by: ProjectDiscovery + community
+        notes: Prefer maintained template sets for checks rather than one-off scanner scripts.
+
+  - id: android_security_ops
+    name: Android Security Ops
+    description: Open-source Android tooling standards for authorized reverse engineering and app security testing.
+    tags: [android, mobile, reverse-engineering]
+    standards:
+      - id: android_platform_tools
+        name: Android SDK Platform-Tools
+        format: Official adb/fastboot host tooling distribution.
+        source_url: https://developer.android.com/tools/releases/platform-tools
+        repo_url: https://developer.android.com/tools/releases/platform-tools
+        maintained_by: Android Developers
+        notes: Treat platform-tools as the baseline transport layer for Android workflows.
+      - id: apktool
+        name: Apktool
+        format: APK decode/build workflow for Android resources and smali.
+        source_url: https://apktool.org/
+        repo_url: https://github.com/iBotPeaches/Apktool
+        maintained_by: Apktool project
+        notes: Use canonical Apktool decode/build paths before custom APK unpackers.
+      - id: jadx
+        name: JADX
+        format: Dex to Java decompilation and interactive code review.
+        source_url: https://github.com/skylot/jadx
+        repo_url: https://github.com/skylot/jadx
+        maintained_by: JADX maintainers
+        notes: Reuse JADX output conventions when generating static-analysis artifacts.
+      - id: mobsf
+        name: Mobile Security Framework (MobSF)
+        format: Automated mobile app static/dynamic analysis framework.
+        source_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
+        repo_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
+        maintained_by: MobSF maintainers
+        notes: Prefer MobSF scans as first-pass evidence before custom analyzers.
+      - id: frida
+        name: Frida
+        format: Dynamic instrumentation framework and CLI tooling.
+        source_url: https://frida.re/docs/frida-cli/
+        repo_url: https://github.com/frida/frida
+        maintained_by: Frida maintainers
+        notes: Use Frida for runtime instrumentation hooks instead of proprietary agents.
+      - id: owasp_mas
+        name: OWASP MASVS and MASTG
+        format: Mobile AppSec verification and testing standards.
+        source_url: https://mas.owasp.org/
+        repo_url: https://github.com/OWASP/owasp-mastg
+        maintained_by: OWASP Mobile Security Project
+        notes: Align test evidence and reporting with MASVS/MASTG control language.

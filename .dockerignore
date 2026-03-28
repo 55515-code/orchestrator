@@ -1,0 +1,17 @@
+.git
+.venv
+.direnv
+__pycache__
+*.pyc
+site
+memory
+state
+generated
+downloads
+tmp
+tools
+work
+aosp-eos-asteroids
+eos-asteroids
+.research
+

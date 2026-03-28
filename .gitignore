@@ -1,0 +1,38 @@
+.venv/
+.env
+.env.local
+.direnv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.env.local-agent-tools
+docs/*.local.md
+docs/*-private.md
+
+# Runtime and local artifacts
+memory/
+state/
+tmp/
+
+# Generated/static build outputs
+site/
+generated/
+
+# Internal/private research and tooling metadata
+.research/
+.roo/
+
+# Large non-core worktrees and source drops
+downloads/
+eos-asteroids/
+aosp-eos-asteroids/
+
+# Local package caches
+.local-pkgs/
+.pkgcache/
+
+# Editor metadata
+.vscode/
+work/eos-asteroids-src/

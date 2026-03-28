@@ -1,0 +1,154 @@
+version: 1
+
+defaults:
+  access_mode: read
+  write_requires_directive: true
+  write_policy: External write operations are blocked unless an explicit directive is supplied.
+
+services:
+  - id: github
+    name: GitHub
+    category: scm
+    auth:
+      methods: [oauth_app, github_app, personal_access_token]
+      login_url: https://github.com/login/oauth/authorize
+      docs_url: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps
+    cli_tools: [gh, git]
+    read_profile:
+      default_scopes:
+        - "(no scope) for public data"
+        - "read:org"
+        - "read:project"
+      guidance: Prefer GitHub App fine-grained read permissions where possible.
+    write_profile:
+      scopes:
+        - "repo"
+        - "workflow"
+      guidance: Enable only for explicit push/update directives.
+
+  - id: gitlab
+    name: GitLab
+    category: scm
+    auth:
+      methods: [personal_access_token, oauth2]
+      login_url: https://gitlab.com/oauth/authorize
+      docs_url: https://docs.gitlab.com/user/profile/personal_access_tokens/
+    cli_tools: [glab, git]
+    read_profile:
+      default_scopes:
+        - "read_api"
+        - "read_repository"
+      guidance: Use read scopes for inventory, project discovery, and non-mutating APIs.
+    write_profile:
+      scopes:
+        - "api"
+        - "write_repository"
+      guidance: Escalate only for approved automation changes.
+
+  - id: slack
+    name: Slack
+    category: collaboration
+    auth:
+      methods: [oauth_v2, bot_token]
+      login_url: https://slack.com/oauth/v2/authorize
+      docs_url: https://docs.slack.dev/authentication/installing-with-oauth/
+    cli_tools: []
+    read_profile:
+      default_scopes:
+        - "channels:read"
+        - "channels:history"
+      guidance: Request minimal required bot/user scopes and handle missing optional scopes gracefully.
+    write_profile:
+      scopes:
+        - "chat:write"
+      guidance: Message posting and updates require explicit operator directive.
+
+  - id: notion
+    name: Notion
+    category: knowledge
+    auth:
+      methods: [oauth2, internal_integration_token]
+      login_url: https://api.notion.com/v1/oauth/authorize
+      docs_url: https://developers.notion.com/guides/get-started/authorization
+    cli_tools: []
+    read_profile:
+      default_scopes:
+        - "read content shared to integration"
+      guidance: Keep page/database scope narrow and workspace-selected.
+    write_profile:
+      scopes:
+        - "update/create content shared to integration"
+      guidance: Permit content writes only with explicit destination + intent.
+
+  - id: proton_mail
+    name: Proton Mail
+    category: email
+    availability: bridge_only
+    api_status: no_public_general_api
+    notes: No public general-purpose mail API is documented. Use Proton Mail Bridge or approved mail clients with SMTP/IMAP access.
+    auth:
+      methods: [bridge_imap_smtp, bridge_cli, web_app]
+      login_url: https://mail.proton.me/
+      docs_url: https://proton.me/support/imap-smtp-and-pop3-setup
+    cli_tools: []
+    supported_surfaces: [mail_bridge, smtp_submission, imap_access, web_app]
+    alternatives: [Proton Mail Bridge, Bridge CLI guide, SMTP submission]
+    community_projects: []
+    read_profile:
+      default_scopes:
+        - "mailbox access through Bridge IMAP"
+        - "metadata and folder listing through approved mail clients"
+      guidance: Default to read-only mailbox inspection. Treat send/label changes as explicit operator-directed writes.
+    write_profile:
+      scopes:
+        - "send mail through Bridge SMTP"
+        - "approved mailbox changes through Bridge"
+      guidance: Only send or mutate mail state from a supported Bridge session with an explicit directive.
+
+  - id: proton_drive
+    name: Proton Drive
+    category: storage
+    availability: app_managed
+    api_status: sdk_preview_only
+    notes: Proton Drive does not document a public third-party production API. Use the official web, desktop, or mobile apps; the Drive SDK is a preview surface, not a general automation contract.
+    auth:
+      methods: [web_app, desktop_app, mobile_app, sdk_preview]
+      login_url: https://drive.proton.me/
+      docs_url: https://proton.me/support/proton-drive-business-support
+    cli_tools: []
+    supported_surfaces: [web_app, desktop_app, mobile_app, sdk_preview, local_sync_folder]
+    alternatives: [Proton Drive app, Proton Drive SDK preview]
+    community_projects: []
+    read_profile:
+      default_scopes:
+        - "browse files shared to the account"
+        - "download synced content through official apps"
+      guidance: Keep Drive access read-first and prefer local sync or download flows over direct automation.
+    write_profile:
+      scopes: []
+      guidance: Do not assume a public write API. Use official apps or SDK preview only when Proton documents a supported path.
+
+  - id: proton_vpn
+    name: Proton VPN
+    category: network
+    availability: business_managed
+    api_status: no_public_consumer_api
+    notes: Proton VPN is managed through the Proton app, business admin, SSO/SCIM, and config/profile workflows. No public consumer API is documented for direct automation.
+    auth:
+      methods: [account_login, sso, scim, mdm, config_profile]
+      login_url: https://account.proton.me/
+      docs_url: https://proton.me/support/business/vpn
+    cli_tools: [wireguard-tools, openvpn]
+    supported_surfaces: [business_admin, sso, scim, mdm, wireguard_profiles, openvpn_profiles]
+    alternatives: [Proton VPN business support, WireGuard profile export, OpenVPN profiles]
+    community_projects: []
+    read_profile:
+      default_scopes:
+        - "account and device inventory"
+        - "connection posture and profile status"
+      guidance: Use read-only monitoring first. Avoid assuming direct tunnel control without a documented administrative surface.
+    write_profile:
+      scopes:
+        - "SCIM user provisioning"
+        - "managed profile rollout"
+      guidance: Only provision users or deploy VPN profiles through documented admin or device-management flows with an explicit directive.

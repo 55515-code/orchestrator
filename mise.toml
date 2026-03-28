@@ -1,0 +1,36 @@
+[tools]
+just = "latest"
+node = "22"
+pnpm = "latest"
+
+[tasks.bootstrap]
+run = "bash scripts/bootstrap-local-agent-env.sh"
+description = "Install local tools and project dependencies."
+
+[tasks.probe]
+run = "python scripts/probe_system.py docs/system-probe.md"
+description = "Generate a system profile report in docs/system-probe.md."
+
+[tasks.chain-dry]
+run = "uv run python scripts/run_chain.py --objective \"${OBJECTIVE:-Repository audit}\" --dry-run"
+description = "Run the default chain without calling an LLM provider."
+
+[tasks.docs]
+run = "uv run mkdocs serve -a 127.0.0.1:8000"
+description = "Serve local documentation."
+
+[tasks.scan]
+run = "uv run python scripts/substrate_cli.py scan"
+description = "Scan configured repositories and persist status snapshots."
+
+[tasks.sources]
+run = "uv run python scripts/substrate_cli.py sources-refresh"
+description = "Refresh fact-based upstream metadata."
+
+[tasks.ops]
+run = "uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090"
+description = "Run the orchestration ops control panel."
+
+[tasks.package]
+run = "uv run python scripts/package_substrate.py"
+description = "Build a redistributable substrate release zip with manifest and checksums."

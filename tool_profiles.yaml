@@ -1,0 +1,169 @@
+version: 1
+
+manager_priority:
+  - uv_tool
+  - pipx
+  - brew
+  - apt
+  - dnf
+  - pacman
+  - winget
+  - choco
+  - scoop
+  - manual
+
+profiles:
+  - id: remote_access
+    name: Remote Access and Tunnel Tools
+    description: Optional tools for no-domain remote ops panel access and recovery.
+    tools:
+      - id: cloudflared
+        name: cloudflared
+        binary: cloudflared
+        source_url: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+        install:
+          brew:
+            - brew install cloudflared
+          winget:
+            - winget install --id Cloudflare.cloudflared -e
+          manual:
+            - Visit the official cloudflared docs and install from the platform package instructions.
+      - id: tailscale
+        name: Tailscale
+        binary: tailscale
+        source_url: https://tailscale.com/kb/
+        install:
+          brew:
+            - brew install tailscale
+          apt:
+            - curl -fsSL https://tailscale.com/install.sh | sh
+          winget:
+            - winget install --id Tailscale.Tailscale -e
+          manual:
+            - Use the official Tailscale installer from the KB for your operating system.
+      - id: ssh
+        name: OpenSSH Client
+        binary: ssh
+        source_url: https://www.openssh.com/
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y openssh-client
+          brew:
+            - brew install openssh
+          winget:
+            - winget install --id Microsoft.OpenSSH.Beta -e
+          manual:
+            - Install the OpenSSH client package from your OS distribution channel.
+
+  - id: android_lab
+    name: Android Security Lab
+    description: Open-source Android tooling assembled on demand for authorized testing.
+    tools:
+      - id: adb
+        name: Android Debug Bridge
+        binary: adb
+        source_url: https://developer.android.com/tools/releases/platform-tools
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y android-sdk-platform-tools
+          brew:
+            - brew install android-platform-tools
+          winget:
+            - winget install --id Google.PlatformTools -e
+          choco:
+            - choco install adb -y
+          manual:
+            - Download Android SDK Platform-Tools from the official Android developer page.
+      - id: fastboot
+        name: Fastboot
+        binary: fastboot
+        source_url: https://developer.android.com/tools/releases/platform-tools
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y android-sdk-platform-tools
+          brew:
+            - brew install android-platform-tools
+          winget:
+            - winget install --id Google.PlatformTools -e
+          manual:
+            - Install Android SDK Platform-Tools to get fastboot.
+      - id: apktool
+        name: Apktool
+        binary: apktool
+        source_url: https://apktool.org/
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y apktool
+          brew:
+            - brew install apktool
+          manual:
+            - Install Apktool from the official project release instructions.
+      - id: jadx
+        name: JADX
+        binary: jadx
+        source_url: https://github.com/skylot/jadx
+        install:
+          brew:
+            - brew install jadx
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y jadx
+          manual:
+            - Download JADX releases from the official GitHub repository.
+      - id: frida_tools
+        name: Frida CLI tools
+        binary: frida
+        source_url: https://frida.re/docs/frida-cli/
+        install:
+          uv_tool:
+            - uv tool install frida-tools
+          pipx:
+            - pipx install frida-tools
+          manual:
+            - Install frida-tools using your Python packaging workflow.
+      - id: mobsf
+        name: MobSF
+        binary: docker
+        source_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y docker.io
+          brew:
+            - brew install --cask docker
+          winget:
+            - winget install --id Docker.DockerDesktop -e
+          manual:
+            - Install Docker and run the official MobSF container workflow.
+
+  - id: detection_content
+    name: Detection and Template Content
+    description: Maintained template/rule ecosystems for reusable detection and testing content.
+    tools:
+      - id: nuclei
+        name: Nuclei
+        binary: nuclei
+        source_url: https://docs.projectdiscovery.io/tools/nuclei/overview
+        install:
+          brew:
+            - brew install nuclei
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y nuclei
+          manual:
+            - Install Nuclei from official ProjectDiscovery packages or binaries.
+      - id: sigma_cli
+        name: sigma-cli
+        binary: sigma
+        source_url: https://sigmahq.io/
+        install:
+          uv_tool:
+            - uv tool install sigma-cli
+          pipx:
+            - pipx install sigma-cli
+          manual:
+            - Install sigma-cli from its maintained Python package source.

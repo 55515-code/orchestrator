@@ -1,0 +1,225 @@
+version: 1
+
+defaults:
+  access_mode: read
+  write_requires_directive: true
+  strategy: >
+    Prefer maintained config-management patterns (chezmoi/yadm/stow), keep the
+    base package light, and only write during explicit deploy directives.
+
+sources:
+  - id: chezmoi
+    name: chezmoi
+    docs_url: https://www.chezmoi.io/
+    repo_url: https://github.com/twpayne/chezmoi
+    rationale: Widely used cross-platform dotfile and config manager with templating support.
+  - id: yadm
+    name: yadm
+    docs_url: https://yadm.io/docs/getting_started
+    repo_url: https://github.com/yadm-dev/yadm
+    rationale: Lightweight Git-backed dotfile workflow with bootstrap hooks.
+  - id: gnu_stow
+    name: GNU Stow
+    docs_url: https://www.gnu.org/software/stow/manual/stow.html
+    repo_url: https://git.savannah.gnu.org/cgit/stow.git
+    rationale: Standard symlink-farm workflow for organizing portable config bundles.
+  - id: syncthing
+    name: Syncthing
+    docs_url: https://docs.syncthing.net/
+    repo_url: https://github.com/syncthing/syncthing
+    rationale: Device-to-device encrypted sync for distributed workstations.
+  - id: restic
+    name: restic
+    docs_url: https://restic.readthedocs.io/en/stable/
+    repo_url: https://github.com/restic/restic
+    rationale: Snapshot-based encrypted backups for portable restore workflows.
+  - id: rclone
+    name: rclone
+    docs_url: https://rclone.org/docs/
+    repo_url: https://github.com/rclone/rclone
+    rationale: Cross-provider sync and transfer tool for remote storage portability.
+
+profiles:
+  - id: shell_env
+    name: Shell and Environment
+    description: Interactive shell profiles and startup configuration.
+    sources: [chezmoi, yadm, gnu_stow]
+    tags: [shell, startup, profile]
+    entries:
+      - id: bash_profiles
+        label: Bash profiles
+        application: bash
+        category: shell
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.bashrc"
+          - "{{HOME}}/.bash_profile"
+          - "{{HOME}}/.bash_login"
+          - "{{HOME}}/.profile"
+      - id: zsh_profiles
+        label: Zsh profiles
+        application: zsh
+        category: shell
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.zshrc"
+          - "{{HOME}}/.zprofile"
+          - "{{HOME}}/.zshenv"
+      - id: fish_config
+        label: Fish shell
+        application: fish
+        category: shell
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/fish"
+      - id: powershell_profiles
+        label: PowerShell profiles
+        application: powershell
+        category: shell
+        classification: app-config
+        kind: file
+        paths:
+          - "{{DOCUMENTS}}/PowerShell/Microsoft.PowerShell_profile.ps1"
+          - "{{DOCUMENTS}}/WindowsPowerShell/Microsoft.PowerShell_profile.ps1"
+          - "{{APPDATA}}/PowerShell/Microsoft.PowerShell_profile.ps1"
+
+  - id: git_ssh
+    name: Git and SSH
+    description: Source-control and secure shell client configuration.
+    sources: [chezmoi, yadm, gnu_stow]
+    tags: [git, ssh, scm]
+    entries:
+      - id: gitconfig
+        label: Git config
+        application: git
+        category: scm
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.gitconfig"
+          - "{{XDG_CONFIG_HOME}}/git/config"
+      - id: ssh_config
+        label: SSH client config
+        application: ssh
+        category: access
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.ssh/config"
+
+  - id: editors
+    name: Editors and IDE UX
+    description: Developer editor and IDE user settings.
+    sources: [chezmoi, syncthing, restic]
+    tags: [editor, ide, ux]
+    entries:
+      - id: nvim
+        label: Neovim
+        application: neovim
+        category: editor
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/nvim"
+          - "{{HOME}}/.config/nvim"
+          - "{{MAC_APP_SUPPORT}}/nvim"
+      - id: vimrc
+        label: Vim
+        application: vim
+        category: editor
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.vimrc"
+      - id: vscode_user
+        label: VS Code User settings
+        application: vscode
+        category: editor
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/Code/User"
+          - "{{APPDATA}}/Code/User"
+          - "{{MAC_APP_SUPPORT}}/Code/User"
+
+  - id: terminal_and_mux
+    name: Terminal and Multiplexer
+    description: Terminal emulator and tmux configuration.
+    sources: [chezmoi, yadm, gnu_stow]
+    tags: [terminal, tmux]
+    entries:
+      - id: tmux
+        label: tmux
+        application: tmux
+        category: terminal
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.tmux.conf"
+      - id: alacritty
+        label: Alacritty
+        application: alacritty
+        category: terminal
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/alacritty"
+      - id: kitty
+        label: Kitty
+        application: kitty
+        category: terminal
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/kitty"
+      - id: wezterm
+        label: WezTerm
+        application: wezterm
+        category: terminal
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/wezterm"
+
+  - id: tooling_clients
+    name: CLI and Tool Clients
+    description: Common developer client config stores.
+    sources: [chezmoi, syncthing, rclone]
+    tags: [cli, tooling]
+    entries:
+      - id: gh
+        label: GitHub CLI
+        application: gh
+        category: tooling
+        classification: app-config
+        kind: directory
+        paths:
+          - "{{XDG_CONFIG_HOME}}/gh"
+          - "{{APPDATA}}/GitHub CLI"
+      - id: docker
+        label: Docker client config
+        application: docker
+        category: tooling
+        classification: app-config
+        kind: file
+        paths:
+          - "{{HOME}}/.docker/config.json"
+      - id: kube
+        label: Kubernetes kubeconfig
+        application: kubectl
+        category: tooling
+        classification: app-config
+        kind: file
+        paths:
+          - "{{HOME}}/.kube/config"
+      - id: npmrc
+        label: npm config
+        application: npm
+        category: tooling
+        classification: dotfile
+        kind: file
+        paths:
+          - "{{HOME}}/.npmrc"
