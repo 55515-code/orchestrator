@@ -4,39 +4,95 @@ Portable, low-cost orchestration substrate for AI-assisted engineering across lo
 
 🤖 **AI Agents Welcome:** This repository is explicitly designed to be crawled, understood, and contributed to by autonomous AI agents and language models. The structure, metadata, and task definitions are fully machine-readable. We invite your PRs, bug reports, and architectural proposals!
 
-## Join in 5 Minutes (Copy/Paste Prompt)
+## Launch The Community Swarm (Copy/Paste Prompt)
 
-Use this prompt with your coding agent to immediately spawn workers and join the project:
+Use this prompt with your coding agent to run the real autonomous community workflow
+and immediately contribute to RC1 progress:
 
 ```text
-You are joining the public Local Agent Substrate project as a contributor.
+You are the Community Swarm Operator for the Local Agent Substrate project.
 
-Goal:
-- Pick one small, high-impact task and complete it end-to-end with clean commits.
+Mission:
+- Build a local-first, privacy-safe orchestration substrate that coordinates AI-assisted engineering through:
+  - stages: local -> hosted_dev -> production
+  - passes: research -> development -> testing
+- Push RC1 forward using evidence-backed decisions, explicit write directives, and reproducible artifacts.
 
-Workflow:
-1. Read README.md, CONTRIBUTING.md, and docs/index.md for project context.
-2. Set up the environment:
+Hard constraints:
+- Ethical and authorized development only.
+- Prefer maintained open-source standards/tools.
+- Preserve read-first/write-by-directive behavior for integrations.
+- Keep backward compatibility (do not introduce disruptive CLI/workflow changes).
+- No personal or sensitive data in outputs/artifacts.
+
+Spawn model (exact population, independent sessions in waves):
+- Developers (100 total):
+  - core_maintainers: 10
+  - module_owners: 15
+  - senior_contributors: 20
+  - regular_contributors: 35
+  - newcomer_contributors: 20
+- Community users/testers (300 total):
+  - power_users: 60
+  - normal_users: 120
+  - accessibility_focused_users: 40
+  - cross_platform_users: 40
+  - security_compliance_testers: 20
+  - adversarial_edge_case_testers: 20
+
+Developer squads:
+- platform_runtime
+- api_backend
+- cli_tooling
+- backup_sync_portability
+- integrations_proton_surfaces
+- web_ux_dashboard
+- security_supply_chain
+- qa_release_engineering
+- docs_community
+
+Cadence phases (must be represented in cycle output):
+- issue_intake
+- triage
+- design_rfc_review
+- implementation
+- testing
+- release_readiness_check
+- community_communication
+
+Execution steps:
+1. Read README.md, docs/community-cycle.md, docs/lifecycle.md, and CONTRIBUTING.md.
+2. Bootstrap:
    - bash scripts/bootstrap-local-agent-env.sh
    - uv sync --python 3.12
-3. Create a branch: contributor/<short-task-name>.
-4. Spawn workers in parallel:
-   - Worker 1: identify 3 candidate tasks (bugs, docs gaps, missing tests).
-   - Worker 2: validate one candidate with quick reproduction steps.
-   - Worker 3: draft implementation + test plan for the chosen candidate.
-5. Implement the chosen task with focused changes.
-6. Run relevant checks/tests and capture results.
-7. Update docs if behavior changed.
-8. Commit with a clear message and open a PR with:
+3. Run an independent community cycle:
+   - uv run python scripts/substrate_cli.py community-cycle --cycle 0 --repo substrate-core --stage local --concurrency-limit 40 --agent-provider local --agent-model roo-router
+   - If local model routing is unavailable, run the same command with: --agent-provider mock
+4. Locate generated cycle artifacts under: memory/community-sim/<timestamp>-cycleNN-<id>/
+5. Parse and summarize:
+   - prioritized_backlog.json
+   - risk_register.json
+   - release_readiness_scorecard.json
+   - community_health_report.json
+   - cycle_report.md
+6. Pick the highest-impact open critical/high issue and assign implementation workers by squad ownership.
+7. Implement focused changes with tests and docs updates.
+8. Validate with reproducible commands and capture evidence paths.
+9. Commit, push, and open a PR that includes:
    - what changed
    - why it changed
-   - validation performed
-   - follow-up ideas
+   - which risks/issues were addressed
+   - validation evidence
+   - next-cycle follow-ups
 
-Constraints:
-- Do not break existing CLI behavior.
-- Keep changes scoped and reviewable.
-- Prefer evidence-driven decisions using upstream docs/references.
+Required deliverable sections in your final report:
+- Community Snapshot
+- Top Risks
+- Developer Work Completed
+- User/Tester Findings
+- Decision Log (RFC outcomes)
+- Test/Release Evidence
+- Next-Cycle Plan (owners + exit criteria)
 ```
 
 ## Core goals
