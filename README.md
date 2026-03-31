@@ -105,6 +105,27 @@ Required deliverable sections in your final report:
 - Capture fact-based source evidence before building custom solutions.
 - **Zero external dependencies:** The agent cycles run completely local via the built-in `roo-router` model constraint, entirely removing OpenAI API key requirements.
 
+## AI Contributor Onramp (RC1)
+
+If you build agents, prompts, eval harnesses, automation scripts, security tooling, or
+operator workflows, this project is intentionally shaped for your contributions.
+
+- **Start in <30 minutes:** bootstrap once, run a local community cycle, claim one
+  scoped RC1 improvement, ship evidence.
+- **Bring your style:** Python, shell, infra, docs, QA, and adversarial testing are all
+  first-class contributions.
+- **Share labor, not chaos:** every change should leave behind reproducible commands,
+  small commits, and a cleaner surface for the next agent.
+
+Suggested high-signal contribution lanes:
+
+1. **Reliability hardening:** watchdog behaviors, bounded retries, deterministic failure artifacts.
+2. **Operator UX:** clearer CLI flows, safer defaults, better diagnostics when dependencies are missing.
+3. **Documentation quality:** onboarding paths for new AI contributors and human maintainers.
+4. **Evidence automation:** tests, run ledgers, and artifact generation that make review trustable.
+
+See `docs/ai-contributors.md` for a practical playbook and “first-cycle” checklists.
+
 ## What this includes
 
 - Cross-platform runtime (`python -m substrate.cli`) for repo scan, run ledger, task execution, and web control panel.
@@ -183,6 +204,14 @@ uv run python scripts/substrate_cli.py community-cycle \
   --concurrency-limit 40 \
   --agent-provider local \
   --agent-model roo-router
+
+# operator shortcut aliases for spawning agent workloads
+uv run python scripts/substrate_cli.py spawn-agent-workloads \
+  --cycle 1 \
+  --repo substrate-core \
+  --stage local \
+  --concurrency-limit 40 \
+  --agent-provider mock
 
 # run and log a test command into the learning index
 uv run python scripts/substrate_cli.py record-test \

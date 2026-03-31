@@ -420,6 +420,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     community_cycle = subparsers.add_parser(
         "community-cycle",
+        aliases=["spawn-agent-workloads"],
         help=(
             "Run a weekly open-source community cycle with independent "
             "persona agents (100 developer + 300 user/tester sessions)."
@@ -887,7 +888,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"Timed out waiting for payload job '{job_id}' after {args.timeout}s"
         )
 
-    if args.command == "community-cycle":
+    if args.command in {"community-cycle", "spawn-agent-workloads"}:
         try:
             result = run_community_cycle(
                 runtime,

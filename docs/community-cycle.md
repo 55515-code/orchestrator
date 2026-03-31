@@ -31,6 +31,9 @@ uv run python scripts/substrate_cli.py community-cycle \
   --stage local \
   --concurrency-limit 40 \
   --agent-provider mock
+
+# Alias commands that run the same workflow
+uv run python scripts/substrate_cli.py spawn-agent-workloads --cycle 1 --agent-provider mock
 ```
 
 Use a real provider/model when credentials/runtime are configured:
