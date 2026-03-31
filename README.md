@@ -184,6 +184,16 @@ uv run python scripts/substrate_cli.py community-cycle \
   --agent-provider local \
   --agent-model roo-router
 
+# operator shortcut aliases for spawning agent workloads
+uv run python scripts/substrate_cli.py spawn-agent-workloads \
+  --cycle 1 \
+  --repo substrate-core \
+  --stage local \
+  --concurrency-limit 40 \
+  --agent-provider mock \
+  --population-scale 0.5
+uv run python scripts/substrate_cli.py spawn-agent-workloads-now --cycle 2
+
 # run and log a test command into the learning index
 uv run python scripts/substrate_cli.py record-test \
   --name "compileall" \

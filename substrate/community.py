@@ -240,6 +240,40 @@ def _issue_by_id(issue_id: str) -> dict[str, Any] | None:
     return None
 
 
+def _scale_cohorts(
+    cohorts: list[tuple[str, int]],
+    scale: float,
+) -> list[tuple[str, int]]:
+    if scale <= 0:
+        raise ValueError("population_scale must be > 0")
+    if not cohorts:
+        return []
+    if scale == 1.0:
+        return list(cohorts)
+
+    raw_targets = [count * scale for _, count in cohorts]
+    floored = [int(value) for value in raw_targets]
+    target_total = max(1, int(round(sum(raw_targets))))
+    remainder = target_total - sum(floored)
+
+    fractional_order = sorted(
+        range(len(cohorts)),
+        key=lambda index: (raw_targets[index] - floored[index], cohorts[index][1]),
+        reverse=True,
+    )
+    for index in fractional_order[: max(remainder, 0)]:
+        floored[index] += 1
+
+    if all(count <= 0 for count in floored):
+        max_index = max(range(len(cohorts)), key=lambda index: cohorts[index][1])
+        floored[max_index] = 1
+
+    return [
+        (cohort_name, max(0, scaled_count))
+        for (cohort_name, _), scaled_count in zip(cohorts, floored)
+    ]
+
+
 def _seed_for_agent(agent_id: str, cycle: int, base_seed: int) -> int:
     total = base_seed + cycle * 9973
     for char in agent_id:
@@ -257,10 +291,15 @@ def _persona_for_agent(agent_id: str, cycle: int, base_seed: int) -> dict[str, s
     }
 
 
-def _build_developer_agents(cycle: int, base_seed: int) -> list[dict[str, Any]]:
+def _build_developer_agents(
+    cycle: int,
+    base_seed: int,
+    cohorts: list[tuple[str, int]] | None = None,
+) -> list[dict[str, Any]]:
     agents: list[dict[str, Any]] = []
     squad_index = 0
-    for cohort, count in DEVELOPER_COHORTS:
+    selected_cohorts = cohorts or DEVELOPER_COHORTS
+    for cohort, count in selected_cohorts:
         for idx in range(1, count + 1):
             agent_id = f"dev-{cohort}-{idx:03d}"
             squad = DEVELOPER_SQUADS[squad_index % len(DEVELOPER_SQUADS)]
@@ -279,11 +318,16 @@ def _build_developer_agents(cycle: int, base_seed: int) -> list[dict[str, Any]]:
     return agents
 
 
-def _build_user_tester_agents(cycle: int, base_seed: int) -> list[dict[str, Any]]:
+def _build_user_tester_agents(
+    cycle: int,
+    base_seed: int,
+    cohorts: list[tuple[str, int]] | None = None,
+) -> list[dict[str, Any]]:
     agents: list[dict[str, Any]] = []
     platform_cycle = ["linux", "macos", "windows"]
     platform_index = 0
-    for cohort, count in USER_TESTER_COHORTS:
+    selected_cohorts = cohorts or USER_TESTER_COHORTS
+    for cohort, count in selected_cohorts:
         for idx in range(1, count + 1):
             agent_id = f"user-{cohort}-{idx:03d}"
             program = TESTER_PROGRAMS[(idx - 1) % len(TESTER_PROGRAMS)]
@@ -1509,6 +1553,7 @@ def run_community_cycle(
     agent_provider: str = "mock",
     agent_model: str | None = None,
     seed: int | None = None,
+    population_scale: float = 1.0,
 ) -> dict[str, Any]:
     if cycle < 0:
         raise ValueError("cycle must be >= 0")
@@ -1518,6 +1563,8 @@ def run_community_cycle(
         raise ValueError(
             f"agent_provider must be one of {sorted(DEFAULT_PROVIDER_MODELS)}"
         )
+    if population_scale <= 0:
+        raise ValueError("population_scale must be > 0")
 
     runtime.resolve_repo(repo_slug)
     _assert_stage_policy(runtime, repo_slug=repo_slug, stage=stage)
@@ -1532,6 +1579,9 @@ def run_community_cycle(
         / f"{timestamp}-cycle{cycle:02d}-{run_id[:8]}"
     )
     run_dir.mkdir(parents=True, exist_ok=True)
+
+    scaled_developer_cohorts = _scale_cohorts(DEVELOPER_COHORTS, population_scale)
+    scaled_user_tester_cohorts = _scale_cohorts(USER_TESTER_COHORTS, population_scale)
 
     runtime.db.create_run(
         run_id=run_id,
@@ -1548,9 +1598,10 @@ def run_community_cycle(
             "concurrency_limit": concurrency_limit,
             "seed": base_seed,
             "population": {
-                "developers": sum(count for _, count in DEVELOPER_COHORTS),
-                "users_testers": sum(count for _, count in USER_TESTER_COHORTS),
+                "developers": sum(count for _, count in scaled_developer_cohorts),
+                "users_testers": sum(count for _, count in scaled_user_tester_cohorts),
             },
+            "population_scale": population_scale,
             "cadence_phases": OPERATING_CADENCE_PHASES,
         },
     )
@@ -1570,8 +1621,16 @@ def run_community_cycle(
         mission = _mission_scope_alignment(cycle)
         mission_statement = mission["mission_statement"]
 
-        developers = _build_developer_agents(cycle=cycle, base_seed=base_seed)
-        users_testers = _build_user_tester_agents(cycle=cycle, base_seed=base_seed)
+        developers = _build_developer_agents(
+            cycle=cycle,
+            base_seed=base_seed,
+            cohorts=scaled_developer_cohorts,
+        )
+        users_testers = _build_user_tester_agents(
+            cycle=cycle,
+            base_seed=base_seed,
+            cohorts=scaled_user_tester_cohorts,
+        )
         all_agents = [*developers, *users_testers]
 
         actor_sessions, wave_schedule = _run_agent_waves(
@@ -1616,6 +1675,7 @@ def run_community_cycle(
             "simulation_mode": "independent_agents_in_waves",
             "wave_count": len(wave_schedule),
             "concurrency_limit": concurrency_limit,
+            "population_scale": population_scale,
             "cadence_phases": OPERATING_CADENCE_PHASES,
             "realism": {
                 "conflicting_opinions_threads": sum(
