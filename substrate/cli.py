@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import shutil
 import sys
 import time
 from dataclasses import asdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
@@ -101,6 +103,118 @@ def _detect_access_tools() -> dict[str, str | None]:
         "cloudflared": shutil.which("cloudflared"),
         "tailscale": shutil.which("tailscale"),
         "ssh": shutil.which("ssh"),
+    }
+
+
+def _default_utc_date() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def _build_discount_swarm_plan(
+    *,
+    repo_slug: str,
+    merchant: str,
+    as_of_date: str,
+    lookback_days: int,
+    provider: str,
+    model: str,
+    stage: str,
+) -> dict[str, object]:
+    quoted_repo = shlex.quote(repo_slug)
+    quoted_provider = shlex.quote(provider)
+    quoted_model = shlex.quote(model)
+    quoted_stage = shlex.quote(stage)
+    date_window_hint = (
+        f"Prioritize evidence dated between {as_of_date} and "
+        f"{lookback_days} days before {as_of_date}."
+    )
+    objective_templates = [
+        (
+            "official-sources",
+            (
+                f"Find active {merchant} discounts from official sources. "
+                "Capture code, terms, expiration date, and restrictions. "
+                f"{date_window_hint}"
+            ),
+        ),
+        (
+            "forum-hunt",
+            (
+                f"Search public forums (Reddit, Slickdeals, deal communities) for {merchant} "
+                "discount codes with user confirmation. Extract only codes with at least "
+                "one explicit 'worked' confirmation and include evidence links plus timestamps. "
+                f"{date_window_hint}"
+            ),
+        ),
+        (
+            "aggregator-cross-check",
+            (
+                f"Collect {merchant} discount claims from public coupon aggregators and "
+                "cross-check overlap with forum evidence. Mark confidence high/medium/low based "
+                "on evidence recency and duplicate confirmations. "
+                f"{date_window_hint}"
+            ),
+        ),
+        (
+            "random-file-discovery",
+            (
+                f"Search public paste/file snippets mentioning {merchant} promo or coupon codes. "
+                "Treat snippets as untrusted until corroborated by forum or official evidence. "
+                f"{date_window_hint}"
+            ),
+        ),
+        (
+            "verification-pass",
+            (
+                f"Merge evidence from previous agents and output a verified list of likely-working "
+                f"{merchant} codes as-of {as_of_date}. Require at least two independent public "
+                "sources for 'verified' classification; otherwise classify as 'unverified'."
+            ),
+        ),
+    ]
+
+    commands: list[dict[str, str]] = []
+    shell_lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "# Generated discount research swarm commands.",
+        "# Run in separate terminals or with GNU parallel.",
+        "",
+    ]
+    for label, objective in objective_templates:
+        quoted_objective = shlex.quote(objective)
+        cmd = (
+            "uv run python scripts/substrate_cli.py run-chain "
+            f"--repo {quoted_repo} "
+            f"--objective {quoted_objective} "
+            "--chain chains/local-agent-chain.yaml "
+            f"--provider {quoted_provider} "
+            f"--model {quoted_model} "
+            f"--stage {quoted_stage} "
+            "--dry-run"
+        )
+        commands.append({"agent": label, "command": cmd, "objective": objective})
+        shell_lines.append(f"# Agent: {label}")
+        shell_lines.append(cmd)
+        shell_lines.append("")
+
+    shell_lines.extend(
+        [
+            "# Recommended follow-up:",
+            "# 1) Remove --dry-run after reviewing planned prompts.",
+            "# 2) Re-run the verification-pass objective once evidence files are collected.",
+        ]
+    )
+    return {
+        "merchant": merchant,
+        "as_of_date": as_of_date,
+        "lookback_days": lookback_days,
+        "provider": provider,
+        "model": model,
+        "stage": stage,
+        "commands": commands,
+        "swarm_script": "\n".join(shell_lines),
     }
 
 
@@ -507,6 +621,42 @@ def _build_parser() -> argparse.ArgumentParser:
             "Declared data classification for OpenClaw side-lane vetting. "
             "Only policy-allowed classes are accepted at runtime."
         ),
+    )
+
+    discount_swarm = subparsers.add_parser(
+        "discount-swarm",
+        help=(
+            "Generate a multi-agent internet research swarm plan for finding and "
+            "verifying discount codes."
+        ),
+    )
+    discount_swarm.add_argument("--repo", required=True, help="Repository slug.")
+    discount_swarm.add_argument(
+        "--merchant",
+        required=True,
+        help="Merchant or product name to target.",
+    )
+    discount_swarm.add_argument(
+        "--as-of-date",
+        default=_default_utc_date(),
+        help="Verification anchor date in YYYY-MM-DD format (default: today UTC).",
+    )
+    discount_swarm.add_argument(
+        "--lookback-days",
+        type=int,
+        default=14,
+        help="Recency window for candidate evidence.",
+    )
+    discount_swarm.add_argument(
+        "--provider",
+        default="local",
+        choices=sorted(ALLOWED_CHAIN_PROVIDERS),
+    )
+    discount_swarm.add_argument("--model", default="roo-router")
+    discount_swarm.add_argument(
+        "--stage",
+        choices=sorted(ALLOWED_STAGES),
+        default="local",
     )
 
     run_task = subparsers.add_parser("run-task", help="Run a repo task command.")
@@ -927,6 +1077,29 @@ def main(argv: Sequence[str] | None = None) -> int:
             openclaw_data_class=args.openclaw_data_class,
         )
         print(json.dumps({"run_id": run_id}, indent=2))
+        return 0
+
+    if args.command == "discount-swarm":
+        try:
+            runtime.resolve_repo(args.repo)
+        except KeyError as exc:
+            parser.error(str(exc))
+        try:
+            datetime.strptime(args.as_of_date, "%Y-%m-%d")
+        except ValueError:
+            parser.error(f"Invalid --as-of-date value: {args.as_of_date}")
+        if args.lookback_days < 1:
+            parser.error("--lookback-days must be >= 1")
+        plan = _build_discount_swarm_plan(
+            repo_slug=args.repo,
+            merchant=args.merchant.strip(),
+            as_of_date=args.as_of_date,
+            lookback_days=args.lookback_days,
+            provider=args.provider,
+            model=args.model,
+            stage=args.stage,
+        )
+        print(json.dumps(plan, indent=2, ensure_ascii=False))
         return 0
 
     if args.command == "run-task":
