@@ -35,6 +35,8 @@ def _resolve_executable_token(token: str) -> str | None:
     resolved = shutil.which(candidate)
     if resolved:
         return resolved
+    if Path(candidate).name == candidate:
+        return candidate
     return None
 
 

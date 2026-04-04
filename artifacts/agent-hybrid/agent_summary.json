@@ -1,96 +1,95 @@
 {
-  "status": "partial_failure",
+  "status": "fallback_success",
   "mode": "deep",
   "route": "fallback_local_mock",
-  "session_id": "20260404-local",
+  "session_id": "20260404-swarm-local",
   "loop_count": 6,
   "loop_results": [
     {
       "loop": 1,
       "name": "Discovery + baseline",
-      "result": "success",
-      "notes": "Git bootstrap and required context document reads completed."
+      "status": "success",
+      "notes": "Completed required context read and git bootstrap; origin/main unavailable in local clone."
     },
     {
       "loop": 2,
       "name": "Research + planning",
-      "result": "success",
-      "notes": "Roadmap/protocol alignment and risk triage completed."
+      "status": "success",
+      "notes": "Identified failing test surface in studio connection executable resolution and import-path test bootstrap gap."
     },
     {
       "loop": 3,
       "name": "Implementation + validation",
-      "result": "partial_failure",
-      "notes": "Lint fix implemented; pytest command had import-path failure and then 2 functional failures with PYTHONPATH."
+      "status": "success",
+      "notes": "Patched executable resolution fallback and added tests/conftest.py. Required lint/compile/targeted tests passed."
     },
     {
       "loop": 4,
       "name": "Reporting + collaboration updates",
-      "result": "success",
-      "notes": "Agent report drafted with task queue and evidence references."
+      "status": "success",
+      "notes": "Prepared updated agent_report and structured task queue/risks with label mapping."
     },
     {
       "loop": 5,
       "name": "Git sync and PR upsert",
-      "result": "partial_failure",
-      "notes": "No remote and no GitHub CLI, so PR sync/upsert could not be executed."
+      "status": "success",
+      "notes": "allow_write=false by contract; no branch push or draft PR creation attempted."
     },
     {
       "loop": 6,
       "name": "Final loop merge decision and execution",
-      "result": "partial_failure",
-      "notes": "Safe-gate merge could not run without remote PR context."
+      "status": "success",
+      "notes": "Merge skipped because allow_write=false and no remote/gh integration in runtime."
     }
   ],
   "merge_history": [
     {
       "loop": 5,
-      "action": "draft_pr_upsert",
-      "outcome": "failed",
-      "details": "gh command unavailable and no git remote configured"
+      "action": "pr_upsert",
+      "result": "skipped_allow_write_false"
     },
     {
       "loop": 6,
-      "action": "safe_gate_merge",
-      "outcome": "skipped",
-      "details": "No PR available to mark ready/merge"
+      "action": "merge_safe_gate",
+      "result": "skipped_allow_write_false"
     }
   ],
   "final_pr_url": null,
-  "final_merge_state": "not_attempted_no_remote",
-  "generated_at": "2026-04-04T00:00:00Z",
+  "final_merge_state": "not_attempted_allow_write_false",
+  "generated_at": "2026-04-04T03:31:05.333757+00:00",
   "findings": [
-    "Repository governance and roadmap are aligned around defensive, education-first security workflows.",
-    "Lint baseline had one unused import issue in substrate/studio/main.py and was remediated.",
-    "Targeted pytest command fails in clean env without PYTHONPATH and reveals two connection-test regressions when import path is fixed."
+    "Targeted studio tests originally failed because codex executable fallback rejected unresolved PATH token in test monkeypatch context.",
+    "Pytest invocation without PYTHONPATH failed to import substrate package in this environment; repo-level conftest path bootstrapping resolved it.",
+    "gh CLI is unavailable, so GitHub issue/PR intake could not be collected from API during this run."
   ],
   "risks": [
-    "Test command reproducibility risk due to unresolved substrate import path in default invocation.",
-    "Potential behavior/test mismatch in connection service command assembly.",
-    "Automation collaboration context is degraded when gh and remotes are unavailable."
+    "No origin/main ref in local checkout limits ahead/behind/divergence certainty.",
+    "Fallback executable token behavior can defer missing-binary detection to subprocess execution time.",
+    "Cloud-agent route was not exercised in this local run; cloud parity remains unverified."
   ],
   "tasks": [
     {
       "priority": "P1",
       "owner": "core_reliability",
-      "task": "Stabilize pytest path resolution for substrate package",
-      "acceptance_criteria": "Targeted test command passes from clean checkout without manual environment overrides"
+      "task": "Restore origin remote tracking and branch comparison in CI runner bootstrap.",
+      "acceptance_criteria": "git rev-parse origin/main succeeds and ahead/behind metrics are emitted in artifacts."
     },
     {
-      "priority": "P1",
-      "owner": "security_tooling",
-      "task": "Align run_connection_test behavior with tests or update tests with approved behavior",
-      "acceptance_criteria": "tests/studio/test_connection.py passes fully"
+      "priority": "P2",
+      "owner": "qa_release",
+      "task": "Add explicit test env bootstrap docs for local/uv pytest invocation.",
+      "acceptance_criteria": "Contributing docs include one canonical command path that passes in clean environment."
     },
     {
       "priority": "P2",
       "owner": "docs_community",
-      "task": "Document fallback behavior when gh CLI is absent",
-      "acceptance_criteria": "docs include git-only context procedure and known limitations"
+      "task": "Create issue templates for ai-ready security-toolkit tasks with acceptance criteria/evidence paths.",
+      "acceptance_criteria": "At least two templates merged and linked from ai-collaboration protocol."
     }
   ],
   "changed_files": [
-    "substrate/studio/main.py",
+    "substrate/studio/connection.py",
+    "tests/conftest.py",
     "artifacts/agent-hybrid/agent_summary.json",
     "artifacts/agent-hybrid/agent_report.md"
   ],
@@ -98,54 +97,40 @@
     {
       "loop": 3,
       "command": "uv run --with ruff ruff check substrate scripts tests",
-      "ok": false,
-      "return_code": 1,
-      "duration_seconds": 1
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 0.04
     },
     {
       "loop": 3,
       "command": "uv run python -m compileall substrate scripts",
       "ok": true,
       "return_code": 0,
-      "duration_seconds": 0
+      "duration_seconds": 0.06
     },
     {
       "loop": 3,
       "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
-      "ok": false,
-      "return_code": 2,
-      "duration_seconds": 4
-    },
-    {
-      "loop": 3,
-      "command": "uv run --with ruff ruff check substrate scripts tests",
       "ok": true,
       "return_code": 0,
-      "duration_seconds": 0
-    },
-    {
-      "loop": 3,
-      "command": "PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
-      "ok": false,
-      "return_code": 1,
-      "duration_seconds": 5
+      "duration_seconds": 4.94
     }
   ],
   "assumptions": [
-    "Defaults applied: mode=deep, target_branch=main, loop_count=6.",
-    "Cloud route unavailable in this shell, so fallback_local_mock route used.",
-    "No remotes configured means origin/main comparison fields are best-effort."
+    "Runtime defaults applied: mode=deep, target_branch=main, allow_write=false, loop_count=6.",
+    "Because gh is missing, collaboration context relies on local git log only.",
+    "Working tree was clean at session start based on initial status output."
   ],
   "next_cycle_focus": [
-    "Fix test import path ergonomics",
-    "Resolve studio connection behavior regressions",
-    "Restore remote+gh integration for rolling PR automation"
+    "Re-enable cloud_agent route and capture cloud failure telemetry when unavailable.",
+    "Expand deterministic tests around connection executable resolution edge cases.",
+    "Improve git bootstrap resilience when remotes are partially configured."
   ],
   "git_context": {
-    "current_branch": "agent/swarm-20260404-local",
+    "current_branch": "work",
     "target_branch": "main",
-    "head_sha": "f4214671c029ced7ec93e9f0a8aff6e699752f04",
-    "target_sha": null,
+    "head_sha": "1dd5259e79c9d571458462c09b08702d4ace4840",
+    "target_sha": "UNAVAILABLE",
     "ahead_count": 0,
     "behind_count": 0,
     "diverged": false,
@@ -155,11 +140,11 @@
   "git_actions": [
     {
       "command": "git rev-parse --is-inside-work-tree",
-      "outcome": "success"
+      "outcome": "success:true"
     },
     {
       "command": "git remote -v",
-      "outcome": "success_no_remotes"
+      "outcome": "success:empty-remotes"
     },
     {
       "command": "git status --porcelain --branch",
@@ -167,39 +152,35 @@
     },
     {
       "command": "git branch --show-current",
-      "outcome": "success"
+      "outcome": "success:work"
     },
     {
       "command": "git fetch --all --prune",
       "outcome": "success_no_remotes"
     },
     {
-      "command": "git log --oneline --decorate -n 30",
+      "command": "git log --oneline --decorate -n 50",
       "outcome": "success"
     },
     {
       "command": "git rev-parse HEAD",
-      "outcome": "success"
+      "outcome": "success:1dd5259e79c9d571458462c09b08702d4ace4840"
     },
     {
       "command": "git rev-parse origin/main",
-      "outcome": "failed_missing_ref"
+      "outcome": "failed:unknown_revision"
     },
     {
       "command": "git diff --name-status origin/main...HEAD",
-      "outcome": "failed_missing_ref"
+      "outcome": "failed:unknown_revision"
     },
     {
       "command": "gh issue list --state open --limit 50 --json number,title,labels,url,updatedAt",
-      "outcome": "failed_gh_unavailable"
+      "outcome": "failed:gh_not_found"
     },
     {
       "command": "gh pr list --state open --limit 30 --json number,title,headRefName,baseRefName,url,updatedAt",
-      "outcome": "failed_gh_unavailable"
-    },
-    {
-      "command": "git checkout -b agent/swarm-20260404-local",
-      "outcome": "success"
+      "outcome": "failed:gh_not_found"
     }
   ]
 }
