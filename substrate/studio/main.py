@@ -19,7 +19,7 @@ from substrate.registry import SubstrateRuntime
 from .connection import codex_diagnostics, start_device_auth, test_connection
 from .db import init_database
 from .deployment import DeploymentRequest, get_task_status, install_headless_task, uninstall_headless_task
-from .models import AppConfig, Job, RunRecord
+from .models import Job, RunRecord
 from .notification_service import DEFAULT_NOTIFICATION_TO, compute_notification_readiness, send_test_notification
 from .preflight import run_preflight
 from .rc2.services.cloud_service import assert_cloud_readiness, compute_cloud_readiness
