@@ -6,7 +6,13 @@ from typing import Any
 
 import yaml
 
-from .models import PolicyConfig, RepositoryConfig, TaskConfig, WorkspaceConfig
+from .models import (
+    PolicyConfig,
+    RepositoryConfig,
+    SchedulerConfig,
+    TaskConfig,
+    WorkspaceConfig,
+)
 
 WORKSPACE_FILE = "workspace.yaml"
 UPSTREAMS_FILE = "upstreams.yaml"
@@ -332,6 +338,25 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
             "policy.rc1_openclaw_allowed_data_classes must stay within synthetic|redacted."
         )
 
+    raw_scheduler = payload.get("scheduler", {})
+    if raw_scheduler and not isinstance(raw_scheduler, dict):
+        raise ValueError("workspace.yaml scheduler must be a mapping.")
+    scheduler = SchedulerConfig(
+        enabled=bool(raw_scheduler.get("enabled", True)),
+        default_repo_slug=str(raw_scheduler.get("default_repo_slug", "substrate-core")),
+        default_stage=str(raw_scheduler.get("default_stage", "local")).lower(),
+        windows_features_enabled=bool(
+            raw_scheduler.get("windows_features_enabled", False)
+        ),
+        windows_app_mode_enabled=bool(
+            raw_scheduler.get("windows_app_mode_enabled", False)
+        ),
+    )
+    if scheduler.default_stage not in set(policy.stage_sequence):
+        raise ValueError(
+            "scheduler.default_stage must be present in policy.stage_sequence."
+        )
+
     repositories: dict[str, RepositoryConfig] = {}
     raw_repositories = payload.get("repositories")
     if raw_repositories is None:
@@ -380,6 +405,7 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
         root=root,
         repositories=repositories,
         policy=policy,
+        scheduler=scheduler,
         auto_discovery_enabled=auto_discovery_enabled,
         auto_discovery_roots=auto_discovery_roots,
         auto_discovery_max_depth=auto_discovery_max_depth,

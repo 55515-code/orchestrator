@@ -98,10 +98,20 @@ class PolicyConfig:
 
 
 @dataclass(slots=True)
+class SchedulerConfig:
+    enabled: bool = True
+    default_repo_slug: str = "substrate-core"
+    default_stage: str = "local"
+    windows_features_enabled: bool = False
+    windows_app_mode_enabled: bool = False
+
+
+@dataclass(slots=True)
 class WorkspaceConfig:
     root: Path
     repositories: dict[str, RepositoryConfig]
     policy: PolicyConfig
+    scheduler: SchedulerConfig = field(default_factory=SchedulerConfig)
     auto_discovery_enabled: bool = True
     auto_discovery_roots: list[Path] = field(default_factory=list)
     auto_discovery_max_depth: int = 2

@@ -6,6 +6,7 @@ import subprocess
 import time
 import traceback
 import uuid
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -16,6 +17,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from .environment import platform_key
 from .learning import record_execution
+from .models import TaskConfig
 from .reliability import (
     CheckpointStore,
     ExecutionTarget,
@@ -100,6 +102,30 @@ def _p95(values: list[float]) -> float:
     ordered = sorted(values)
     index = int(round(0.95 * (len(ordered) - 1)))
     return float(ordered[index])
+
+
+@dataclass(slots=True, frozen=True)
+class ScheduledJobSpec:
+    repo_slug: str
+    stage: str
+    requested_mode: str
+    command: list[str]
+    workdir: str = "."
+    allow_mutations: bool = True
+    allow_stage_skip: bool = False
+    timeout_seconds: float | None = None
+    env: dict[str, str] = field(default_factory=dict)
+    run_id: str | None = None
+    description: str = "Scheduled orchestrator job"
+
+
+@dataclass(slots=True, frozen=True)
+class ScheduledJobResult:
+    run_id: str
+    status: str
+    exit_code: int | None
+    artifact_path: str | None
+    error_text: str | None
 
 
 class Orchestrator:
@@ -1128,6 +1154,82 @@ class Orchestrator:
 
         return run_id
 
+    def run_scheduled_job(self, *, spec: ScheduledJobSpec) -> ScheduledJobResult:
+        if not spec.command:
+            raise ValueError("Scheduled job command must not be empty.")
+        if spec.requested_mode not in {"observe", "mutate"}:
+            raise ValueError("Scheduled job requested_mode must be observe|mutate.")
+
+        repo = self.runtime.resolve_repo(spec.repo_slug)
+        scheduled_run_id = spec.run_id or self._new_run_id()
+        temp_task_id = f"studio_scheduled_{uuid.uuid4().hex[:12]}"
+        repo.tasks[temp_task_id] = TaskConfig(
+            id=temp_task_id,
+            description=spec.description,
+            command=[str(part) for part in spec.command],
+            workdir=spec.workdir,
+            mode=spec.requested_mode,  # type: ignore[arg-type]
+        )
+        run_id = scheduled_run_id
+        try:
+            run_id = self.run_task(
+                repo_slug=spec.repo_slug,
+                task_id=temp_task_id,
+                stage=spec.stage,
+                requested_mode=spec.requested_mode,
+                allow_mutations=spec.allow_mutations,
+                allow_stage_skip=spec.allow_stage_skip,
+                extra_env=spec.env,
+                execution_timeout_seconds=spec.timeout_seconds,
+                run_id=scheduled_run_id,
+            )
+        except Exception:
+            run_row = self.runtime.db.get_run(run_id) or {}
+            raw_exit_code = run_row.get("exit_code")
+            exit_code = int(raw_exit_code) if isinstance(raw_exit_code, int) else None
+            artifact_path = (
+                str(run_row.get("run_dir"))
+                if isinstance(run_row.get("run_dir"), str)
+                else None
+            )
+            error_text = (
+                str(run_row.get("error_text"))
+                if isinstance(run_row.get("error_text"), str)
+                else None
+            )
+            status = str(run_row.get("status") or "failed")
+            return ScheduledJobResult(
+                run_id=run_id,
+                status=status,
+                exit_code=exit_code,
+                artifact_path=artifact_path,
+                error_text=error_text,
+            )
+        finally:
+            repo.tasks.pop(temp_task_id, None)
+
+        run_row = self.runtime.db.get_run(run_id) or {}
+        raw_exit_code = run_row.get("exit_code")
+        exit_code = int(raw_exit_code) if isinstance(raw_exit_code, int) else None
+        artifact_path = (
+            str(run_row.get("run_dir"))
+            if isinstance(run_row.get("run_dir"), str)
+            else None
+        )
+        error_text = (
+            str(run_row.get("error_text"))
+            if isinstance(run_row.get("error_text"), str)
+            else None
+        )
+        status = str(run_row.get("status") or "unknown")
+        return ScheduledJobResult(
+            run_id=run_id,
+            status=status,
+            exit_code=exit_code,
+            artifact_path=artifact_path,
+            error_text=error_text,
+        )
+
     def run_task(
         self,
         *,
@@ -1137,6 +1239,8 @@ class Orchestrator:
         requested_mode: str | None = None,
         allow_mutations: bool = False,
         allow_stage_skip: bool = False,
+        extra_env: dict[str, str] | None = None,
+        execution_timeout_seconds: float | None = None,
         run_id: str | None = None,
     ) -> str:
         repo = self.runtime.resolve_repo(repo_slug)
@@ -1198,8 +1302,25 @@ class Orchestrator:
             }
         repo_root = (self.runtime.root / repo.path).resolve()
         run_workdir = (repo_root / task.workdir).resolve()
+        command_env = {
+            **os.environ,
+            "SUBSTRATE_MODE": mode,
+            "SUBSTRATE_REPO_SLUG": repo_slug,
+            "SUBSTRATE_RUN_ID": run_id or "",
+        }
+        if extra_env:
+            command_env.update(
+                {
+                    str(key): str(value)
+                    for key, value in extra_env.items()
+                    if str(key).strip()
+                }
+            )
+        if execution_timeout_seconds is not None and execution_timeout_seconds <= 0:
+            raise ValueError("execution_timeout_seconds must be > 0 when provided.")
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         run_id = run_id or self._new_run_id()
+        command_env["SUBSTRATE_RUN_ID"] = run_id
         log_dir = self.runtime.paths["memory"] / "task-runs"
         log_dir.mkdir(parents=True, exist_ok=True)
         log_path = log_dir / f"{timestamp}-{run_id[:8]}.log"
@@ -1219,6 +1340,8 @@ class Orchestrator:
                 "command": command,
                 "workdir": str(run_workdir),
                 "pass_sequence": self.runtime.workspace.policy.pass_sequence,
+                "extra_env_keys": sorted((extra_env or {}).keys()),
+                "execution_timeout_seconds": execution_timeout_seconds,
                 "bounded_validation": bounded_validation_policy,
             },
         )
@@ -1319,10 +1442,15 @@ class Orchestrator:
         attempt_limit = (
             int(policy.rc1_validation_max_attempts) if bounded_validation else 1
         )
+        external_timeout_seconds = (
+            float(execution_timeout_seconds)
+            if execution_timeout_seconds is not None
+            else None
+        )
         per_attempt_timeout_seconds = (
             float(policy.rc1_validation_attempt_timeout_seconds)
             if bounded_validation
-            else 0.0
+            else (external_timeout_seconds or 0.0)
         )
         deadline_at = (
             time.monotonic() + float(policy.rc1_validation_deadline_seconds)
@@ -1400,6 +1528,8 @@ class Orchestrator:
                     )
                     last_failure_state = "failed_retryable"
                     break
+            elif external_timeout_seconds is not None:
+                timeout_budget = external_timeout_seconds
 
             attempts_used = attempt
             transition_index = self._record_task_lifecycle_transition(
@@ -1485,10 +1615,7 @@ class Orchestrator:
                         command=command,
                         cwd=run_workdir,
                         env={
-                            **os.environ,
-                            "SUBSTRATE_MODE": mode,
-                            "SUBSTRATE_REPO_SLUG": repo_slug,
-                            "SUBSTRATE_RUN_ID": run_id,
+                            **command_env,
                             "SUBSTRATE_VALIDATION_ATTEMPT": str(attempt),
                         },
                         timeout_seconds=timeout_budget,
@@ -1515,10 +1642,7 @@ class Orchestrator:
                         check=False,
                         timeout=timeout_budget,
                         env={
-                            **os.environ,
-                            "SUBSTRATE_MODE": mode,
-                            "SUBSTRATE_REPO_SLUG": repo_slug,
-                            "SUBSTRATE_RUN_ID": run_id,
+                            **command_env,
                             "SUBSTRATE_VALIDATION_ATTEMPT": str(attempt),
                         },
                     )

@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codex Scheduler Studio</title>
+    <link rel="stylesheet" href="/studio-static/styles.css" />
+  </head>
+  <body>
+    <div class="ambient"></div>
+    <main class="layout">
+      <header class="topbar card">
+        <div>
+          <h1>Codex Scheduler Studio</h1>
+          <p>Schedule Codex jobs, run them safely, and review outcomes.</p>
+        </div>
+        <div class="status-group">
+          <span class="badge info" id="healthBadge">checking...</span>
+          <span class="badge info" id="preflightBadge">runtime checking...</span>
+          <button class="btn btn-secondary" id="refreshAllBtn">Refresh</button>
+        </div>
+      </header>
+
+      <section class="grid">
+        <article class="card job-panel">
+          <div class="section-head">
+            <h2>Jobs</h2>
+            <input id="jobSearch" type="search" placeholder="Search jobs..." />
+          </div>
+          <div id="jobList" class="job-list"></div>
+        </article>
+
+        <article class="card form-panel">
+          <div class="section-head">
+            <h2 id="formTitle">Create Job</h2>
+            <button class="btn btn-tertiary" id="resetFormBtn">Reset</button>
+          </div>
+          <form id="jobForm">
+            <input type="hidden" id="jobId" />
+            <div class="field-grid">
+              <label>
+                <span>Name</span>
+                <input id="name" required maxlength="120" />
+              </label>
+              <label>
+                <span>Mode</span>
+                <select id="mode">
+                  <option value="exec">exec (local)</option>
+                  <option value="cloud_exec">cloud_exec</option>
+                </select>
+              </label>
+              <label>
+                <span>Schedule Type</span>
+                <select id="scheduleType">
+                  <option value="cron">cron</option>
+                  <option value="interval">interval</option>
+                </select>
+              </label>
+              <label id="cronGroup">
+                <span>Cron (5-part)</span>
+                <input id="cronExpr" placeholder="*/15 * * * *" />
+              </label>
+              <label id="intervalGroup" class="hidden">
+                <span>Interval (minutes)</span>
+                <input id="intervalMinutes" type="number" min="1" step="1" value="60" />
+              </label>
+              <label>
+                <span>Sandbox</span>
+                <select id="sandbox">
+                  <option value="read-only">read-only</option>
+                  <option value="workspace-write">workspace-write</option>
+                  <option value="danger-full-access">danger-full-access</option>
+                </select>
+              </label>
+              <label>
+                <span>Timeout (seconds)</span>
+                <input id="timeoutSeconds" type="number" min="30" max="86400" value="1800" />
+              </label>
+              <label>
+                <span>Extra Codex Args (JSON array or string)</span>
+                <input id="codexArgs" placeholder='["--profile","default"]' />
+              </label>
+              <label>
+                <span>Job Env JSON</span>
+                <input id="jobEnvJson" placeholder='{"MY_FLAG":"1"}' />
+              </label>
+              <label class="inline">
+                <input id="notifyEmailEnabled" type="checkbox" />
+                <span>Email status updates</span>
+              </label>
+              <label id="notifyEmailToGroup" class="hidden">
+                <span>Email recipient (optional override)</span>
+                <input id="notifyEmailTo" placeholder="adarnell@concepts2code.com" />
+                <p class="helper">Leave blank to use the global default recipient.</p>
+              </label>
+              <label>
+                <span>Working Directory</span>
+                <input id="workingDirectory" value="." />
+              </label>
+              <label id="cloudEnvGroup" class="hidden">
+                <span>Cloud Target</span>
+                <div class="cloud-target-stack">
+                  <label class="inline">
+                    <input id="jobUseDefaultCloudTarget" type="checkbox" checked />
+                    <span>Use global cloud target</span>
+                  </label>
+                  <select id="jobCloudTargetSelect" class="hidden"></select>
+                  <p class="helper" id="jobCloudTargetHint">This job will inherit the global cloud target.</p>
+                  <details class="advanced-panel hidden" id="jobCloudTargetManualPanel">
+                    <summary>Advanced: Manual Cloud Target ID</summary>
+                    <input id="jobCloudTargetManual" placeholder="owner/repo or target id" />
+                  </details>
+                </div>
+              </label>
+              <label id="cloudGateGroup" class="hidden">
+                <span>Cloud Ready Check</span>
+                <div class="cloud-gate-inline">
+                  <span class="badge info" id="jobCloudGateBadge">Not checked</span>
+                  <button class="btn btn-secondary" type="button" id="jobCloudGateBtn">Check</button>
+                </div>
+              </label>
+              <label id="attemptsGroup" class="hidden">
+                <span>Attempts</span>
+                <input id="attempts" type="number" min="1" max="4" value="1" />
+              </label>
+              <label class="inline">
+                <input id="enabled" type="checkbox" checked />
+                <span>Enabled</span>
+              </label>
+            </div>
+            <label class="prompt-field">
+              <span>Prompt</span>
+              <textarea id="prompt" required rows="8"></textarea>
+            </label>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit" id="saveBtn">Create Job</button>
+            </div>
+          </form>
+        </article>
+      </section>
+
+      <section class="card history-panel">
+        <div class="section-head">
+          <h2>Run History</h2>
+          <button class="btn btn-secondary" id="refreshRunsBtn">Refresh Runs</button>
+        </div>
+        <div id="runTableWrap" class="run-table-wrap"></div>
+      </section>
+
+      <section class="grid">
+        <article class="card form-panel">
+          <div class="section-head">
+            <h2>Execution Settings</h2>
+            <button class="btn btn-secondary" id="reloadSettingsBtn">Reload</button>
+          </div>
+          <div class="connection-panel">
+            <h3>Connection</h3>
+            <div class="connection-status-row">
+              <span class="badge info" id="connectionStateBadge">Checking...</span>
+              <span class="connection-meta" id="connectionMeta">Checking Codex connection...</span>
+            </div>
+            <div class="connection-status-row">
+              <span class="badge info" id="runtimeDiagnosticBadge">Desktop runtime unknown</span>
+              <span class="connection-meta" id="runtimeDiagnosticSummary">Checking packaged backend runtime status...</span>
+            </div>
+            <div class="actions connection-actions">
+              <button class="btn btn-primary" type="button" id="connectAccountBtn">Connect Account</button>
+              <button class="btn btn-secondary" type="button" id="testConnectionBtn">Test Connection</button>
+              <button class="btn btn-secondary" type="button" id="refreshConnectionBtn">Refresh Status</button>
+            </div>
+            <div class="auth-card hidden" id="deviceAuthCard">
+              <div class="auth-step">
+                <p>1. Open secure sign-in page</p>
+                <div class="auth-inline">
+                  <button class="btn btn-secondary" type="button" id="openVerificationBtn">Open Sign-In Page</button>
+                  <span id="verificationUrlText" class="code-inline"></span>
+                </div>
+              </div>
+              <div class="auth-step">
+                <p>2. Enter one-time code</p>
+                <div class="auth-inline">
+                  <span id="deviceCodeText" class="code-pill">----</span>
+                  <button class="btn btn-secondary" type="button" id="copyDeviceCodeBtn">Copy Code</button>
+                </div>
+                <p class="helper" id="deviceCodeExpiry"></p>
+              </div>
+            </div>
+            <p id="connectionHint" class="helper"></p>
+            <p id="connectionError" class="helper connection-error hidden"></p>
+            <div class="cloud-ready-panel">
+              <div class="wizard-head">
+                <div>
+                  <h3>Cloud Setup Wizard</h3>
+                  <p class="helper">A guided path from account sign-in to cloud schedule readiness.</p>
+                </div>
+                <span class="badge info" id="cloudWizardBadge">Step 1 of 4</span>
+              </div>
+              <div class="wizard-steps" aria-label="Cloud setup steps">
+                <div class="wizard-step" id="wizardStepAccount">
+                  <span class="wizard-step-index">1</span>
+                  <div>
+                    <strong>Account session check</strong>
+                    <p>Confirm the connected account is available for cloud execution.</p>
+                  </div>
+                </div>
+                <div class="wizard-step" id="wizardStepEnv">
+                  <span class="wizard-step-index">2</span>
+                  <div>
+                    <strong>Select cloud target</strong>
+                    <p>Choose an account-backed cloud target and use it as the global default.</p>
+                  </div>
+                </div>
+                <div class="wizard-step" id="wizardStepReady">
+                  <span class="wizard-step-index">3</span>
+                  <div>
+                    <strong>Validate cloud readiness</strong>
+                    <p>Run the readiness check with the current env and working directory.</p>
+                  </div>
+                </div>
+                <div class="wizard-step" id="wizardStepLaunch">
+                  <span class="wizard-step-index">4</span>
+                  <div>
+                    <strong>Ready to enable cloud schedules</strong>
+                    <p>Only enable cloud jobs when readiness is green.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="connection-status-row">
+                <span class="badge info" id="cloudReadyBadge">Cloud readiness unknown</span>
+                <span class="connection-meta" id="cloudReadySummary">Run cloud readiness check before enabling cloud schedules.</span>
+              </div>
+              <div class="cloud-ready-meta">
+                <span class="connection-meta" id="cloudReadyEnvMeta">Env source: n/a</span>
+                <span class="connection-meta" id="cloudReadyResolvedMeta">Resolved env: n/a</span>
+              </div>
+              <div class="actions connection-actions">
+                <button class="btn btn-secondary" type="button" id="checkCloudReadyBtn">Check Cloud Readiness</button>
+                <button class="btn btn-secondary" type="button" id="refreshCloudTargetsBtn">Refresh Cloud Targets</button>
+                <button class="btn btn-secondary" type="button" id="cloudResolveStuckBtn">Resolve Stuck State</button>
+                <button class="btn btn-secondary" type="button" id="cloudFixReauthBtn">Reconnect Account</button>
+                <button class="btn btn-secondary" type="button" id="cloudFixFallbackBtn">Enable Automation Credential</button>
+              </div>
+            </div>
+          </div>
+          <form id="settingsForm">
+            <div class="connection-panel email-panel">
+              <h3>Email Delivery</h3>
+              <div class="connection-status-row">
+                <span class="badge info" id="notificationReadyBadge">Email readiness unknown</span>
+                <span class="connection-meta" id="notificationReadySummary">Configure SMTP relay settings to enable status notifications.</span>
+              </div>
+              <div class="actions connection-actions">
+                <button class="btn btn-secondary" type="button" id="refreshNotificationReadyBtn">Check Email Readiness</button>
+                <button class="btn btn-secondary" type="button" id="sendTestEmailBtn">Send Test Email</button>
+              </div>
+              <p id="notificationStatus" class="helper"></p>
+            </div>
+            <div class="field-grid">
+              <label class="inline">
+                <input id="settingsNotificationsEnabled" type="checkbox" checked />
+                <span>Global notifications enabled</span>
+              </label>
+              <label>
+                <span>Default recipient</span>
+                <input id="settingsDefaultNotificationTo" value="adarnell@concepts2code.com" />
+              </label>
+              <label>
+                <span>SMTP provider preset</span>
+                <select id="settingsSmtpPreset">
+                  <option value="custom">Custom</option>
+                  <option value="sendgrid">SendGrid SMTP</option>
+                  <option value="ses">AWS SES SMTP</option>
+                </select>
+              </label>
+              <label>
+                <span>SMTP security</span>
+                <select id="settingsSmtpSecurity">
+                  <option value="starttls">STARTTLS</option>
+                  <option value="ssl">SSL/TLS</option>
+                  <option value="none">None (local test relay)</option>
+                </select>
+              </label>
+              <label>
+                <span>SMTP host</span>
+                <input id="settingsSmtpHost" placeholder="smtp.sendgrid.net" />
+              </label>
+              <label>
+                <span>SMTP port</span>
+                <input id="settingsSmtpPort" type="number" min="1" max="65535" value="587" />
+              </label>
+              <label>
+                <span>SMTP username</span>
+                <input id="settingsSmtpUsername" placeholder="apikey" />
+              </label>
+              <label>
+                <span>From email</span>
+                <input id="settingsSmtpFromEmail" placeholder="noreply@example.com" />
+              </label>
+              <label>
+                <span>Codex Executable</span>
+                <input id="settingsCodexExecutable" value="codex" />
+              </label>
+              <label>
+                <span>Codex Home (optional)</span>
+                <input id="settingsCodexHome" />
+              </label>
+              <label>
+                <span>Default Working Directory</span>
+                <input id="settingsWorkingDirectory" value="." />
+              </label>
+              <label>
+                <span>Default Cloud Target</span>
+                <select id="settingsDefaultCloudTargetSelect"></select>
+              </label>
+              <label>
+                <span>Cloud Target Source</span>
+                <div class="cloud-target-stack">
+                  <button class="btn btn-secondary" type="button" id="refreshCloudTargetsInlineBtn">Refresh Targets</button>
+                  <p class="helper" id="cloudTargetsStatus">Load cloud targets from the connected account.</p>
+                  <details class="advanced-panel" id="settingsCloudTargetManualPanel">
+                    <summary>Advanced: Manual Cloud Target ID</summary>
+                    <input id="settingsDefaultCloudEnvId" placeholder="owner/repo or target id" />
+                  </details>
+                </div>
+              </label>
+              <label>
+                <span>API Key Env Var Name</span>
+                <input id="settingsApiEnvVar" value="OPENAI_API_KEY" />
+              </label>
+              <label>
+                <span>Global Env JSON</span>
+                <input id="settingsGlobalEnvJson" placeholder='{"HTTP_PROXY":"http://proxy:8080"}' />
+              </label>
+            </div>
+            <details class="advanced-panel">
+              <summary>Advanced: SMTP Password</summary>
+              <div class="field-grid">
+                <label>
+                  <span>Set / Rotate SMTP Password</span>
+                  <input id="settingsSmtpPassword" type="password" placeholder="Stored in OS keyring" />
+                </label>
+              </div>
+              <div class="actions">
+                <button class="btn btn-secondary" type="button" id="clearSmtpPasswordBtn">Clear SMTP Password</button>
+              </div>
+            </details>
+            <details class="advanced-panel">
+              <summary>Advanced: API Key Fallback</summary>
+              <div class="field-grid">
+                <label>
+                  <span>Set / Rotate API Key</span>
+                  <input id="settingsApiKey" type="password" placeholder="Optional fallback if account auth is unavailable" />
+                </label>
+              </div>
+              <div class="actions">
+                <button class="btn btn-secondary" type="button" id="useApiModeBtn">Use API Key Mode</button>
+                <button class="btn btn-secondary" type="button" id="clearApiKeyBtn">Clear API Key</button>
+              </div>
+            </details>
+            <div class="actions">
+              <button class="btn btn-secondary" type="button" id="useAccountModeBtn">Use Account Mode</button>
+              <button class="btn btn-primary" type="submit">Save Settings</button>
+            </div>
+            <p id="settingsStatus" class="helper"></p>
+          </form>
+        </article>
+
+        <article class="card form-panel">
+          <div class="section-head">
+            <h2>Headless Host Deployment</h2>
+            <button class="btn btn-secondary" id="checkDeploymentBtn">Check</button>
+          </div>
+          <form id="deploymentForm">
+            <div class="field-grid">
+              <label>
+                <span>Task Name</span>
+                <input id="deployTaskName" value="CodexSchedulerStudioHost" />
+              </label>
+              <label>
+                <span>Host</span>
+                <input id="deployHost" value="127.0.0.1" />
+              </label>
+              <label>
+                <span>Port</span>
+                <input id="deployPort" type="number" min="1" max="65535" value="8787" />
+              </label>
+              <label>
+                <span>Python Path</span>
+                <input id="deployPythonPath" value="python" />
+              </label>
+              <label>
+                <span>Run As User</span>
+                <input id="deployUser" placeholder="DOMAIN\\User or AzureAD\\User" />
+              </label>
+              <label>
+                <span>Logon Type</span>
+                <select id="deployLogonType">
+                  <option value="interactive">interactive</option>
+                  <option value="s4u">s4u</option>
+                  <option value="password">password</option>
+                </select>
+              </label>
+              <label id="deployPasswordGroup" class="hidden">
+                <span>Password</span>
+                <input id="deployPassword" type="password" />
+              </label>
+              <label>
+                <span>Run Level</span>
+                <select id="deployRunLevel">
+                  <option value="limited">limited</option>
+                  <option value="highest">highest</option>
+                </select>
+              </label>
+            </div>
+            <div class="actions">
+              <button class="btn btn-danger" type="button" id="removeDeploymentBtn">Remove Task</button>
+              <button class="btn btn-primary" type="submit">Install/Update Task</button>
+            </div>
+            <p id="deploymentStatus" class="helper"></p>
+          </form>
+          <div class="connection-panel email-panel">
+            <h3>Windows App Mode</h3>
+            <p class="helper">Run as desktop-style app with startup host service + tray launcher.</p>
+            <div class="actions connection-actions">
+              <button class="btn btn-secondary" type="button" id="windowsInstallBtn">Install App Mode</button>
+              <button class="btn btn-secondary" type="button" id="windowsUninstallBtn">Uninstall App Mode</button>
+              <button class="btn btn-secondary" type="button" id="windowsStartHostBtn">Start Host</button>
+              <button class="btn btn-secondary" type="button" id="windowsStopHostBtn">Stop Host</button>
+            </div>
+            <p id="windowsStatus" class="helper"></p>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <template id="jobItemTemplate">
+      <div class="job-item">
+        <div class="job-main">
+          <h3 class="job-name"></h3>
+          <p class="job-sub"></p>
+        </div>
+        <div class="job-meta">
+          <span class="badge status-badge"></span>
+          <div class="job-actions">
+            <button class="btn btn-tertiary run-now-btn">Run Now</button>
+            <button class="btn btn-secondary edit-btn">Edit</button>
+            <button class="btn btn-secondary toggle-btn"></button>
+            <button class="btn btn-danger delete-btn">Delete</button>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <script src="/studio-static/app.js"></script>
+  </body>
+</html>
