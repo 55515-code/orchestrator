@@ -9,6 +9,30 @@ from substrate.web import _validate_openclaw_data_class
 
 
 class OpenClawEntrypointValidationTest(unittest.TestCase):
+    def test_cli_spawn_agent_workloads_aliases_parse(self) -> None:
+        parser = _build_parser()
+        parsed = parser.parse_args(
+            [
+                "spawn-agent-workloads-now",
+                "--cycle",
+                "3",
+                "--repo",
+                "substrate-core",
+                "--stage",
+                "local",
+                "--concurrency-limit",
+                "10",
+                "--agent-provider",
+                "mock",
+                "--population-scale",
+                "0.5",
+            ]
+        )
+        self.assertEqual("spawn-agent-workloads-now", parsed.command)
+        self.assertEqual(3, parsed.cycle)
+        self.assertEqual(10, parsed.concurrency_limit)
+        self.assertEqual(0.5, parsed.population_scale)
+
     def test_cli_rejects_unapproved_openclaw_data_class(self) -> None:
         parser = _build_parser()
         with self.assertRaises(SystemExit):
@@ -52,4 +76,3 @@ class OpenClawEntrypointValidationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
