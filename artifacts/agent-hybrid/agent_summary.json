@@ -1,0 +1,102 @@
+{
+  "status": "fallback_success",
+  "mode": "deep",
+  "route": "fallback_local_mock",
+  "generated_at": "2026-04-04T02:46:44Z",
+  "findings": [
+    "Repository is a valid git workspace on branch 'work', but no remotes are configured so origin/main comparison is unavailable.",
+    "Required docs docs/ai-collaboration.md and docs/security-toolkit-roadmap.md are missing from the repository.",
+    "Ruff baseline check currently fails with 3 lint violations in scripts/.",
+    "Targeted Studio pytest command fails because tests/studio/test_connection.py does not exist."
+  ],
+  "risks": [
+    "Missing docs referenced by operator prompt reduce collaboration consistency and onboarding completeness.",
+    "Lint debt in scripts/ can hide defects and blocks strict CI adoption.",
+    "Test path drift indicates QA command contracts may be stale and can create false confidence."
+  ],
+  "tasks": [
+    {
+      "priority": "P1",
+      "owner": "core_reliability",
+      "task": "Restore/author docs/ai-collaboration.md and docs/security-toolkit-roadmap.md or update required-context contract.",
+      "acceptance_criteria": "Both files exist with current process guidance, or automation prompt points at valid replacements and docs index links resolve."
+    },
+    {
+      "priority": "P1",
+      "owner": "qa_release",
+      "task": "Fix baseline lint errors in scripts/generate_cosmic_wallpapers.py, scripts/generate_status_page.py, scripts/substrate_cli.py.",
+      "acceptance_criteria": "uv run --with ruff ruff check substrate scripts tests exits 0."
+    },
+    {
+      "priority": "P2",
+      "owner": "qa_release",
+      "task": "Align targeted Studio pytest command with actual test layout.",
+      "acceptance_criteria": "Documented targeted command executes existing tests and returns exit code 0 in CI."
+    },
+    {
+      "priority": "P2",
+      "owner": "docs_community",
+      "task": "Add fallback guidance for environments without git remote/gh CLI.",
+      "acceptance_criteria": "Runbook includes explicit degraded-mode behavior and expected artifact fields."
+    }
+  ],
+  "changed_files": [
+    "artifacts/agent-hybrid/agent_summary.json",
+    "artifacts/agent-hybrid/agent_report.md"
+  ],
+  "test_results": [
+    {
+      "command": "uv run --with ruff ruff check substrate scripts tests",
+      "ok": false,
+      "return_code": 1,
+      "duration_seconds": 3.071
+    },
+    {
+      "command": "uv run python -m compileall substrate scripts",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 0.5
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+      "ok": false,
+      "return_code": 4,
+      "duration_seconds": 7.722
+    }
+  ],
+  "assumptions": [
+    "Runtime inputs were not provided; defaults applied (mode=deep, target_branch=main, allow_write=false).",
+    "Cloud route unavailable in this local runtime; proceeded with fallback_local_mock route.",
+    "No origin remote implies ahead/behind counts cannot be computed against origin/main."
+  ],
+  "next_cycle_focus": [
+    "Re-establish remote tracking to enable divergence and PR automation.",
+    "Repair lint/test baseline to make deterministic QA green.",
+    "Restore missing collaboration docs and wire them into README/docs index."
+  ],
+  "git_context": {
+    "current_branch": "work",
+    "target_branch": "main",
+    "head_sha": "2d22b722fa4a57afdc458ad08472ffd1f8cbaf75",
+    "target_sha": "unavailable (origin/main missing)",
+    "ahead_count": 0,
+    "behind_count": 0,
+    "diverged": false,
+    "working_tree_clean_start": true,
+    "working_tree_clean_end": false
+  },
+  "git_actions": [
+    "git rev-parse --is-inside-work-tree => true",
+    "git remote -v => no remotes configured",
+    "git status --porcelain --branch => clean at start on branch work",
+    "git branch --show-current => work",
+    "git fetch --all --prune => no remotes to fetch",
+    "git log --oneline --decorate -n 30 => success",
+    "git rev-parse HEAD => 2d22b722fa4a57afdc458ad08472ffd1f8cbaf75",
+    "git rev-parse origin/main => failed (unknown revision)",
+    "git diff --name-status origin/main...HEAD => not executed due missing origin/main",
+    "gh issue list => failed (gh not installed)",
+    "gh pr list => failed (gh not installed)",
+    "Created artifacts/agent-hybrid/agent_summary.json and agent_report.md"
+  ]
+}
