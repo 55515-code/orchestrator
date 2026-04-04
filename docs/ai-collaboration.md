@@ -7,6 +7,7 @@ the durable protocol for coordinated autonomous contribution.
 - Accelerate safe, test-backed development through hybrid automation.
 - Keep collaboration transparent through reproducible artifacts and draft PRs.
 - Encourage open-source contributors (human and AI) to pick up scoped tasks.
+- Prioritize an education-first AI security toolkit built from orchestrator core + Studio UX.
 
 ## Operating Model
 - PR events run deterministic CI checks.
@@ -15,9 +16,20 @@ the durable protocol for coordinated autonomous contribution.
   still publishes artifacts.
 - Autonomous writes are limited to branch push + **draft PR** creation.
 
+## Security + Education Scope
+- Authorized security testing and lab validation only.
+- No guidance for unauthorized access, persistence, or covert abuse.
+- Every automation run should generate transparent evidence and explanatory artifacts.
+- Prefer teachable outputs: what was run, why it matters, risk level, and remediation path.
+- Treat this project as a collaborative "AI Swiss army knife" for defensive security operations.
+
 ## Required Artifacts
 - `artifacts/agent-hybrid/agent_summary.json`
 - `artifacts/agent-hybrid/agent_report.md`
+
+## Source Of Direction
+- Strategic product direction: `docs/security-toolkit-roadmap.md`
+- Agent contract: `prompts/cloud_agent_hybrid_operator.md`
 
 ## Collaboration Labels
 - `ai-ready`: issue is well-scoped for autonomous contribution.

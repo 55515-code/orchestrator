@@ -14,15 +14,20 @@ on:
           - deep
           - release-readiness
       target_branch:
-        description: "Base branch for optional draft PR output"
+        description: "Base branch for rolling PR + merge target"
         required: false
         default: main
         type: string
       allow_write:
-        description: "Allow automated branch/commit/push + draft PR"
+        description: "Allow automated branch/commit/push/merge via rolling PR"
         required: true
         default: true
         type: boolean
+      loop_count:
+        description: "Number of sequential loops for deep swarm mode (1..12)"
+        required: false
+        default: 6
+        type: number
   schedule:
     - cron: "17 3 * * *"
 
@@ -105,17 +110,24 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> "$GITHUB_ENV"
             echo "ALLOW_WRITE=${{ github.event.inputs.allow_write }}" >> "$GITHUB_ENV"
+            echo "LOOP_COUNT=${{ github.event.inputs.loop_count }}" >> "$GITHUB_ENV"
           else
             echo "TARGET_BRANCH=${{ github.ref_name }}" >> "$GITHUB_ENV"
             echo "ALLOW_WRITE=true" >> "$GITHUB_ENV"
+            echo "LOOP_COUNT=6" >> "$GITHUB_ENV"
           fi
 
       - name: Run deep cloud-agent cycle with fallback
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           uv run python scripts/agent_hybrid_runner.py \
             --mode deep \
             --target-branch "${TARGET_BRANCH}" \
             --allow-write "${ALLOW_WRITE}" \
+            --loop-count "${LOOP_COUNT}" \
+            --merge-policy "safe_gate" \
+            --retry-merge "1" \
             --summary-out artifacts/agent-hybrid/agent_summary.json \
             --report-out artifacts/agent-hybrid/agent_report.md
 
@@ -126,15 +138,3 @@ jobs:
           name: agent-hybrid-${{ github.run_id }}
           path: artifacts/agent-hybrid
           if-no-files-found: warn
-
-      - name: Publish draft PR when writes are allowed
-        if: env.ALLOW_WRITE == 'true'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          bash scripts/agent_hybrid_publish.sh \
-            "${ALLOW_WRITE}" \
-            "${TARGET_BRANCH}" \
-            artifacts/agent-hybrid/agent_summary.json \
-            artifacts/agent-hybrid/agent_report.md
