@@ -112,7 +112,6 @@ def star_elements(width, height, seed, palette, variant):
             radius = 0.75 + rng.random() * 2.8
             opacity = 0.22 + rng.random() * 0.6
         color = palette["warning"] if rng.random() < 0.06 else brighten(palette["text_tint"], rng.random() * 0.25)
-        blur = 0 if radius < 1.4 else rng.random() * 2.2 + 0.6
         stars.append(
             f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius:.2f}" '
             f'fill="{rgb_to_rgba(color, opacity)}" '
