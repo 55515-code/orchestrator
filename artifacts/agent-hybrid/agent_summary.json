@@ -1,0 +1,217 @@
+{
+  "status": "partial_failure",
+  "mode": "deep",
+  "route": "fallback_local_mock",
+  "session_id": "local-20260404",
+  "loop_count": 6,
+  "loop_results": [
+    {
+      "loop": 1,
+      "name": "Discovery + baseline",
+      "status": "completed",
+      "notes": "Git bootstrap and required docs read; missing docs/ai-collaboration.md and docs/security-toolkit-roadmap.md detected."
+    },
+    {
+      "loop": 2,
+      "name": "Research + planning",
+      "status": "completed",
+      "notes": "Fallback local mode selected because remote and gh CLI context are unavailable."
+    },
+    {
+      "loop": 3,
+      "name": "Implementation + validation",
+      "status": "completed",
+      "notes": "Fixed three Ruff violations in scripts; executed lint, compileall, and test commands."
+    },
+    {
+      "loop": 4,
+      "name": "Reporting + collaboration updates",
+      "status": "completed",
+      "notes": "Generated required artifacts with findings, risks, and collaboration tasks."
+    },
+    {
+      "loop": 5,
+      "name": "Git sync and PR upsert",
+      "status": "partial_failure",
+      "notes": "No origin remote and no gh CLI prevented rolling branch push and PR upsert."
+    },
+    {
+      "loop": 6,
+      "name": "Final loop merge decision and execution",
+      "status": "partial_failure",
+      "notes": "safe_gate blocked by prior loop partial failure and unavailable GitHub integration."
+    }
+  ],
+  "merge_history": [
+    {
+      "loop": 5,
+      "action": "pr_upsert",
+      "result": "skipped",
+      "reason": "gh unavailable and no origin remote configured"
+    },
+    {
+      "loop": 6,
+      "action": "safe_gate_merge",
+      "result": "blocked",
+      "reason": "partial_failure in prior loops + no PR available"
+    }
+  ],
+  "final_pr_url": null,
+  "final_merge_state": "not_attempted_safe_gate_blocked",
+  "generated_at": "2026-04-04T03:12:21.328466+00:00",
+  "findings": [
+    "Repository is a valid git workspace on branch work with clean start state.",
+    "origin remote is missing; target branch SHA and ahead/behind calculations versus origin/main are unavailable.",
+    "gh CLI is unavailable, so GitHub issue/PR intake and rolling PR operations could not execute.",
+    "Ruff baseline is now clean after script hygiene fixes.",
+    "Targeted studio tests referenced in operator prompt do not exist in this repository layout.",
+    "Full test suite requires PYTHONPATH=. and still has one failing reliability failover test."
+  ],
+  "risks": [
+    "Missing docs referenced by operator contract may reduce onboarding consistency.",
+    "No configured remote blocks PR-based collaboration and safe-gated autonomous merge path.",
+    "One reliability failover integration test is failing and should be triaged before release-readiness."
+  ],
+  "tasks": [
+    {
+      "priority": "P1",
+      "owner": "core_reliability",
+      "task": "Stabilize failover hook behavior validated by test_orchestrator_reliability",
+      "acceptance_criteria": "PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests passes with zero failures."
+    },
+    {
+      "priority": "P1",
+      "owner": "docs_community",
+      "task": "Add docs/ai-collaboration.md and docs/security-toolkit-roadmap.md or update operator prompt paths",
+      "acceptance_criteria": "Required context read list resolves without missing files in CI preflight."
+    },
+    {
+      "priority": "P2",
+      "owner": "qa_release",
+      "task": "Align default test command set with actual repository test layout",
+      "acceptance_criteria": "Targeted default command references existing files and exits zero in clean env."
+    },
+    {
+      "priority": "P2",
+      "owner": "swarm_coordinator",
+      "task": "Configure origin remote and gh authentication in runner image",
+      "acceptance_criteria": "gh issue/pr list + rolling draft PR upsert succeed in loop 5."
+    }
+  ],
+  "changed_files": [
+    "scripts/generate_cosmic_wallpapers.py",
+    "scripts/generate_status_page.py",
+    "scripts/substrate_cli.py",
+    "artifacts/agent-hybrid/agent_summary.json",
+    "artifacts/agent-hybrid/agent_report.md"
+  ],
+  "test_results": [
+    {
+      "loop": 3,
+      "command": "uv run --with ruff ruff check substrate scripts tests",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 1
+    },
+    {
+      "loop": 3,
+      "command": "uv run python -m compileall substrate scripts",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 0
+    },
+    {
+      "loop": 3,
+      "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+      "ok": false,
+      "return_code": 4,
+      "duration_seconds": 1
+    },
+    {
+      "loop": 3,
+      "command": "uv run --with pytest --with httpx pytest -q tests",
+      "ok": false,
+      "return_code": 2,
+      "duration_seconds": 2
+    },
+    {
+      "loop": 3,
+      "command": "PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests",
+      "ok": false,
+      "return_code": 1,
+      "duration_seconds": 9
+    }
+  ],
+  "assumptions": [
+    "Runtime inputs were not provided, so defaults were used: mode=deep, target_branch=main, loop_count=6, allow_write=false.",
+    "Fallback route selected because cloud-agent wrapper metadata was not present and gh CLI was unavailable."
+  ],
+  "next_cycle_focus": [
+    "Fix failover integration regression and rerun full suite.",
+    "Restore GitHub integration in runner for rolling PR automation.",
+    "Resolve missing docs or update required context contract to existing docs."
+  ],
+  "git_context": {
+    "current_branch": "work",
+    "target_branch": "main",
+    "head_sha": "2d22b722fa4a57afdc458ad08472ffd1f8cbaf75",
+    "target_sha": "unavailable",
+    "ahead_count": 0,
+    "behind_count": 0,
+    "diverged": false,
+    "working_tree_clean_start": true,
+    "working_tree_clean_end": false
+  },
+  "git_actions": [
+    {
+      "command": "git rev-parse --is-inside-work-tree",
+      "ok": true
+    },
+    {
+      "command": "git remote -v",
+      "ok": true,
+      "notes": "no remotes configured"
+    },
+    {
+      "command": "git status --porcelain --branch",
+      "ok": true
+    },
+    {
+      "command": "git branch --show-current",
+      "ok": true
+    },
+    {
+      "command": "git fetch --all --prune",
+      "ok": true,
+      "notes": "no remotes to fetch"
+    },
+    {
+      "command": "git log --oneline --decorate -n 30",
+      "ok": true
+    },
+    {
+      "command": "git rev-parse HEAD",
+      "ok": true
+    },
+    {
+      "command": "git rev-parse origin/main",
+      "ok": false,
+      "notes": "origin/main unavailable"
+    },
+    {
+      "command": "git diff --name-status origin/main...HEAD",
+      "ok": false,
+      "notes": "base ref unavailable"
+    },
+    {
+      "command": "gh issue list --state open --limit 50 --json number,title,labels,url,updatedAt",
+      "ok": false,
+      "notes": "gh command not found"
+    },
+    {
+      "command": "gh pr list --state open --limit 30 --json number,title,headRefName,baseRefName,url,updatedAt",
+      "ok": false,
+      "notes": "gh command not found"
+    }
+  ]
+}
