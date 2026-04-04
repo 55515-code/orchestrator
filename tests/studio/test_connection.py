@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from substrate.studio.connection import codex_diagnostics
+from substrate.studio.connection import _parse_retry_after_seconds
 from substrate.studio.connection import start_device_auth
 from substrate.studio.connection import test_connection as run_connection_test
 
@@ -132,3 +133,8 @@ def test_start_device_auth_falls_back_when_configured_executable_missing(
     command = captured["command"]
     assert isinstance(command, list)
     assert command[0] == "/usr/bin/codex"
+
+
+def test_parse_retry_after_seconds_supports_compact_duration_notation() -> None:
+    assert _parse_retry_after_seconds("Too many requests. Retry after 2m 30s.") == 150
+    assert _parse_retry_after_seconds("Rate limited. Try again in 1h 5m.") == 3900
