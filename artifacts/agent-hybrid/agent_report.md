@@ -1,116 +1,84 @@
-# Agent Hybrid Report
-
-Route: `fallback_local_mock`  
-Mode: `deep`  
-Session ID: `local-20260404`
-
 ## Repo health + failing surfaces
-
-- Git workspace: valid.
-- Current branch: `work`.
-- Base target branch requested: `main`.
-- `HEAD`: `2d22b722fa4a57afdc458ad08472ffd1f8cbaf75`.
-- `origin/main`: unavailable (no configured `origin` remote).
-- Working tree at start: clean.
-- Working tree at end: dirty (artifact + script updates).
+- Route executed: `fallback_local_mock` because cloud-agent wrapper signals were not present and GitHub CLI (`gh`) is unavailable in this environment.
+- Git bootstrap findings:
+  - inside git work tree: true
+  - current branch: `work`
+  - HEAD: `f4214671c029ced7ec93e9f0a8aff6e699752f04`
+  - target branch: `main` (requested default)
+  - target SHA: unavailable (no `origin/main` ref in local clone)
+  - working tree at start: clean
 - Failing surfaces:
-  - `gh` CLI missing (cannot ingest issue/PR state, cannot upsert PR).
-  - Required context docs missing: `docs/ai-collaboration.md`, `docs/security-toolkit-roadmap.md`.
-  - Prompted targeted tests missing: `tests/studio/test_connection.py`, `tests/studio/test_api.py`.
-  - Full suite with `PYTHONPATH=.` still has 1 failing reliability test.
+  - `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` fails in this container due `ModuleNotFoundError: No module named 'substrate'` when `PYTHONPATH` is unset.
+  - With `PYTHONPATH=.`, tests execute and reveal functional failures in `tests/studio/test_connection.py` (2 assertions failing around connection command behavior).
 
 ## Deep research findings with sources/risks
+- Project direction is consistent across `README.md`, `docs/ai-collaboration.md`, and `docs/security-toolkit-roadmap.md`: defensive, authorized, education-first operations only.
+- Lifecycle and governance documents require explicit stage/pass flow, reproducible evidence, and draft-PR-centric automation.
+- Risk observations:
+  1. Test entrypoint ergonomics are brittle (`substrate` import path dependency).
+  2. Connection service behavior appears to have drifted from tests.
+  3. Missing GitHub CLI in runner degrades issue/PR context automation.
 
-### Sources reviewed
+Sources reviewed:
 - `README.md`
 - `docs/community-cycle.md`
 - `docs/lifecycle.md`
 - `CONTRIBUTING.md`
-- docs requested but missing:
-  - `docs/ai-collaboration.md`
-  - `docs/security-toolkit-roadmap.md`
-
-### Findings
-1. The repo emphasizes local-first, autonomous community cycles and defensive, reproducible workflows.
-2. The lifecycle model enforces stage/pass sequencing suitable for deterministic gating.
-3. Existing baseline commands in prompt are partly misaligned with current test layout.
-4. GitHub automation prerequisites (remote + `gh`) are not currently available in runtime.
-
-### Risks
-- Missing docs reduce shared context quality and may create drift between operator prompts and repository truth.
-- Lack of GitHub plumbing blocks rolling PR governance and autonomous merge gates.
-- One integration failover test indicates reliability behavior drift that may impact fallback safety.
+- `docs/ai-collaboration.md`
+- `docs/security-toolkit-roadmap.md`
 
 ## Development plan with prioritized tasks
-
-- [P1] [core_reliability] Repair failover behavior validated by `test_orchestrator_reliability`.
-  - Acceptance criteria: `PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests` passes.
-  - Evidence paths: `tests/test_orchestrator_reliability.py`, future CI logs.
-  - Suggested labels: `ai-ready`, `research-needed`.
-
-- [P1] [docs_community] Add missing collaboration and security-roadmap docs or update required-context contract.
-  - Acceptance criteria: required read list resolves in preflight with no missing files.
-  - Evidence paths: `docs/ai-collaboration.md`, `docs/security-toolkit-roadmap.md`.
-  - Suggested labels: `help-wanted`, `good-first-task`.
-
-- [P2] [qa_release] Update default targeted test selection to real test paths.
-  - Acceptance criteria: default targeted pytest command exits 0 in clean local environment.
-  - Evidence paths: operator prompt template + CI logs.
-  - Suggested labels: `needs-repro`, `ai-ready`.
-
-- [P2] [swarm_coordinator] Enable `origin` remote and `gh` in runner image.
-  - Acceptance criteria: loop-5 PR upsert succeeds without manual intervention.
-  - Evidence paths: `artifacts/agent-hybrid/agent_summary.json` git_actions.
-  - Suggested labels: `research-needed`, `help-wanted`.
+- [P1] [core_reliability] Stabilize test execution environment defaults.
+  - Acceptance criteria: targeted pytest command passes without requiring manual `PYTHONPATH`.
+  - Evidence paths: `tests/studio/test_connection.py`, CI logs.
+  - Suggested labels: `ai-ready`, `needs-repro`.
+- [P1] [security_tooling] Reconcile `run_connection_test` command composition with unit-test expectations.
+  - Acceptance criteria: `tests/studio/test_connection.py` all passing.
+  - Evidence paths: test output + patched service file.
+  - Suggested labels: `ai-ready`, `help-wanted`.
+- [P2] [docs_community] Add troubleshooting note for local runner requirements (`gh`, import path assumptions).
+  - Acceptance criteria: docs include fallback behavior and commands.
+  - Evidence paths: docs update diff.
+  - Suggested labels: `good-first-task`, `research-needed`.
 
 ## Implemented changes + test evidence
+Implemented change:
+- Removed an unused import in `substrate/studio/main.py` to satisfy ruff static checks.
 
-### Code changes
-- Removed an unused local variable in wallpaper generation to satisfy Ruff F841.
-- Removed an unused import in status page generator to satisfy Ruff F401.
-- Added a targeted Ruff suppression on delayed import in script entrypoint to satisfy E402 without changing runtime path bootstrap behavior.
-- Generated required run artifacts:
-  - `artifacts/agent-hybrid/agent_summary.json`
-  - `artifacts/agent-hybrid/agent_report.md`
+Command transcript summary:
+- Mandatory git bootstrap commands executed.
+- Required context docs read.
+- Collaboration intake commands attempted (`gh issue list`, `gh pr list`) but failed due missing CLI.
+- Baseline checks executed (ruff, compileall, targeted pytest).
 
-### Command transcript summary
-- Git bootstrap commands executed (workspace validity, status, branch, log, SHAs, diff vs target).
-- Required context docs loaded (with two missing-file errors recorded).
-- GitHub intake attempted; `gh` unavailable.
-- Baseline checks executed:
-  - `uv run --with ruff ruff check substrate scripts tests` ✅ pass
-  - `uv run python -m compileall substrate scripts` ✅ pass
-  - `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` ❌ missing files
-  - `uv run --with pytest --with httpx pytest -q tests` ❌ import-path collection errors
-  - `PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests` ❌ 1 failing test
+Test evidence:
+- `uv run --with ruff ruff check substrate scripts tests` -> pass after import cleanup.
+- `uv run python -m compileall substrate scripts` -> pass.
+- `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> fails (module import path).
+- `PYTHONPATH=. uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> executes, 2 failing tests in connection suite.
 
-### Compatibility notes
-- CLI/API surface unchanged.
-- Script behavior preserved; only lint-hygiene adjustments were made.
+Compatibility notes:
+- No public CLI/API contract changes introduced.
+- Only lint-only import cleanup was applied.
 
-### Unresolved questions
-1. Should `PYTHONPATH=.` be embedded in test runner docs/Make targets, or should packaging/install be required before tests?
-2. Which fallback provider (`openai` vs others) is expected by failover reliability tests in current design?
-3. Should missing docs be created now or prompt contracts be updated to current repo structure?
+Unresolved questions:
+- Should test commands in docs/CI set `PYTHONPATH=.` explicitly or install package editable before pytest?
+- Is current `run_connection_test` behavior intentionally changed versus tests, or are tests stale?
 
-### Git sync posture summary
-- Ahead/behind/diverged vs `origin/main`: unavailable due to missing `origin` remote.
-- Rolling PR link: unavailable (`gh` missing + no remote).
-- Safe-gate merge: blocked/not attempted.
+Git sync posture summary:
+- Cannot compute ahead/behind/diverged vs `origin/main` because no remotes are configured in this clone.
+- PR link unavailable (no remote/`gh`).
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
-
-- [P1] [core_reliability] Fix failover hook invocation ordering in orchestrator reliability path.
-  - Acceptance criteria: failover test passes consistently in CI and local.
-  - Evidence paths: `tests/test_orchestrator_reliability.py`, CI job logs.
+- [P1] [qa_release] Normalize pytest invocation so `substrate` imports resolve in clean env.
+  - Acceptance criteria: required targeted suite passes from clean checkout with one documented command.
+  - Evidence paths: CI workflow logs + updated docs/config.
   - Suggested labels: `ai-ready`, `needs-repro`.
-
-- [P2] [docs_community] Create collaboration and security-roadmap docs referenced by operator workflow.
-  - Acceptance criteria: docs exist and are linked from `docs/index.md` and `README.md`.
-  - Evidence paths: docs tree + link checks.
+- [P2] [ux_operator] Add Studio troubleshooting panel hint when connection checks run outside repos.
+  - Acceptance criteria: UI explains `--skip-git-repo-check` behavior and expected contexts.
+  - Evidence paths: `substrate/studio/templates/index.html`, `substrate/studio/static/app.js`.
   - Suggested labels: `help-wanted`, `good-first-task`.
-
-- [P2] [qa_release] Normalize default test command matrix for this repo.
-  - Acceptance criteria: targeted suite command references existing files and passes in CI.
-  - Evidence paths: CI config + operator templates.
+- [P3] [docs_community] Publish a contributor quick-checklist for local agent-hybrid runs.
+  - Acceptance criteria: includes required tools (`uv`, optional `gh`) and fallback policy notes.
+  - Evidence paths: `docs/ai-collaboration.md`.
   - Suggested labels: `research-needed`, `ai-ready`.
