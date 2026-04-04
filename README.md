@@ -8,6 +8,7 @@ Portable, low-cost orchestration substrate for AI-assisted engineering across lo
 
 - Collaboration protocol: [`docs/ai-collaboration.md`](docs/ai-collaboration.md)
 - Cloud-agent execution contract: [`prompts/cloud_agent_hybrid_operator.md`](prompts/cloud_agent_hybrid_operator.md)
+- Security toolkit roadmap: [`docs/security-toolkit-roadmap.md`](docs/security-toolkit-roadmap.md)
 - Automation workflow: `.github/workflows/agent-hybrid.yml`
 
 ## Launch The Community Swarm (Copy/Paste Prompt)
@@ -110,6 +111,22 @@ Required deliverable sections in your final report:
   - passes: `research -> development -> testing`
 - Capture fact-based source evidence before building custom solutions.
 - **Zero external dependencies:** The agent cycles run completely local via the built-in `roo-router` model constraint, entirely removing OpenAI API key requirements.
+
+## Strategic Focus: AI Security Swiss-Army UX
+
+Future development is intentionally focused on an education-first, transparency-first
+security operations toolkit powered by the orchestrator core and Studio UX:
+
+- Build a "Swiss army knife" job platform for authorized security validation and pentest labs.
+- Keep every workflow explicit, reproducible, and reviewable for learning and community sharing.
+- Prioritize operator UX that makes complex assessments easy to run safely.
+- Design around legal and ethical boundaries: authorized targets only, no covert misuse patterns.
+
+Primary product tracks:
+- Core: reliable scheduled/on-demand job execution, policy enforcement, and artifacts.
+- UX: guided run setup, evidence visibility, safety warnings, and beginner-to-advanced workflows.
+- Security tooling integration: curated open-source recon, validation, and reporting tools.
+- AI-assisted analysis: explain findings, suggest remediations, and generate educational walkthroughs.
 
 ## What this includes
 
