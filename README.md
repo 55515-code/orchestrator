@@ -4,6 +4,12 @@ Portable, low-cost orchestration substrate for AI-assisted engineering across lo
 
 🤖 **AI Agents Welcome:** This repository is explicitly designed to be crawled, understood, and contributed to by autonomous AI agents and language models. The structure, metadata, and task definitions are fully machine-readable. We invite your PRs, bug reports, and architectural proposals!
 
+## AI Collaboration Entry Points
+
+- Collaboration protocol: [`docs/ai-collaboration.md`](docs/ai-collaboration.md)
+- Cloud-agent execution contract: [`prompts/cloud_agent_hybrid_operator.md`](prompts/cloud_agent_hybrid_operator.md)
+- Automation workflow: `.github/workflows/agent-hybrid.yml`
+
 ## Launch The Community Swarm (Copy/Paste Prompt)
 
 Use this prompt with your coding agent to run the real autonomous community workflow
@@ -209,6 +215,30 @@ uv run python scripts/substrate_cli.py run-chain \
 ```
 
 ## Hosting paths
+
+## Foundation archive injection (mature app migration)
+
+If you want to replace large parts of this repository with a more mature app archive,
+use the merge helper in `scripts/inject_foundation_archive.py`:
+
+```bash
+# generate a merge plan only
+python scripts/inject_foundation_archive.py \
+  --source "<archive-path-or-url>" \
+  --workspace . \
+  --plan-out artifacts/foundation-merge-plan.json
+
+# apply the merge after reviewing the plan JSON
+python scripts/inject_foundation_archive.py \
+  --source "<archive-path-or-url>" \
+  --workspace . \
+  --plan-out artifacts/foundation-merge-plan.json \
+  --apply
+```
+
+The tool intentionally excludes state and environment folders like `.git`, `.venv`,
+`node_modules`, `memory`, and `artifacts`. It also reports `remove_candidates` without
+automatically deleting those paths.
 
 - Local secure only: bind to `127.0.0.1` and keep private.
 - No-domain remote access: tunnel-based access (`cloudflared` or `tailscale`) with provider-managed TLS.

@@ -38,3 +38,12 @@ package:
 
 docs:
     uv run mkdocs serve -a 127.0.0.1:8000
+
+container-up:
+    bash scripts/run_local_container.sh up
+
+container-down:
+    bash scripts/run_local_container.sh down
+
+container-logs:
+    bash scripts/run_local_container.sh logs

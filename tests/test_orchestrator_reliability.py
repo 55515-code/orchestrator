@@ -203,7 +203,7 @@ class OrchestratorReliabilityIntegrationTest(unittest.TestCase):
             _write_test_workspace(root, retry_max_attempts=1)
             runtime = SubstrateRuntime(root)
             orchestrator = Orchestrator(runtime)
-            attempts: dict[str, int] = {"openai": 0, "anthropic": 0}
+            attempts: dict[str, int] = {"local": 0, "anthropic": 0}
 
             def fake_build_model(provider: str, model: str):
                 del model
@@ -229,7 +229,7 @@ class OrchestratorReliabilityIntegrationTest(unittest.TestCase):
                     allow_mutations=False,
                 )
 
-            self.assertEqual(1, attempts["openai"])
+            self.assertEqual(1, attempts["local"])
             self.assertEqual(1, attempts["anthropic"])
 
             events = runtime.db.list_run_events(run_id)
