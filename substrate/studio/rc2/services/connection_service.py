@@ -9,7 +9,12 @@ from ...schemas import ConnectionStatusOut
 def remaining_auth_cooldown_seconds(config: AppConfig, now: datetime) -> int:
     if not config.auth_rate_limited_until:
         return 0
-    remaining = int((config.auth_rate_limited_until - now).total_seconds())
+    limited_until = config.auth_rate_limited_until
+    if limited_until.tzinfo and now.tzinfo is None:
+        now = now.replace(tzinfo=limited_until.tzinfo)
+    elif now.tzinfo and limited_until.tzinfo is None:
+        limited_until = limited_until.replace(tzinfo=now.tzinfo)
+    remaining = int((limited_until - now).total_seconds())
     return max(0, remaining)
 
 
@@ -21,16 +26,15 @@ def next_backoff_seconds(current_hits: int) -> int:
 
 def build_connection_status(config: AppConfig, diagnostics: dict, retry_after: int) -> ConnectionStatusOut:
     return ConnectionStatusOut(
-        installed=diagnostics["installed"],
-        resolved_executable=diagnostics["resolved_executable"],
-        version=diagnostics["version"],
-        auth_file_exists=diagnostics["auth_file_exists"],
-        auth_file_path=diagnostics["auth_file_path"],
-        error=diagnostics["error"],
+        installed=bool(diagnostics.get("installed")),
+        resolved_executable=diagnostics.get("resolved_executable"),
+        version=diagnostics.get("version"),
+        auth_file_exists=bool(diagnostics.get("auth_file_exists")),
+        auth_file_path=diagnostics.get("auth_file_path") or "",
+        error=diagnostics.get("error"),
         auth_mode=config.auth_mode or "chatgpt_account",
         api_key_configured=bool(config.api_key_secret_ref),
         rate_limited=retry_after > 0,
         retry_after_seconds=retry_after,
         rate_limited_until=config.auth_rate_limited_until,
     )
-
