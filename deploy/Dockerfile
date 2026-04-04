@@ -15,5 +15,4 @@ COPY . .
 
 EXPOSE 8090
 
-CMD ["uv", "run", "python", "scripts/substrate.py", "serve", "--host", "0.0.0.0", "--port", "8090"]
-
+CMD ["uv", "run", "python", "scripts/substrate_cli.py", "serve", "--host", "0.0.0.0", "--port", "8090"]

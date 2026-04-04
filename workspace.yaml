@@ -43,6 +43,13 @@ discovery:
     - .
   max_depth: 2
 
+scheduler:
+  enabled: true
+  default_repo_slug: substrate-core
+  default_stage: local
+  windows_features_enabled: false
+  windows_app_mode_enabled: false
+
 ignored_paths:
   - .git
   - .venv

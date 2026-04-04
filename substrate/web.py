@@ -37,6 +37,7 @@ from .registry import SubstrateRuntime
 from .research import refresh_upstreams
 from .standards import standards_payload
 from .stats import dashboard_payload
+from .studio.main import create_app as create_studio_app
 from .tooling import ensure_tool_profile, tooling_snapshot
 
 RUNTIME = SubstrateRuntime()
@@ -45,6 +46,12 @@ DUCKY_ENGINE = DuckyPayloadEngine(RUNTIME, ORCHESTRATOR)
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 RUN_FUTURES: dict[str, Future[Any]] = {}
 RUN_FUTURES_LOCK = Lock()
+STUDIO_APP = create_studio_app(
+    start_scheduler=bool(RUNTIME.workspace.scheduler.enabled),
+    runtime=RUNTIME,
+    orchestrator=ORCHESTRATOR,
+    static_mount_path="/studio-static",
+)
 
 MAX_REQUEST_BODY_BYTES = 16 * 1024
 ALLOWED_STAGES = {"local", "hosted_dev", "production"}
@@ -89,6 +96,21 @@ app.mount(
     StaticFiles(directory=str((RUNTIME.root / "substrate" / "static"))),
     name="static",
 )
+
+
+@app.on_event("startup")
+def _startup_studio_scheduler() -> None:
+    if (
+        hasattr(STUDIO_APP.state, "scheduler_service")
+        and RUNTIME.workspace.scheduler.enabled
+    ):
+        STUDIO_APP.state.scheduler_service.start()
+
+
+@app.on_event("shutdown")
+def _shutdown_studio_scheduler() -> None:
+    if hasattr(STUDIO_APP.state, "scheduler_service"):
+        STUDIO_APP.state.scheduler_service.shutdown()
 
 
 def _parse_bool(value: str | None) -> bool:
@@ -458,7 +480,8 @@ def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/")
+@app.get("/legacy")
+@app.get("/legacy/")
 def dashboard(request: Request):
     if not RUNTIME.db.latest_repository_snapshots():
         RUNTIME.scan_repositories(persist=True)
@@ -1005,3 +1028,7 @@ def api_run(run_id: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Run not found")
     run["events"] = RUNTIME.db.list_run_events(run_id)
     return run
+
+
+# Keep legacy endpoints above, and serve Studio as the default root experience.
+app.mount("/", STUDIO_APP)

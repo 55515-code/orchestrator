@@ -39,6 +39,12 @@ Container path:
 docker compose -f deploy/compose.yaml up --build -d
 ```
 
+Local helper (auto-detects docker/docker-compose/podman and runs smoke checks):
+
+```bash
+bash scripts/run_local_container.sh up
+```
+
 Reference files:
 
 - `deploy/Dockerfile`
