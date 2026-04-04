@@ -210,6 +210,30 @@ uv run python scripts/substrate_cli.py run-chain \
 
 ## Hosting paths
 
+## Foundation archive injection (mature app migration)
+
+If you want to replace large parts of this repository with a more mature app archive,
+use the merge helper in `scripts/inject_foundation_archive.py`:
+
+```bash
+# generate a merge plan only
+python scripts/inject_foundation_archive.py \
+  --source "<archive-path-or-url>" \
+  --workspace . \
+  --plan-out artifacts/foundation-merge-plan.json
+
+# apply the merge after reviewing the plan JSON
+python scripts/inject_foundation_archive.py \
+  --source "<archive-path-or-url>" \
+  --workspace . \
+  --plan-out artifacts/foundation-merge-plan.json \
+  --apply
+```
+
+The tool intentionally excludes state and environment folders like `.git`, `.venv`,
+`node_modules`, `memory`, and `artifacts`. It also reports `remove_candidates` without
+automatically deleting those paths.
+
 - Local secure only: bind to `127.0.0.1` and keep private.
 - No-domain remote access: tunnel-based access (`cloudflared` or `tailscale`) with provider-managed TLS.
 - Traditional hosting: deploy behind Caddy/Nginx reverse proxy on VPS or internal platform.
