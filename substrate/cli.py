@@ -532,12 +532,65 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Timeout in seconds when --wait is set.",
     )
 
+    def _register_community_cycle_parser(command_name: str) -> argparse.ArgumentParser:
+        parser_ref = subparsers.add_parser(
+            command_name,
+            help=(
+                "Run a weekly open-source community cycle with independent "
+                "persona agents (100 developer + 300 user/tester sessions)."
+            ),
+        )
+        parser_ref.add_argument(
+            "--cycle",
+            type=int,
+            default=0,
+            help="Cycle number (starts at 0).",
+        )
+        parser_ref.add_argument(
+            "--repo",
+            default="substrate-core",
+            help="Repository slug used for stage-policy checks.",
+        )
+        parser_ref.add_argument(
+            "--stage",
+            choices=sorted(ALLOWED_STAGES),
+            default="local",
+        )
+        parser_ref.add_argument(
+            "--concurrency-limit",
+            type=int,
+            default=40,
+            help="Max number of live agents per wave.",
+        )
+        parser_ref.add_argument(
+            "--agent-provider",
+            choices=sorted(ALLOWED_AGENT_PROVIDERS),
+            default="mock",
+            help="Provider used to run independent agent sessions.",
+        )
+        parser_ref.add_argument(
+            "--agent-model",
+            default="",
+            help="Optional provider model override.",
+        )
+        parser_ref.add_argument(
+            "--seed",
+            type=int,
+            help="Optional deterministic seed for persona generation.",
+        )
+        parser_ref.add_argument(
+            "--population-scale",
+            type=float,
+            default=1.0,
+            help="Scale agent population size up/down while preserving cohort mix.",
+        )
+        return parser_ref
+
+    _register_community_cycle_parser("community-cycle")
+    _register_community_cycle_parser("spawn-agent-workloads")
     community_cycle = subparsers.add_parser(
-        "community-cycle",
-        help=(
-            "Run a weekly open-source community cycle with independent "
-            "persona agents (100 developer + 300 user/tester sessions)."
-        ),
+        "spawn-agent-workloads-now",
+        help="Alias for spawn-agent-workloads for fast operator use.",
     )
     community_cycle.add_argument(
         "--cycle",
@@ -576,6 +629,12 @@ def _build_parser() -> argparse.ArgumentParser:
         "--seed",
         type=int,
         help="Optional deterministic seed for persona generation.",
+    )
+    community_cycle.add_argument(
+        "--population-scale",
+        type=float,
+        default=1.0,
+        help="Scale agent population size up/down while preserving cohort mix.",
     )
 
     run_chain = subparsers.add_parser("run-chain", help="Run chain orchestration.")
@@ -1037,7 +1096,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"Timed out waiting for payload job '{job_id}' after {args.timeout}s"
         )
 
-    if args.command == "community-cycle":
+    if args.command in {
+        "community-cycle",
+        "spawn-agent-workloads",
+        "spawn-agent-workloads-now",
+    }:
         try:
             result = run_community_cycle(
                 runtime,
@@ -1048,6 +1111,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 agent_provider=args.agent_provider,
                 agent_model=args.agent_model or None,
                 seed=args.seed,
+                population_scale=args.population_scale,
             )
         except (KeyError, PermissionError, ValueError) as exc:
             parser.error(str(exc))
