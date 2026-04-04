@@ -90,6 +90,17 @@ def _parse_retry_after_seconds(output: str) -> int | None:
                 return max(1, int(match.group(1)) * multiplier)
             except ValueError:
                 return None
+    compact_match = re.search(
+        r"(?:retry after|try again in)\s+((?:\d+\s*[hms]\s*)+)",
+        lowered,
+    )
+    if compact_match:
+        total = 0
+        for amount, unit in re.findall(r"(\d+)\s*([hms])", compact_match.group(1)):
+            multiplier = {"h": 3600, "m": 60, "s": 1}[unit]
+            total += int(amount) * multiplier
+        if total > 0:
+            return total
     return None
 
 
