@@ -50,19 +50,6 @@ _BOUNDED_VALIDATION_HINTS = (
 )
 
 
-def _bounded_validation_command_tokens(command: list[str]) -> list[str]:
-    if not command:
-        return []
-    executable = Path(command[0]).name
-    if executable != "codex":
-        return command
-    if len(command) >= 2 and command[1] == "exec":
-        return command[:-1]
-    if len(command) >= 3 and command[1:3] == ["cloud", "exec"]:
-        return command[:-1]
-    return command
-
-
 def _build_model(provider: str, model: str):
     if provider == "local":
         pass  # using local router
@@ -251,9 +238,7 @@ class Orchestrator:
         policy = self.runtime.workspace.policy
         if not policy.rc1_bounded_validation_enabled:
             return False
-        haystack = " ".join(
-            [task_id, description, *_bounded_validation_command_tokens(command)]
-        ).lower()
+        haystack = " ".join([task_id, description, *command]).lower()
         return any(hint in haystack for hint in _BOUNDED_VALIDATION_HINTS)
 
     def _run_optional_openclaw_side_lane(

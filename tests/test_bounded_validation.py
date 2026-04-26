@@ -86,46 +86,6 @@ def _read_checkpoint_rows(root: Path, run_id: str) -> list[dict[str, object]]:
 
 
 class BoundedValidationExecutionTest(unittest.TestCase):
-    def test_codex_scheduled_prompt_text_does_not_trigger_hardware_probe_gate(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            _write_workspace(
-                root,
-                command=[
-                    "codex",
-                    "cloud",
-                    "exec",
-                    "--env",
-                    "orchestrator",
-                    "Run validation and testing work.",
-                ],
-                task_id="studio_scheduled_abc123",
-                description="Scheduler job 'self dev'",
-                hardware_probe_enabled=False,
-                max_attempts=2,
-                attempt_timeout_seconds=1,
-                deadline_seconds=5,
-            )
-            runtime = SubstrateRuntime(root)
-            orchestrator = Orchestrator(runtime)
-
-            self.assertFalse(
-                orchestrator._is_bounded_validation_task(  # noqa: SLF001
-                    task_id="studio_scheduled_abc123",
-                    description="Scheduler job 'self dev'",
-                    command=[
-                        "codex",
-                        "cloud",
-                        "exec",
-                        "--env",
-                        "orchestrator",
-                        "Run validation and testing work.",
-                    ],
-                )
-            )
-
     def test_probe_task_is_disabled_by_default_and_skipped(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
