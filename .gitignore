@@ -36,3 +36,23 @@ aosp-eos-asteroids/
 # Editor metadata
 .vscode/
 work/eos-asteroids-src/
+
+# AI/operator safety ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+error.log
+
+# OpenClaw/export bundles and sensitive handoff material
+openclaw_substrate_export_*/
+openclaw_substrate_export_*.tar.gz
+*SECRETS*.env
+*secrets*.env
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
