@@ -1,136 +1,286 @@
 {
-  "status": "fallback_success",
+  "status": "partial_failure",
   "mode": "deep",
   "route": "fallback_local_mock",
-  "session_id": "20260404-swarm-local",
+  "target_branch": "main",
+  "allow_write": true,
+  "session_id": "20260501-f79194c",
   "loop_count": 6,
-  "loop_results": [
-    {
-      "loop": 1,
-      "name": "Discovery + baseline",
-      "status": "success",
-      "notes": "Completed required context read and git bootstrap; origin/main unavailable in local clone."
-    },
-    {
-      "loop": 2,
-      "name": "Research + planning",
-      "status": "success",
-      "notes": "Identified failing test surface in studio connection executable resolution and import-path test bootstrap gap."
-    },
-    {
-      "loop": 3,
-      "name": "Implementation + validation",
-      "status": "success",
-      "notes": "Patched executable resolution fallback and added tests/conftest.py. Required lint/compile/targeted tests passed."
-    },
-    {
-      "loop": 4,
-      "name": "Reporting + collaboration updates",
-      "status": "success",
-      "notes": "Prepared updated agent_report and structured task queue/risks with label mapping."
-    },
-    {
-      "loop": 5,
-      "name": "Git sync and PR upsert",
-      "status": "success",
-      "notes": "allow_write=false by contract; no branch push or draft PR creation attempted."
-    },
-    {
-      "loop": 6,
-      "name": "Final loop merge decision and execution",
-      "status": "success",
-      "notes": "Merge skipped because allow_write=false and no remote/gh integration in runtime."
-    }
-  ],
-  "merge_history": [
-    {
-      "loop": 5,
-      "action": "pr_upsert",
-      "result": "skipped_allow_write_false"
-    },
-    {
-      "loop": 6,
-      "action": "merge_safe_gate",
-      "result": "skipped_allow_write_false"
-    }
-  ],
-  "final_pr_url": null,
-  "final_merge_state": "not_attempted_allow_write_false",
-  "generated_at": "2026-04-04T03:31:05.333757+00:00",
+  "generated_at": "2026-05-01T06:22:33.847657+00:00",
+  "started_at": "2026-05-01T06:22:20.860517+00:00",
   "findings": [
-    "Targeted studio tests originally failed because codex executable fallback rejected unresolved PATH token in test monkeypatch context.",
-    "Pytest invocation without PYTHONPATH failed to import substrate package in this environment; repo-level conftest path bootstrapping resolved it.",
-    "gh CLI is unavailable, so GitHub issue/PR intake could not be collected from API during this run."
+    "Loop 1: 1 command(s) failed during mode 'deep'.",
+    "Loop 1: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)"
   ],
   "risks": [
-    "No origin/main ref in local checkout limits ahead/behind/divergence certainty.",
-    "Fallback executable token behavior can defer missing-binary detection to subprocess execution time.",
-    "Cloud-agent route was not exercised in this local run; cloud parity remains unverified."
+    "Cloud route was unavailable during deep loop; fallback was used."
   ],
   "tasks": [
     {
       "priority": "P1",
-      "owner": "core_reliability",
-      "task": "Restore origin remote tracking and branch comparison in CI runner bootstrap.",
-      "acceptance_criteria": "git rev-parse origin/main succeeds and ahead/behind metrics are emitted in artifacts."
+      "owner": "qa_release",
+      "task": "Investigate failing command surfaces and publish deterministic repro notes.",
+      "acceptance_criteria": "Each failure has a reproducible command and captured stdout/stderr evidence path."
     },
     {
-      "priority": "P2",
-      "owner": "qa_release",
-      "task": "Add explicit test env bootstrap docs for local/uv pytest invocation.",
-      "acceptance_criteria": "Contributing docs include one canonical command path that passes in clean environment."
+      "priority": "P1",
+      "owner": "core_reliability",
+      "task": "Translate validated findings into minimal, test-backed reliability patches.",
+      "acceptance_criteria": "Patches include targeted tests and preserve stage/policy safeguards."
     },
     {
       "priority": "P2",
       "owner": "docs_community",
-      "task": "Create issue templates for ai-ready security-toolkit tasks with acceptance criteria/evidence paths.",
-      "acceptance_criteria": "At least two templates merged and linked from ai-collaboration protocol."
+      "task": "Update collaboration queue with owner-tagged next tasks.",
+      "acceptance_criteria": "At least 3 queued tasks include owner, priority, and labels."
+    },
+    {
+      "priority": "P1",
+      "owner": "security_tooling",
+      "task": "Prioritize sanctioned defensive tool integrations and normalized evidence output.",
+      "acceptance_criteria": "Top adapters include maintenance status and risk notes."
+    },
+    {
+      "priority": "P1",
+      "owner": "ux_operator",
+      "task": "Improve explainable security-run UX and learner-safe remediation guidance.",
+      "acceptance_criteria": "Operator flow clearly shows finding, confidence, and next safe step."
     }
   ],
   "changed_files": [
-    "substrate/studio/connection.py",
-    "tests/conftest.py",
-    "artifacts/agent-hybrid/agent_summary.json",
-    "artifacts/agent-hybrid/agent_report.md"
+    "scripts/__pycache__/agent_hybrid_runner.cpython-312.pyc",
+    "scripts/__pycache__/generate_cosmic_wallpapers.cpython-312.pyc",
+    "scripts/__pycache__/package_substrate.cpython-312.pyc",
+    "scripts/__pycache__/probe_system.cpython-312.pyc",
+    "scripts/__pycache__/run_chain.cpython-312.pyc",
+    "scripts/__pycache__/substrate_cli.cpython-312.pyc",
+    "substrate/__pycache__/__init__.cpython-312.pyc",
+    "substrate/__pycache__/cli.cpython-312.pyc",
+    "substrate/__pycache__/community.cpython-312.pyc",
+    "substrate/__pycache__/config_sync.cpython-312.pyc",
+    "substrate/__pycache__/db.cpython-312.pyc",
+    "substrate/__pycache__/dotfiles.cpython-312.pyc",
+    "substrate/__pycache__/ducky.cpython-312.pyc",
+    "substrate/__pycache__/environment.cpython-312.pyc",
+    "substrate/__pycache__/integrations.cpython-312.pyc",
+    "substrate/__pycache__/learning.cpython-312.pyc",
+    "substrate/__pycache__/models.cpython-312.pyc",
+    "substrate/__pycache__/orchestrator.cpython-312.pyc",
+    "substrate/__pycache__/registry.cpython-312.pyc",
+    "substrate/__pycache__/reliability.cpython-312.pyc",
+    "substrate/__pycache__/research.cpython-312.pyc",
+    "substrate/__pycache__/resource_orchestration.cpython-312.pyc",
+    "substrate/__pycache__/settings.cpython-312.pyc",
+    "substrate/__pycache__/standards.cpython-312.pyc",
+    "substrate/__pycache__/stats.cpython-312.pyc",
+    "substrate/__pycache__/tooling.cpython-312.pyc",
+    "substrate/__pycache__/web.cpython-312.pyc",
+    "substrate/studio/__pycache__/__init__.cpython-312.pyc",
+    "substrate/studio/__pycache__/cloud_exec.cpython-312.pyc",
+    "substrate/studio/__pycache__/connection.cpython-312.pyc",
+    "substrate/studio/__pycache__/db.cpython-312.pyc",
+    "substrate/studio/__pycache__/deployment.cpython-312.pyc",
+    "substrate/studio/__pycache__/main.cpython-312.pyc",
+    "substrate/studio/__pycache__/models.cpython-312.pyc",
+    "substrate/studio/__pycache__/notification_service.cpython-312.pyc",
+    "substrate/studio/__pycache__/preflight.cpython-312.pyc",
+    "substrate/studio/__pycache__/runner.cpython-312.pyc",
+    "substrate/studio/__pycache__/runtime_config.cpython-312.pyc",
+    "substrate/studio/__pycache__/scheduler_service.cpython-312.pyc",
+    "substrate/studio/__pycache__/schemas.cpython-312.pyc",
+    "substrate/studio/__pycache__/security.cpython-312.pyc",
+    "substrate/studio/__pycache__/windows_integration.cpython-312.pyc",
+    "substrate/studio/rc2/__pycache__/__init__.cpython-312.pyc",
+    "substrate/studio/rc2/services/__pycache__/__init__.cpython-312.pyc",
+    "substrate/studio/rc2/services/__pycache__/cloud_service.cpython-312.pyc",
+    "substrate/studio/rc2/services/__pycache__/connection_service.cpython-312.pyc",
+    "substrate/studio/rc2/services/__pycache__/run_service.cpython-312.pyc",
+    "substrate/studio/rc2/services/__pycache__/settings_service.cpython-312.pyc",
+    "scripts/__pycache__/generate_status_page.cpython-312.pyc",
+    "scripts/__pycache__/inject_foundation_archive.cpython-312.pyc",
+    "substrate/studio/__pycache__/server.cpython-312.pyc",
+    "tests/__pycache__/conftest.cpython-312-pytest-9.0.3.pyc",
+    "tests/studio/__pycache__/test_api.cpython-312-pytest-9.0.3.pyc",
+    "tests/studio/__pycache__/test_connection.cpython-312-pytest-9.0.3.pyc"
   ],
   "test_results": [
     {
-      "loop": 3,
-      "command": "uv run --with ruff ruff check substrate scripts tests",
-      "ok": true,
-      "return_code": 0,
-      "duration_seconds": 0.04
-    },
-    {
-      "loop": 3,
-      "command": "uv run python -m compileall substrate scripts",
-      "ok": true,
-      "return_code": 0,
-      "duration_seconds": 0.06
-    },
-    {
-      "loop": 3,
       "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
       "ok": true,
       "return_code": 0,
-      "duration_seconds": 4.94
+      "duration_seconds": 8.023,
+      "loop": 1
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 2.946,
+      "loop": 1
     }
   ],
   "assumptions": [
-    "Runtime defaults applied: mode=deep, target_branch=main, allow_write=false, loop_count=6.",
-    "Because gh is missing, collaboration context relies on local git log only.",
-    "Working tree was clean at session start based on initial status output."
+    "Target merge branch defaults to main.",
+    "Rolling PR model uses one branch and one PR for the full session.",
+    "Safe gate merge requires loop checks and rebase/push success."
   ],
   "next_cycle_focus": [
-    "Re-enable cloud_agent route and capture cloud failure telemetry when unavailable.",
-    "Expand deterministic tests around connection executable resolution edge cases.",
-    "Improve git bootstrap resilience when remotes are partially configured."
+    "Increase cloud execution reliability and codex auth readiness.",
+    "Expand defensive-tool evidence normalization coverage.",
+    "Improve UX explainability for learner-safe security runs."
   ],
+  "loop_results": [
+    {
+      "loop_index": 1,
+      "started_at": "2026-05-01T06:22:21.173709+00:00",
+      "generated_at": "2026-05-01T06:22:33.624271+00:00",
+      "route": "fallback_local_mock",
+      "cloud_attempted": true,
+      "cloud_success": false,
+      "cloud_note": "Cloud agent unavailable or failed; fallback completed.",
+      "findings": [
+        "1 command(s) failed during mode 'deep'.",
+        "Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)"
+      ],
+      "risks": [
+        "Cloud route was unavailable during deep loop; fallback was used."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.309,
+          "stdout_tail": "All checks passed!\n",
+          "stderr_tail": "Downloading ruff (10.7MiB)\n Downloaded ruff\nInstalled 1 package in 1ms\n"
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.193,
+          "stdout_tail": "Listing 'substrate'...\nCompiling 'substrate/__init__.py'...\nCompiling 'substrate/cli.py'...\nCompiling 'substrate/community.py'...\nCompiling 'substrate/config_sync.py'...\nCompiling 'substrate/db.py'...\nCompiling 'substrate/dotfiles.py'...\nCompiling 'substrate/ducky.py'...\nCompiling 'substrate/environment.py'...\nCompiling 'substrate/integrations.py'...\nCompiling 'substrate/learning.py'...\nCompiling 'substrate/models.py'...\nCompiling 'substrate/orchestrator.py'...\nCompiling 'substrate/registry.py'...\nCompiling 'substrate/reliability.py'...\nCompiling 'substrate/research.py'...\nCompiling 'substrate/resource_orchestration.py'...\nCompiling 'substrate/settings.py'...\nCompiling 'substrate/standards.py'...\nListing 'substrate/static'...\nCompiling 'substrate/stats.py'...\nListing 'substrate/studio'...\nCompiling 'substrate/studio/__init__.py'...\nCompiling 'substrate/studio/cloud_exec.py'...\nCompiling 'substrate/studio/connection.py'...\nCompiling 'substrate/studio/db.py'...\nCompiling 'substrate/studio/deployment.py'...\nCompiling 'substrate/studio/main.py'...\nCompiling 'substrate/studio/models.py'...\nCompiling 'substrate/studio/notification_service.py'...\nCompiling 'substrate/studio/preflight.py'...\nListing 'substrate/studio/rc2'...\nCompiling 'substrate/studio/rc2/__init__.py'...\nListing 'substrate/studio/rc2/services'...\nCompiling 'substrate/studio/rc2/services/__init__.py'...\nCompiling 'substrate/studio/rc2/services/cloud_service.py'...\nCompiling 'substrate/studio/rc2/services/connection_service.py'...\nCompiling 'substrate/studio/rc2/services/run_service.py'...\nCompiling 'substrate/studio/rc2/services/settings_service.py'...\nCompiling 'substrate/studio/runner.py'...\nCompiling 'substrate/studio/runtime_config.py'...\nCompiling 'substrate/studio/scheduler_service.py'...\nCompiling 'substrate/studio/schemas.py'...\nCompiling 'substrate/studio/security.py'...\nCompiling 'substrate/studio/server.py'...\nListing 'substrate/studio/static'...\nListing 'substrate/studio/templates'...\nCompiling 'substrate/studio/windows_integration.py'...\nListing 'substrate/templates'...\nCompiling 'substrate/tooling.py'...\nCompiling 'substrate/web.py'...\nListing 'scripts'...\nCompiling 'scripts/agent_hybrid_runner.py'...\nCompiling 'scripts/generate_cosmic_wallpapers.py'...\nCompiling 'scripts/generate_status_page.py'...\nCompiling 'scripts/inject_foundation_archive.py'...\nCompiling 'scripts/package_substrate.py'...\nCompiling 'scripts/probe_system.py'...\nCompiling 'scripts/run_chain.py'...\nCompiling 'scripts/substrate_cli.py'...\nListing 'scripts/windows'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/studio/test_connection.py",
+            "tests/studio/test_api.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 8.023,
+          "stdout_tail": "......................                                                   [100%]\n22 passed in 3.64s\n",
+          "stderr_tail": "Installed 12 packages in 10ms\n"
+        },
+        {
+          "command": [
+            "codex",
+            "cloud",
+            "exec",
+            "--attempts",
+            "1",
+            "Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository."
+          ],
+          "command_text": "codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.'",
+          "return_code": 127,
+          "ok": false,
+          "duration_seconds": 0.0,
+          "stdout_tail": "",
+          "stderr_tail": "[Errno 2] No such file or directory: 'codex'",
+          "error": "launch_failed"
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "scripts/substrate_cli.py",
+            "scan"
+          ],
+          "command_text": "uv run python scripts/substrate_cli.py scan",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.978,
+          "stdout_tail": "[\n  {\n    \"scanned_at\": \"2026-05-01T06:22:30.566338+00:00\",\n    \"repo_slug\": \"substrate-core\",\n    \"repo_path\": \"/home/runner/work/orchestrator/orchestrator\",\n    \"is_git_repo\": true,\n    \"details\": {\n      \"allow_mutations\": true,\n      \"default_mode\": \"mutate\",\n      \"tasks\": [\n        \"chain_run\",\n        \"developer_polish\",\n        \"docs_serve\",\n        \"ops_panel\",\n        \"probe_system\"\n      ]\n    },\n    \"branch\": \"main\",\n    \"dirty\": true,\n    \"last_commit_at\": \"2026-04-28T19:44:31-04:00\",\n    \"remote_url\": \"https://github.com/55515-code/orchestrator\",\n    \"default_branch\": \"main\"\n  }\n]\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/studio/test_connection.py",
+            "tests/studio/test_api.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 2.946,
+          "stdout_tail": "......................                                                   [100%]\n22 passed in 1.84s\n",
+          "stderr_tail": ""
+        }
+      ],
+      "failing_count": 1,
+      "loop_status": "fallback_success",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 8.023
+        },
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 2.946
+        }
+      ]
+    }
+  ],
+  "merge_history": [],
+  "final_pr_url": "",
+  "final_merge_state": "not_attempted",
   "git_context": {
-    "current_branch": "work",
+    "current_branch": "main",
     "target_branch": "main",
-    "head_sha": "1dd5259e79c9d571458462c09b08702d4ace4840",
-    "target_sha": "UNAVAILABLE",
+    "head_sha": "f79194c1d113905642d117e0a71a4ee439e524f7",
+    "target_sha": "f79194c1d113905642d117e0a71a4ee439e524f7",
     "ahead_count": 0,
     "behind_count": 0,
     "diverged": false,
@@ -139,48 +289,192 @@
   },
   "git_actions": [
     {
-      "command": "git rev-parse --is-inside-work-tree",
-      "outcome": "success:true"
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git remote -v",
-      "outcome": "success:empty-remotes"
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.21,
+      "stdout_tail": "",
+      "stderr_tail": ""
     },
     {
-      "command": "git status --porcelain --branch",
-      "outcome": "success"
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "main\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git branch --show-current",
-      "outcome": "success:work"
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f79194c1d113905642d117e0a71a4ee439e524f7\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git fetch --all --prune",
-      "outcome": "success_no_remotes"
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f79194c1d113905642d117e0a71a4ee439e524f7\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git log --oneline --decorate -n 50",
-      "outcome": "success"
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "0\t0\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git rev-parse HEAD",
-      "outcome": "success:1dd5259e79c9d571458462c09b08702d4ace4840"
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.096,
+      "stdout_tail": "",
+      "stderr_tail": ""
     },
     {
-      "command": "git rev-parse origin/main",
-      "outcome": "failed:unknown_revision"
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
     },
     {
-      "command": "git diff --name-status origin/main...HEAD",
-      "outcome": "failed:unknown_revision"
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.209,
+      "stdout_tail": "",
+      "stderr_tail": ""
     },
     {
-      "command": "gh issue list --state open --limit 50 --json number,title,labels,url,updatedAt",
-      "outcome": "failed:gh_not_found"
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "main\n",
+      "stderr_tail": ""
     },
     {
-      "command": "gh pr list --state open --limit 30 --json number,title,headRefName,baseRefName,url,updatedAt",
-      "outcome": "failed:gh_not_found"
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f79194c1d113905642d117e0a71a4ee439e524f7\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f79194c1d113905642d117e0a71a4ee439e524f7\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "0\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.004,
+      "stdout_tail": " M scripts/__pycache__/agent_hybrid_runner.cpython-312.pyc\n M scripts/__pycache__/generate_cosmic_wallpapers.cpython-312.pyc\n M scripts/__pycache__/package_substrate.cpython-312.pyc\n M scripts/__pycache__/probe_system.cpython-312.pyc\n M scripts/__pycache__/run_chain.cpython-312.pyc\n M scripts/__pycache__/substrate_cli.cpython-312.pyc\n M substrate/__pycache__/__init__.cpython-312.pyc\n M substrate/__pycache__/cli.cpython-312.pyc\n M substrate/__pycache__/community.cpython-312.pyc\n M substrate/__pycache__/config_sync.cpython-312.pyc\n M substrate/__pycache__/db.cpython-312.pyc\n M substrate/__pycache__/dotfiles.cpython-312.pyc\n M substrate/__pycache__/ducky.cpython-312.pyc\n M substrate/__pycache__/environment.cpython-312.pyc\n M substrate/__pycache__/integrations.cpython-312.pyc\n M substrate/__pycache__/learning.cpython-312.pyc\n M substrate/__pycache__/models.cpython-312.pyc\n M substrate/__pycache__/orchestrator.cpython-312.pyc\n M substrate/__pycache__/registry.cpython-312.pyc\n M substrate/__pycache__/reliability.cpython-312.pyc\n M substrate/__pycache__/research.cpython-312.pyc\n M substrate/__pycache__/resource_orchestration.cpython-312.pyc\n M substrate/__pycache__/settings.cpython-312.pyc\n M substrate/__pycache__/standards.cpython-312.pyc\n M substrate/__pycache__/stats.cpython-312.pyc\n M substrate/__pycache__/tooling.cpython-312.pyc\n M substrate/__pycache__/web.cpython-312.pyc\n M substrate/studio/__pycache__/__init__.cpython-312.pyc\n M substrate/studio/__pycache__/cloud_exec.cpython-312.pyc\n M substrate/studio/__pycache__/connection.cpython-312.pyc\n M substrate/studio/__pycache__/db.cpython-312.pyc\n M substrate/studio/__pycache__/deployment.cpython-312.pyc\n M substrate/studio/__pycache__/main.cpython-312.pyc\n M substrate/studio/__pycache__/models.cpython-312.pyc\n M substrate/studio/__pycache__/notification_service.cpython-312.pyc\n M substrate/studio/__pycache__/preflight.cpython-312.pyc\n M substrate/studio/__pycache__/runner.cpython-312.pyc\n M substrate/studio/__pycache__/runtime_config.cpython-312.pyc\n M substrate/studio/__pycache__/scheduler_service.cpython-312.pyc\n M substrate/studio/__pycache__/schemas.cpython-312.pyc\n M substrate/studio/__pycache__/security.cpython-312.pyc\n M substrate/studio/__pycache__/windows_integration.cpython-312.pyc\n M substrate/studio/rc2/__pycache__/__init__.cpython-312.pyc\n M substrate/studio/rc2/services/__pycache__/__init__.cpython-312.pyc\n M substrate/studio/rc2/services/__pycache__/cloud_service.cpython-312.pyc\n M substrate/studio/rc2/services/__pycache__/connection_service.cpython-312.pyc\n M substrate/studio/rc2/services/__pycache__/run_service.cpython-312.pyc\n M substrate/studio/rc2/services/__pycache__/settings_service.cpython-312.pyc\n?? scripts/__pycache__/generate_status_page.cpython-312.pyc\n?? scripts/__pycache__/inject_foundation_archive.cpython-312.pyc\n?? substrate/studio/__pycache__/server.cpython-312.pyc\n?? tests/__pycache__/conftest.cpython-312-pytest-9.0.3.pyc\n?? tests/studio/__pycache__/test_api.cpython-312-pytest-9.0.3.pyc\n?? tests/studio/__pycache__/test_connection.cpython-312-pytest-9.0.3.pyc\n",
+      "stderr_tail": ""
     }
   ]
 }
