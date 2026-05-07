@@ -1,6 +1,6 @@
 # Agent Hybrid Report
 
-- Generated at: 2026-05-07T06:18:44.425378+00:00
+- Generated at: 2026-05-07T06:18:53.689173+00:00
 - Session: `20260507-f79194c`
 - Mode: `deep`
 - Loop count: `6`
@@ -20,11 +20,14 @@
 - Loop 4: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)
 - Loop 5: 1 command(s) failed during mode 'deep'.
 - Loop 5: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)
+- Loop 6: 1 command(s) failed during mode 'deep'.
+- Loop 6: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)
 
 ## Deep research findings with sources/risks
 
 - Source anchors reviewed: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
 - Strategic direction reviewed: `docs/security-toolkit-roadmap.md`.
+- Risk: Cloud route was unavailable during deep loop; fallback was used.
 - Risk: Cloud route was unavailable during deep loop; fallback was used.
 - Risk: Cloud route was unavailable during deep loop; fallback was used.
 - Risk: Cloud route was unavailable during deep loop; fallback was used.
@@ -52,7 +55,8 @@
 | 2 | fallback_success | fallback_local_mock | 1 | pr_create_failed |
 | 3 | fallback_success | fallback_local_mock | 1 | pr_create_failed |
 | 4 | fallback_success | fallback_local_mock | 1 | pr_create_failed |
-| 5 | fallback_success | fallback_local_mock | 1 | n/a |
+| 5 | fallback_success | fallback_local_mock | 1 | pr_create_failed |
+| 6 | fallback_success | fallback_local_mock | 1 | n/a |
 
 - Loop 1 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
 - Loop 1 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
@@ -64,6 +68,8 @@
 - Loop 4 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
 - Loop 5 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
 - Loop 5 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
+- Loop 6 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
+- Loop 6 test `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` -> ok=True rc=0
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
 
@@ -78,6 +84,7 @@
 - Loop 3 executed 6 commands.
 - Loop 4 executed 6 commands.
 - Loop 5 executed 6 commands.
+- Loop 6 executed 6 commands.
 
 ## Compatibility notes
 
@@ -92,7 +99,7 @@
 
 - Current branch: `agent/swarm-20260507-f79194c`
 - Target branch: `main`
-- Ahead: `4` | Behind: `0` | Diverged: `False`
+- Ahead: `5` | Behind: `0` | Diverged: `False`
 - PR URL: `n/a`
 - Final merge state: `not_attempted`
 
@@ -107,7 +114,7 @@
   "allow_write": true,
   "session_id": "20260507-f79194c",
   "loop_count": 6,
-  "generated_at": "2026-05-07T06:18:44.425378+00:00",
+  "generated_at": "2026-05-07T06:18:53.689173+00:00",
   "started_at": "2026-05-07T06:17:55.581133+00:00",
   "findings": [
     "Loop 1: 1 command(s) failed during mode 'deep'.",
@@ -119,9 +126,12 @@
     "Loop 4: 1 command(s) failed during mode 'deep'.",
     "Loop 4: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)",
     "Loop 5: 1 command(s) failed during mode 'deep'.",
-    "Loop 5: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)"
+    "Loop 5: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)",
+    "Loop 6: 1 command(s) failed during mode 'deep'.",
+    "Loop 6: Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)"
   ],
   "risks": [
+    "Cloud route was unavailable during deep loop; fallback was used.",
     "Cloud route was unavailable during deep loop; fallback was used.",
     "Cloud route was unavailable during deep loop; fallback was used.",
     "Cloud route was unavailable during deep loop; fallback was used.",
@@ -231,6 +241,20 @@
       "return_code": 0,
       "duration_seconds": 2.88,
       "loop": 5
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 2.904,
+      "loop": 6
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 2.929,
+      "loop": 6
     }
   ],
   "assumptions": [
@@ -1008,6 +1032,162 @@
           "return_code": 0,
           "duration_seconds": 2.88
         }
+      ],
+      "publish_result": {
+        "action": "pr_create_failed",
+        "ok": false,
+        "branch": "agent/swarm-20260507-f79194c",
+        "pr_number": 0,
+        "pr_url": "",
+        "merge_attempted": false,
+        "merged": false,
+        "merge_attempts": 0,
+        "message": "Failed to create PR from rolling branch.",
+        "rebase_ok": true,
+        "push_ok": true,
+        "loop_index": 5
+      }
+    },
+    {
+      "loop_index": 6,
+      "started_at": "2026-05-07T06:18:46.839388+00:00",
+      "generated_at": "2026-05-07T06:18:53.501880+00:00",
+      "route": "fallback_local_mock",
+      "cloud_attempted": true,
+      "cloud_success": false,
+      "cloud_note": "Cloud agent unavailable or failed; fallback completed.",
+      "findings": [
+        "1 command(s) failed during mode 'deep'.",
+        "Failed: codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.' (rc=127)"
+      ],
+      "risks": [
+        "Cloud route was unavailable during deep loop; fallback was used."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.029,
+          "stdout_tail": "All checks passed!\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.054,
+          "stdout_tail": "Listing 'substrate'...\nListing 'substrate/static'...\nListing 'substrate/studio'...\nListing 'substrate/studio/rc2'...\nListing 'substrate/studio/rc2/services'...\nListing 'substrate/studio/static'...\nListing 'substrate/studio/templates'...\nListing 'substrate/templates'...\nListing 'scripts'...\nListing 'scripts/windows'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/studio/test_connection.py",
+            "tests/studio/test_api.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 2.904,
+          "stdout_tail": "......................                                                   [100%]\n22 passed in 1.82s\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "codex",
+            "cloud",
+            "exec",
+            "--attempts",
+            "1",
+            "Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository."
+          ],
+          "command_text": "codex cloud exec --attempts 1 'Follow prompts/cloud_agent_hybrid_operator.md. Perform deep analysis, testing, research planning, and development guidance for this repository.'",
+          "return_code": 127,
+          "ok": false,
+          "duration_seconds": 0.0,
+          "stdout_tail": "",
+          "stderr_tail": "[Errno 2] No such file or directory: 'codex'",
+          "error": "launch_failed"
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "scripts/substrate_cli.py",
+            "scan"
+          ],
+          "command_text": "uv run python scripts/substrate_cli.py scan",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.745,
+          "stdout_tail": "[\n  {\n    \"scanned_at\": \"2026-05-07T06:18:50.472697+00:00\",\n    \"repo_slug\": \"substrate-core\",\n    \"repo_path\": \"/home/runner/work/orchestrator/orchestrator\",\n    \"is_git_repo\": true,\n    \"details\": {\n      \"allow_mutations\": true,\n      \"default_mode\": \"mutate\",\n      \"tasks\": [\n        \"chain_run\",\n        \"developer_polish\",\n        \"docs_serve\",\n        \"ops_panel\",\n        \"probe_system\"\n      ]\n    },\n    \"branch\": \"agent/swarm-20260507-f79194c\",\n    \"dirty\": false,\n    \"last_commit_at\": \"2026-05-07T06:18:44Z\",\n    \"remote_url\": \"https://github.com/55515-code/orchestrator\",\n    \"default_branch\": \"main\"\n  }\n]\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/studio/test_connection.py",
+            "tests/studio/test_api.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 2.929,
+          "stdout_tail": "......................                                                   [100%]\n22 passed in 1.82s\n",
+          "stderr_tail": ""
+        }
+      ],
+      "failing_count": 1,
+      "loop_status": "fallback_success",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 2.904
+        },
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 2.929
+        }
       ]
     }
   ],
@@ -1067,6 +1247,20 @@
       "rebase_ok": true,
       "push_ok": true,
       "loop_index": 4
+    },
+    {
+      "action": "pr_create_failed",
+      "ok": false,
+      "branch": "agent/swarm-20260507-f79194c",
+      "pr_number": 0,
+      "pr_url": "",
+      "merge_attempted": false,
+      "merged": false,
+      "merge_attempts": 0,
+      "message": "Failed to create PR from rolling branch.",
+      "rebase_ok": true,
+      "push_ok": true,
+      "loop_index": 5
     }
   ],
   "final_pr_url": "",
@@ -1074,9 +1268,9 @@
   "git_context": {
     "current_branch": "agent/swarm-20260507-f79194c",
     "target_branch": "main",
-    "head_sha": "ec0ac2ad9f6ff6b1f1c7260aaf3dac796c955710",
+    "head_sha": "0bd835ebcb20730c4b82ad58299523c2d263b3ce",
     "target_sha": "f79194c1d113905642d117e0a71a4ee439e524f7",
-    "ahead_count": 4,
+    "ahead_count": 5,
     "behind_count": 0,
     "diverged": false,
     "working_tree_clean_start": true,
@@ -1720,6 +1914,122 @@
       "ok": true,
       "duration_seconds": 0.002,
       "stdout_tail": "4\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.003,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/agent_hybrid_publish.sh",
+        "true",
+        "main",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md",
+        "5",
+        "6",
+        "20260507-f79194c",
+        "safe_gate",
+        "1",
+        "true"
+      ],
+      "command_text": "bash scripts/agent_hybrid_publish.sh true main /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md 5 6 20260507-f79194c safe_gate 1 true",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 2.411,
+      "stdout_tail": "M\tartifacts/agent-hybrid/agent_report.md\nM\tartifacts/agent-hybrid/agent_summary.json\nYour branch is up to date with 'origin/agent/swarm-20260507-f79194c'.\n[agent/swarm-20260507-f79194c 0bd835e] chore(agent): swarm loop 5/6 session 20260507-f79194c\n 2 files changed, 624 insertions(+), 11 deletions(-)\nCurrent branch agent/swarm-20260507-f79194c is up to date.\nbranch 'agent/swarm-20260507-f79194c' set up to track 'origin/agent/swarm-20260507-f79194c'.\nAGENT_PUBLISH_ACTION=pr_create_failed\nAGENT_PUBLISH_OK=false\nAGENT_PUBLISH_BRANCH=agent/swarm-20260507-f79194c\nAGENT_PUBLISH_PR_NUMBER=\nAGENT_PUBLISH_PR_URL=\nAGENT_PUBLISH_MERGE_ATTEMPTED=false\nAGENT_PUBLISH_MERGED=false\nAGENT_PUBLISH_MERGE_ATTEMPTS=0\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=Failed to create PR from rolling branch.\n",
+      "stderr_tail": "From https://github.com/55515-code/orchestrator\n * branch            main       -> FETCH_HEAD\nAlready on 'agent/swarm-20260507-f79194c'\nTo https://github.com/55515-code/orchestrator\n   ec0ac2a..0bd835e  agent/swarm-20260507-f79194c -> agent/swarm-20260507-f79194c\nscripts/agent_hybrid_publish.sh: line 64: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json\\: No such file or directory\nscripts/agent_hybrid_publish.sh: line 65: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md\\: No such file or directory\npull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)\n"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.173,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "agent/swarm-20260507-f79194c\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "0bd835ebcb20730c4b82ad58299523c2d263b3ce\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f79194c1d113905642d117e0a71a4ee439e524f7\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "5\t0\n",
       "stderr_tail": ""
     },
     {
