@@ -56,3 +56,17 @@ openclaw_substrate_export_*.tar.gz
 *.pfx
 .env
 .env.*
+
+# Local audit evidence and machine-specific captures
+artifacts/*/evidence/
+artifacts/*/applied/
+ahrondarnell_resume_package/
+
+# Generated binaries, screenshots, and device snapshots
+work/**/*-bin
+work/**/build/
+work/**/screenshots/
+work/**/device-current/
+work/**/device-config/*.png
+work/**/device-config/*.new
+work/**/device-config/*.test
