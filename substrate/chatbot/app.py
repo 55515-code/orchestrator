@@ -1,0 +1,181 @@
+"""FastAPI application exposing the desktop chatbot chat UI and API."""
+
+from __future__ import annotations
+
+import json
+import threading
+import time
+import uuid
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse, StreamingResponse
+from pydantic import BaseModel, Field
+
+from .agent import DONE_MARKER, KiloAgent
+from .config import ChatbotConfig
+from .store import ChatMessage, ChatStore
+
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1)
+    session_id: str | None = None
+
+
+class SessionCreateRequest(BaseModel):
+    session_id: str | None = None
+
+
+class ChatbotApp:
+    """Wires the Kilo agent and chat store into a FastAPI app."""
+
+    def __init__(
+        self,
+        config: ChatbotConfig | None = None,
+        store: ChatStore | None = None,
+    ) -> None:
+        self.config = config or ChatbotConfig.load()
+        self.store = store or ChatStore()
+        self._tasks: dict[str, Any] = {}
+        self._assistant_buffers: dict[str, str] = {}
+        self._lock = threading.Lock()
+        self.agent = KiloAgent(self.config, on_message=self._on_message)
+        self.app = self._build_app()
+
+    # -- callbacks ------------------------------------------------------
+
+    def _on_message(self, session_id: str, text: str) -> None:
+        with self._lock:
+            previous = self._assistant_buffers.get(session_id, "")
+            if not previous:
+                self.store.append_message(
+                    session_id,
+                    ChatMessage(role="assistant", content=text, ts=_utc_iso()),
+                )
+            else:
+                self.store.update_last_message(session_id, previous + "\n" + text)
+            self._assistant_buffers[session_id] = previous + ("\n" if previous else "") + text
+
+    def _task(self, task_id: str) -> Any:
+        with self._lock:
+            task = self._tasks.get(task_id)
+        if task is None:
+            raise HTTPException(status_code=404, detail=f"Unknown task: {task_id}")
+        return task
+
+    # -- routes ---------------------------------------------------------
+
+    def _build_app(self) -> FastAPI:
+        app = FastAPI(title="Substrate Chatbot", version="1.0.0")
+
+        @app.get("/", response_class=HTMLResponse)
+        def index() -> str:
+            html_path = STATIC_DIR / "index.html"
+            return html_path.read_text(encoding="utf-8")
+
+        @app.get("/api/status")
+        def status() -> dict[str, Any]:
+            return {
+                "ok": True,
+                "busy": self.agent.busy,
+                "agent": self.agent.status(),
+                "workspace": str(Path(self.config.workspace).expanduser()),
+                "model": self.config.model,
+                "agent_name": self.config.agent,
+            }
+
+        @app.get("/api/sessions")
+        def list_sessions() -> dict[str, Any]:
+            return {"sessions": self.store.list_sessions()}
+
+        @app.post("/api/sessions")
+        def create_session(request: SessionCreateRequest) -> dict[str, Any]:
+            session_id = request.session_id or self.store.new_session()
+            return {"session_id": session_id}
+
+        @app.get("/api/sessions/{session_id}")
+        def get_session(session_id: str) -> dict[str, Any]:
+            messages = self.store.read_session(session_id)
+            if not messages and not self.store.session_exists(session_id):
+                raise HTTPException(status_code=404, detail="Session not found")
+            return {
+                "session_id": session_id,
+                "messages": [message.to_dict() for message in messages],
+            }
+
+        @app.delete("/api/sessions/{session_id}")
+        def delete_session(session_id: str) -> dict[str, Any]:
+            deleted = self.store.delete_session(session_id)
+            if not deleted:
+                raise HTTPException(status_code=404, detail="Session not found")
+            return {"deleted": session_id}
+
+        @app.post("/api/chat")
+        def chat(request: ChatRequest) -> dict[str, Any]:
+            session_id = request.session_id or self.store.new_session()
+            if not self.store.session_exists(session_id):
+                raise HTTPException(status_code=404, detail="Session not found")
+            self.store.append_message(
+                session_id,
+                ChatMessage(role="user", content=request.message, ts=_utc_iso()),
+            )
+            task = self.agent.submit(session_id, request.message)
+            with self._lock:
+                self._tasks[task.task_id] = task
+            return {"task_id": task.task_id, "session_id": session_id, "status": task.status}
+
+        @app.post("/api/cancel")
+        def cancel() -> dict[str, Any]:
+            cancelled = self.agent.cancel()
+            return {"cancelled": cancelled}
+
+        @app.get("/api/stream/{task_id}")
+        def stream(task_id: str) -> StreamingResponse:
+            task = self._task(task_id)
+            return StreamingResponse(
+                self._event_stream(task),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "X-Accel-Buffering": "no",
+                },
+            )
+
+        return app
+
+    def _event_stream(self, task: Any):
+        """Generator that relays a task's event queue to the SSE stream."""
+        heartbeat = 0.0
+        while True:
+            try:
+                item = task.events.get(timeout=15.0)
+            except Exception:  # noqa: BLE001  (Empty)
+                now = time.monotonic()
+                if now - heartbeat >= 15.0:
+                    heartbeat = now
+                    yield ": keepalive\n\n"
+                continue
+            if item == DONE_MARKER:
+                yield "event: done\ndata: {}\n\n"
+                break
+            if isinstance(item, dict):
+                payload = json.dumps(item, ensure_ascii=False)
+                event_type = item.get("type") or "event"
+                yield f"event: {event_type}\ndata: {payload}\n\n"
+            else:
+                yield f"data: {str(item)}\n\n"
+
+
+def _utc_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def create_app(
+    config: ChatbotConfig | None = None, store: ChatStore | None = None
+) -> FastAPI:
+    return ChatbotApp(config=config, store=store).app
