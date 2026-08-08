@@ -113,16 +113,22 @@ ahrondarnell-site. Implementation lives in `substrate/agents/`.
 - `update-agent` (per repo, weekly, Tier 1) — dependency bumps (`uv lock --upgrade`, `npm audit fix`), polish workflows, docs freshness checks; commits only when tests are green.
 - `content-moderator` (ahrondarnell-site, hourly, Tier 1) — triages the site queue; auto-applies hold/needs-changes marks, writes rationale to `.research/site-moderation/`; approvals/rejections remain human-only.
 - `community-manager` (cross-repo, every 4h, Tier 1) — WhatsApp gateway status, GitHub issue/PR triage drafts, community simulation cycles (`.research/community-sim/`); never sends outbound messages.
+- `market-research` (substrate-core, weekly, Tier 0) — the sales research swarm: scans advertising channels and agent-commerce protocols (x402, agent marketplaces, LLM discovery) into `.research/market-demand/`, and refreshes the always-selling posture dashboard (`state/sales-posture.json`). Passive/pull-based only.
+- `resource-generator` (substrate-core, weekly, Tier 1) — consumes `state/resource-backlog.json` from the expansion trigger, drafts resources through the quality gate; publishing into `resources/catalog.json` stays Tier 2.
 
 **Autonomy tiers:**
 - Tier 0: always automatic (notes, reports, branches, test runs).
 - Tier 1: automatic only when validation is green (agent-branch commits, queue hold/needs-changes).
-- Tier 2: always requires an explicit human directive (merges, deploys, publishing, queue approvals, outbound replies). Promoting an action (e.g. Tier 2 → Tier 1) requires editing the tier checks in `substrate/agents/` and the agent's `autonomy_tier` in `agents.yaml` with explicit approval.
+- Tier 2: always requires an explicit human directive (merges, deploys, publishing, queue approvals, outbound replies, ALL crypto financial operations: wallet generation, price updates, opportunity spend, refunds). Promoting an action (e.g. Tier 2 → Tier 1) requires editing the tier checks in `substrate/agents/` and the agent's `autonomy_tier` in `agents.yaml` with explicit approval.
 
 **Commands:**
 - `uv run python scripts/substrate_cli.py agent-cycle` — run every due agent sequentially (used by the systemd timer).
 - `uv run python scripts/substrate_cli.py agent-run --role <role> --repo <slug> [--force] [--directive <text>]` — run one agent manually.
 - `uv run python scripts/substrate_cli.py agent-status` — show roster, last runs, next due times.
+- `uv run python scripts/crypto/wallet_gen.py create --purpose <p> --directive <text>` — generate a wallet (Tier 2).
+- `uv run python scripts/crypto/wallet_gen.py backup` / `list` / `public-address --purpose <p>` / `verify-recovery --purpose <p>`.
+- `uv run python scripts/crypto/backup_proton.py` — verified encrypted backup (Proton Drive sync folder or staged).
+- `uv run python scripts/crypto/export_site_data.py` — regenerate `resources/llm-catalog.json`, site `src/data/*.ts`, and `workers/d1-seed.sql` from source of truth.
 
 **Scheduler:** `scripts/install_agent_timer.sh` installs the
 `substrate-agent-timer` systemd user timer (every 5 minutes; `agent-cycle`

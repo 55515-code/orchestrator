@@ -33,7 +33,7 @@ def _write_donations_ts(manager: WalletManager) -> Path:
     wallets = manager.list_wallets()
     networks: dict[str, dict] = {}
     for wallet in wallets:
-        if wallet.get("purpose") not in {"donations", "payments"}:
+        if wallet.get("purpose") != "donations":
             continue
         network = str(wallet.get("network") or "polygon")
         address = wallet.get("addresses") or [""]
@@ -113,6 +113,8 @@ def _write_d1_seed(inventory: ResourceInventory) -> Path:
     ]
     wallets = WalletManager(ROOT).list_wallets()
     for wallet in wallets:
+        if wallet.get("purpose") != "donations":
+            continue
         network = str(wallet.get("network") or "polygon")
         addresses = wallet.get("addresses") or []
         if not addresses:

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "service": "1pointo digital resources",
-  "generated_at": "2026-08-08T16:26:27.370586+00:00",
+  "generated_at": "2026-08-08T17:32:45.040053+00:00",
   "note": "Payments accepted in USDC/DAI on Polygon and Base. See docs/CRYPTO_PAYMENT_RUNBOOK.md for the delivery flow.",
   "resources": [
     {

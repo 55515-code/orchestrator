@@ -13,13 +13,21 @@ components:
   - substrate/crypto/inventory.py
   - substrate/crypto/token_registry.py
   - substrate/crypto/policy.py
+  - substrate/crypto/revenue.py
+  - substrate/crypto/opportunities.py
+  - substrate/resources/api_access.py
   - substrate/monitoring/crypto_alerts.py
   - substrate/security/audit_trail.py
   - substrate/security/abuse_detection.py
+  - substrate/agents/market_research.py
+  - substrate/agents/resource_gen.py
+  - substrate/pipelines/resource_pipeline.py
+  - substrate/pipelines/quality_gate.py
+  - substrate/pipelines/expansion_trigger.py
   - scripts/crypto/wallet_gen.py
   - scripts/crypto/backup_proton.py
   - scripts/crypto/export_site_data.py
-wallet_purposes: [payments, donations]
+wallet_purposes: [payments, donations, kilo-code]
 ---
 
 # Crypto Payment Flow Runbook
@@ -113,6 +121,38 @@ recorded addresses from the supplied seed and reports mismatches.
 directive; token prices recompute from live rates (stablecoins stay pegged;
 volatile tokens are withheld when rates are unavailable rather than served
 stale).
+
+### 2.7 Competitive undercutting (Tier 2, PF-011)
+
+`PricingEngine.apply_competitive_update()` proposes prices 5% under comparator
+market prices, never below the cost-covering floor (50% of base). Cuts apply
+only when `revenue_trend_ok` is true — a declining revenue trend blocks
+discounting. All price changes require a directive and are audited.
+
+### 2.8 Revenue loop and opportunity spend (PF-016/PF-017)
+
+- Settled payments are recorded by `RevenueTracker.record_payment()` into
+  `state/crypto/revenue.json`; `trend()` reports month-over-month movement.
+- `OpportunityEngine` governs micro-spend (floor 0.1 cent, cap $0.05,
+  EV/cost ≥ 2, max 10% of the stack) from the **earned stack only** — the
+  principal/power-source is never allocated. Allocation requires a Tier 2
+  directive; realized returns are credited back to the stack.
+- The stack can be seeded by the `stack_provider` (e.g. the revenue tracker);
+  no speculative instruments, leverage, or loss-accepting positions.
+
+### 2.9 Programmatic buyers (bots and autonomous networks)
+
+- Discovery: `resources/llm-catalog.json`, site `llms.txt`, worker `/api/llms`,
+  `/api/catalog`. Pull-based and passive only (PF-015).
+- Purchase contract: `GET /api/resource/:id` without a token returns HTTP 402
+  with payment instructions (amount, tokens, networks, verify/deliver
+  endpoints) — the x402-style pattern for payment-capable agents.
+- Access: `APIAccessManager` issues API keys (Tier 2, expiring, revocable) for
+  bots that buy offload services; keys live in `state/crypto/api_keys.json`
+  and never in code.
+- The `market-research` agent (Tier 0, weekly) scans channels/protocols into
+  `.research/market-demand/`; `ExpansionTrigger` queues candidates (Tier 2);
+  `resource-generator` (Tier 1) drafts and gates new resources (publish Tier 2).
 
 ## 3. Threat model (current)
 

@@ -3,7 +3,6 @@
 -- Upsert donation addresses (public only).
 
 INSERT INTO donation_addresses (network, token, address) VALUES ('polygon', 'USDC', '0x537B27beF17eD838f31A90CAdeBa4EE748182404') ON CONFLICT(network, token) DO UPDATE SET address = excluded.address;
-INSERT INTO donation_addresses (network, token, address) VALUES ('polygon', 'USDC', '0xca73fb209E5d59160557DA35f68999a00c851De4') ON CONFLICT(network, token) DO UPDATE SET address = excluded.address;
 
 -- Upsert catalog resources.
 

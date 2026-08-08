@@ -54,9 +54,8 @@ class PaymentFlowGovernanceTest(unittest.TestCase):
         return PaymentFlowGovernance(root), root
 
     def test_missing_rules_file_raises(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(FileNotFoundError):
-                PaymentFlowGovernance(Path(tmp))
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(FileNotFoundError):
+            PaymentFlowGovernance(Path(tmp))
 
     def test_gate_change_requires_directive(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

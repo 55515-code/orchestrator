@@ -45,8 +45,9 @@ async function rpcCall(rpcUrls, method, params) {
   throw new Error(`all RPC providers failed: ${lastError}`);
 }
 
-function rpcUrlsFromEnv(env) {
-  const raw = [env.RPC_URLS, env.RPC_URL].filter(Boolean).join(',');
+function rpcUrlsFromEnv(env, network = 'polygon') {
+  const perNetwork = network === 'base' ? env.RPC_URLS_BASE : env.RPC_URLS_POLYGON;
+  const raw = [perNetwork, env.RPC_URLS, env.RPC_URL].filter(Boolean).join(',');
   return raw
     .split(',')
     .map((entry) => entry.trim())
@@ -110,7 +111,7 @@ async function verifyPayment(request, env) {
     return json({ error: 'txHash and resourceId are required' }, 400);
   }
 
-  const rpcUrls = rpcUrlsFromEnv(env);
+  const rpcUrls = rpcUrlsFromEnv(env, network);
   if (rpcUrls.length < 2) {
     return json({ error: 'server misconfigured: RPC fallback requires >= 2 providers' }, 503);
   }

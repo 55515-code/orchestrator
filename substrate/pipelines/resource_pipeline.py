@@ -79,7 +79,7 @@ class ResourcePipeline:
                 text = str(getattr(result, "content", "") or "").strip()
                 if len(text.split()) > 150:
                     return title, text
-            except Exception:  # noqa: BLE001 - degrade to template generation
+            except Exception:  # noqa: BLE001, S110 - degrade to template generation
                 pass
         return title, _template_content(topic, resource_type)
 

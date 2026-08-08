@@ -41,7 +41,7 @@ def load_payment_rules(root: Path, *, rules_path: Path | None = None) -> dict[st
         raise FileNotFoundError(f"payment-flow rules file missing: {path}")
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(payload, dict):
-        raise ValueError("crypto-rules.yaml must be a mapping")
+        raise TypeError("crypto-rules.yaml must be a mapping")
     if not payload.get("rules"):
         raise ValueError("crypto-rules.yaml must define a non-empty 'rules' list")
     return payload

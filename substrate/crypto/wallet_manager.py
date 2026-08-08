@@ -97,7 +97,7 @@ class WalletManager:
             stored = keyring.get_password(KEYRING_SERVICE, KEYRING_USERNAME)
             if stored:
                 return stored.encode("utf-8")
-        except Exception:  # noqa: BLE001 - keyring backends vary; fall through
+        except Exception:  # noqa: BLE001, S110 - keyring backends vary; fall through
             pass
         key_file = self.state_dir / "master.key"
         if key_file.exists():
@@ -148,7 +148,7 @@ class WalletManager:
         _, Account = _crypto_optional_import()
         try:
             Account.enable_unaudited_hdwallet_features()
-        except Exception:  # noqa: BLE001 - already enabled in some versions
+        except Exception:  # noqa: BLE001, S110 - already enabled in some versions
             pass
         account = Account.from_mnemonic(seed_phrase, account_path=f"{BIP44_BASE_PATH}/{index}")
         return account.address
