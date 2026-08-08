@@ -1,5 +1,7 @@
-# resource-delivery — token-gated delivery of resources from R2.
+# resource-delivery — token-gated delivery of digital resources.
 #
+# Resources are shipped as Workers static assets (R2 is not enabled on this
+# account; the delivery code path is isolated so R2 can be swapped in later).
 # Shares the crypto-payments D1 database with payment-verifier.
 # No secrets required; delivery tokens are issued by payment-verifier.
 
@@ -7,14 +9,13 @@ name = "resource-delivery"
 main = "index.js"
 compatibility_date = "2026-08-01"
 
+assets = { directory = "assets", binding = "ASSETS" }
+
 [vars]
 RATE_LIMIT_PER_HOUR = "30"
+DELIVERY_HOST = "resource-delivery.1pointo.workers.dev"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "crypto-payments"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
-
-[[r2_buckets]]
-binding = "RESOURCES"
-bucket_name = "digital-resources"
+database_id = "fa9d1bb2-4297-4426-9656-38a36710738b"

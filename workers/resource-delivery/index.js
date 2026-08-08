@@ -1,10 +1,13 @@
-// resource-delivery — token-gated delivery of digital resources from R2.
+// resource-delivery — token-gated delivery of digital resources.
 //
 // Security rules (see crypto-rules.yaml, docs/CRYPTO_PAYMENT_RUNBOOK.md):
 //  - Delivery tokens are one-time use and expire.
 //  - Free resources (price_usdc = 0) get rate-limited tokens with no payment.
 //  - Responses include the resource checksum for client-side verification.
 //  - IP-based rate limiting on every public endpoint.
+//
+// Resources are shipped as Workers static assets (R2 is not enabled on this
+// account). The delivery path is isolated so R2 can be swapped in later.
 
 const json = (payload, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -101,20 +104,26 @@ async function deliverResource(request, env, resourceId) {
     return json({ error: 'token expired' }, 401);
   }
 
-  const object = await env.RESOURCES.get(row.resource_path);
-  if (!object) return json({ error: 'resource file missing' }, 404);
+  const resourceUrl = new URL(`/${row.resource_path}`, 'https://assets.local');
+  const asset = await env.ASSETS.fetch(resourceUrl.toString());
+  if (!asset || asset.status === 404) {
+    return json({ error: 'resource file missing' }, 404);
+  }
 
   await env.DB.prepare('UPDATE delivery_tokens SET used = 1, used_at = ? WHERE token = ?')
     .bind(new Date().toISOString(), deliveryToken)
     .run();
 
-  const signedUrl = await object.createSignedUrl(3600);
-
-  return json({
-    downloadUrl: signedUrl,
-    expires_in_seconds: 3600,
-    checksum: resource?.checksum || '',
-    version: resource?.version || '',
+  const filename = row.resource_path.split('/').pop() || 'resource';
+  return new Response(asset.body, {
+    status: 200,
+    headers: {
+      'content-type':
+        asset.headers.get('content-type') || 'text/plain; charset=utf-8',
+      'content-disposition': `attachment; filename="${filename}"`,
+      'x-resource-checksum': resource?.checksum || '',
+      'x-resource-version': resource?.version || '',
+    },
   });
 }
 

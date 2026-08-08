@@ -150,6 +150,32 @@ def _write_d1_seed(inventory: ResourceInventory) -> Path:
     return path
 
 
+def _stage_delivery_assets(inventory: ResourceInventory) -> Path:
+    """Stage catalog files as Worker static assets for token-gated delivery.
+
+    R2 requires dashboard enablement on this account, so delivery uses
+    Workers static assets instead (swappable for R2 later — the delivery
+    code path is isolated). Only catalog files are staged; drafts and
+    metadata never ship.
+    """
+    assets_dir = ROOT / "workers" / "resource-delivery" / "assets"
+    if assets_dir.exists():
+        import shutil
+
+        shutil.rmtree(assets_dir)
+    staged = 0
+    for entry in inventory.load():
+        rel = str(entry.get("file_path") or "")
+        source = ROOT / rel
+        if not source.exists():
+            continue
+        target = assets_dir / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
+        staged += 1
+    return assets_dir
+
+
 def main() -> int:
     manager = WalletManager(ROOT)
     inventory = ResourceInventory(ROOT)
@@ -162,6 +188,7 @@ def main() -> int:
     donations_path = _write_donations_ts(manager)
     resources_path = _write_resources_ts(inventory)
     d1_path = _write_d1_seed(inventory)
+    assets_dir = _stage_delivery_assets(inventory)
 
     print(json.dumps(
         {
@@ -169,6 +196,7 @@ def main() -> int:
             "donations": str(donations_path.relative_to(ROOT)),
             "resources": str(resources_path.relative_to(ROOT)),
             "d1_seed": str(d1_path.relative_to(ROOT)),
+            "delivery_assets": str(assets_dir.relative_to(ROOT)),
         },
         indent=2,
     ))

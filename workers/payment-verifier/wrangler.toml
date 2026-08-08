@@ -24,8 +24,4 @@ POL_USD = "0.50"
 [[d1_databases]]
 binding = "DB"
 database_name = "crypto-payments"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
-
-[[r2_buckets]]
-binding = "RESOURCES"
-bucket_name = "digital-resources"
+database_id = "fa9d1bb2-4297-4426-9656-38a36710738b"

@@ -50,8 +50,10 @@ Buyer ────────────────────────�
 ```
 
 - **Edge**: Cloudflare Workers (`payment-verifier`, `resource-delivery`), D1
-  (`crypto-payments`), R2 (`digital-resources`). Public addresses only — no
-  keys ever leave `state/crypto/`.
+  (`crypto-payments`), and Workers static assets bundled with the delivery
+  worker (R2 is not enabled on this account; the delivery code path is
+  isolated so R2 can be swapped in later). Public addresses only — no keys
+  ever leave `state/crypto/`.
 - **Local**: `substrate/crypto/` manages wallets, backups, pricing, inventory,
   and governance. Audit trail: `state/crypto/audit.jsonl` (hash-chained).
 - **Backup**: Proton Drive sync folder (`CryptoBackups/`) or staged under
@@ -79,8 +81,9 @@ delivery token.
 ### 2.2 Resource delivery (`GET /api/resource/:id`)
 
 Requires header `X-Delivery-Token`. Token must be unused and unexpired. On
-success the token is marked used (one-time) and an R2 signed URL is returned
-(3600s expiry) with the resource checksum for client verification.
+success the token is marked used (one-time) and the resource bytes are
+streamed directly by the worker with `X-Resource-Checksum` and
+`X-Resource-Version` headers for client-side verification.
 
 Free resources: `POST /api/free-token` issues a token for catalog items with
 `price_usdc = 0`, rate-limited per IP. No payment is ever required for free
@@ -162,7 +165,7 @@ discounting. All price changes require a directive and are audited.
 | Seed loss | Verified encrypted backups; recovery test command |
 | Payment replay | `payments.tx_hash` primary key; one-time delivery tokens |
 | Forged confirmation | Multi-RPC fallback + confirmation depth check |
-| Delivery token leak | One-time use, 1h expiry, checksum in response |
+| Delivery token leak | One-time use, 24h expiry, checksum in response |
 | Free-tier abuse | Per-IP rate limits + burst detection (AbuseDetector) |
 | Audit tampering | Hash-chained JSONL; chain verified during vetting |
 | Stale docs / silent drift | This runbook is machine-checked (PF-001) |

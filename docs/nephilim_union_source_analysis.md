@@ -57,12 +57,28 @@ All observations below are drawn from the image itself; no prior artifacts carri
 
 ## 5. Modernization Strategy (derived from observation)
 
-Fidelity-first. The previous text-to-image approach failed alignment; therefore:
+Fidelity-first. Text-to-image and AI img2img were tested and **discarded with evidence**:
 
-1. **Faithful remaster** (primary): 5× LANCZOS upscale, JPEG-block cleanup, vibrance
-   lift, gentle S-curve, subtle highlight bloom — same art, modern finish.
-2. **Guarded AI re-render** (optional): image-to-image (FLUX Kontext) using a prompt
-   written only from §1–§3, accepted **only** if it passes structural QC
-   (edge-map correlation + palette ΔE vs. source); otherwise discarded.
-3. **QC gates:** luminance correlation ≥ 0.93 (remaster), palette ΔE ≤ 12 (remaster) /
-   ≤ 30 + edge corr ≥ 0.45 (AI), sharpness non-regression, integrity.
+- **FLUX Kontext** (structure-preserving edit model): HTTP 500 — "kontext model is only
+  available on enter.pollinations.ai" (enterprise tier). Unavailable.
+- **Free flux + `image` param** (img2img): returned a generic two-portrait anime image
+  borrowing only the palette; source composition ignored (probe kept in repo history,
+  QC edge-correlation gate would reject). Discarded.
+
+Final pipeline (`scripts/remaster_pipeline.py`), all steps derived from §1–§3:
+
+1. **Edge-masked deblock** at source scale — Gaussian smoothing applied only to flat
+   wash regions (edge magnitude < p55), preserving linework, seam, and type.
+2. **5× LANCZOS upscale** (828×1104 → 4140×5520).
+3. **Vibrance** (undersaturated-pixel-weighted saturation lift, a=0.25).
+4. **Gentle S-curve** (contrast 1.06).
+5. **Subtle highlight bloom** (15% screen-blend of 24px blur above luma 190).
+6. **UnsharpMask** (r=2, 110%, t=2) to crisp the contour linework.
+
+QC gates (all pass on final run):
+- luminance NCC vs source ≥ 0.93 → **0.9961**
+- palette ΔE (k-means 5, Lab) ≤ 12 → **4.50**
+- integrity: decodable PNG 4140×5520 → pass
+
+Outputs: `generated/remaster/nephilim_union_modern_final.png` (primary),
+`preview_modern_1024.png`, `report.json`.

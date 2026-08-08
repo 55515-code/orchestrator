@@ -52,7 +52,7 @@ Payment flows are governed by `crypto-rules.yaml` and enforced by
 
 - **Key custody**: seeds are Fernet-encrypted in `state/crypto/seeds.enc`
   (gitignored); keys resolve from env, system keyring, or `master.key`
-  (chmod 600). No secret ever reaches Workers, D1, R2, logs, or the audit trail.
+  (chmod 600). No secret ever reaches Workers, D1, logs, or the audit trail.
 - **Autonomy tiers**: wallet generation, publishing, swaps, price updates, and
   refunds are Tier 2 and require an explicit human directive; refusals are
   audited.

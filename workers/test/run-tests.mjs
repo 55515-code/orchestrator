@@ -96,21 +96,24 @@ function memoryDB() {
   };
 }
 
-function memoryR2() {
-  const objects = new Map();
-  objects.set('resources/security/free-item.md', { exists: true });
-  objects.set('resources/compliance/paid-item.md', { exists: true });
+function memoryAssets() {
+  const files = new Map([
+    ['resources/security/free-item.md', '# Free Checklist\n'],
+    ['resources/compliance/paid-item.md', '# Paid Guide\n'],
+  ]);
   return {
-    async get(key) {
-      return objects.get(key) || null;
+    async fetch(url) {
+      const path = new URL(url).pathname.replace(/^\//, '');
+      const body = files.get(path);
+      if (body === undefined) return new Response('not found', { status: 404 });
+      return new Response(body, { headers: { 'content-type': 'text/markdown' } });
     },
-    objects,
   };
 }
 
 test('free-token issues a token for a free resource', async () => {
   const db = memoryDB();
-  const env = { DB: db, RESOURCES: memoryR2(), RATE_LIMIT_PER_HOUR: '30', DELIVERY_HOST: 'delivery.example' };
+  const env = { DB: db, ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30', DELIVERY_HOST: 'delivery.example' };
   const request = new Request('http://delivery.example/api/free-token', {
     method: 'POST',
     body: JSON.stringify({ resourceId: 'free-item' }),
@@ -124,7 +127,7 @@ test('free-token issues a token for a free resource', async () => {
 
 test('free-token refuses a paid resource', async () => {
   const db = memoryDB();
-  const env = { DB: db, RESOURCES: memoryR2(), RATE_LIMIT_PER_HOUR: '30' };
+  const env = { DB: db, ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30' };
   const request = new Request('http://delivery.example/api/free-token', {
     method: 'POST',
     body: JSON.stringify({ resourceId: 'paid-item' }),
@@ -135,7 +138,7 @@ test('free-token refuses a paid resource', async () => {
 
 test('paid resource without token returns 402 payment contract', async () => {
   const db = memoryDB();
-  const env = { DB: db, RESOURCES: memoryR2(), RATE_LIMIT_PER_HOUR: '30' };
+  const env = { DB: db, ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30' };
   const request = new Request('http://delivery.example/api/resource/paid-item');
   const response = await deliveryWorker.fetch(request, env);
   if (response.status !== 402) throw new Error(`expected 402, got ${response.status}`);
@@ -146,7 +149,7 @@ test('paid resource without token returns 402 payment contract', async () => {
 
 test('free resource without token also returns 402 with guidance', async () => {
   const db = memoryDB();
-  const env = { DB: db, RESOURCES: memoryR2(), RATE_LIMIT_PER_HOUR: '30' };
+  const env = { DB: db, ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30' };
   const request = new Request('http://delivery.example/api/resource/free-item');
   const response = await deliveryWorker.fetch(request, env);
   if (response.status !== 402) throw new Error(`expected 402, got ${response.status}`);
@@ -161,21 +164,15 @@ test('delivery consumes one-time token and returns signed URL', async () => {
     expires_at: new Date(Date.now() + 3600_000).toISOString(),
     used: 0,
   });
-  const r2 = memoryR2();
-  r2.objects.set('resources/security/free-item.md', {
-    exists: true,
-    async createSignedUrl(seconds) {
-      return `https://r2.example/download?expires=${seconds}`;
-    },
-  });
-  const env = { DB: db, RESOURCES: r2, RATE_LIMIT_PER_HOUR: '30' };
+  const env = { DB: db, ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30' };
   const request = new Request('http://delivery.example/api/resource/free-item', {
     headers: { 'x-delivery-token': 'tok-1' },
   });
   const response = await deliveryWorker.fetch(request, env);
   if (response.status !== 200) throw new Error(`status ${response.status}`);
-  const payload = await response.json();
-  if (!payload.downloadUrl) throw new Error('no signed url');
+  const body = await response.text();
+  if (!body.includes('Free Checklist')) throw new Error('asset body missing');
+  if (!response.headers.get('x-resource-checksum')) throw new Error('checksum header missing');
   const row = db.tables.delivery_tokens.find((t) => t.token === 'tok-1');
   if (row.used !== 1) throw new Error('token was not marked used');
 });
@@ -204,7 +201,7 @@ test('payment verifier requires at least two RPC providers', async () => {
 });
 
 test('health endpoints respond', async () => {
-  const env = { DB: memoryDB(), RESOURCES: memoryR2(), RATE_LIMIT_PER_HOUR: '30' };
+  const env = { DB: memoryDB(), ASSETS: memoryAssets(), RATE_LIMIT_PER_HOUR: '30' };
   const deliveryHealth = await deliveryWorker.fetch(new Request('http://delivery.example/api/health'), env);
   const paymentHealth = await paymentWorker.fetch(
     new Request('http://pay.example/api/health'),
