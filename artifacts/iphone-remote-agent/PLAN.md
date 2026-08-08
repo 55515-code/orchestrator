@@ -4,7 +4,7 @@
 **Date:** 2026-08-07
 **Author:** Local Agent Substrate (3×3 lifecycle, local stage, research pass)
 **Host:** CachyOS Linux (Arch-based, kernel 7.1.6-1-cachyos)
-**Network:** wlan0 <redacted>, public IP <redacted>, public DNS for 1pointo.com already on Cloudflare
+**Network:** tailnet-only (LAN + public IP redacted from public docs); public DNS for 1pointo.com on Cloudflare
 
 ---
 

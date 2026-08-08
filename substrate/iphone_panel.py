@@ -94,17 +94,15 @@ async def run_automation(name: str, request: Request) -> dict[str, Any]:
         prompt = str(payload.get("prompt", "")).strip()
         if not prompt:
             raise HTTPException(status_code=400, detail="agent_session requires {\"prompt\": \"...\"}")
-        cmd = cmd.replace("%PROMPT%", prompt)
 
     if not WRAPPER.exists():
         raise HTTPException(status_code=500, detail=f"wrapper missing: {WRAPPER}")
 
-    if name == "agent_session":
-        shell_cmd = f"exec {cmd}"
-    else:
-        shell_cmd = f"{WRAPPER} {name}"
-        if prompt:
-            shell_cmd += f" {prompt!r}"
+    # Delegate to run.sh for every action: it substitutes %PROMPT% as a positional
+    # argument to bash -c, so the prompt can never be interpreted as shell code.
+    shell_cmd = f"{WRAPPER} {name}"
+    if prompt:
+        shell_cmd += f" {prompt!r}"
 
     if cwd and cwd != ".":
         shell_cmd = f"cd {cwd!r} && {shell_cmd}"

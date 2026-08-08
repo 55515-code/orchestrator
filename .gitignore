@@ -84,3 +84,12 @@ linkedin-*.png
 android-swarm/.gradle/
 android-swarm/build/
 android-swarm/app/build/
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+secrets/
+*.db
+*.sqlite
+*.sqlite3
+.envrc

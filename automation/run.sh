@@ -62,10 +62,13 @@ if [ -z "$CMD" ]; then
   exit 3
 fi
 
-# Substitute %PROMPT% in agent_session with remaining args
+# Substitute %PROMPT% with a positional parameter reference ($1). The prompt is
+# passed to bash -c as a separate argument, so it can never be interpreted as
+# shell code (defeats command injection via %PROMPT%).
 if [[ "$CMD" == *"%PROMPT%"* ]]; then
   PROMPT="$*"
-  CMD="${CMD//%PROMPT%/$PROMPT}"
+  CMD=$(printf '%s' "$CMD" | sed 's/"%PROMPT%"/"$1"/g; s/%PROMPT%/$1/g')
+  HAS_PROMPT=1
 fi
 
 if [ -n "$CWD" ] && [ "$CWD" != "." ]; then
@@ -73,4 +76,8 @@ if [ -n "$CWD" ] && [ "$CWD" != "." ]; then
 fi
 
 echo "+ $CMD" >&2
-eval "$CMD"
+if [ "${HAS_PROMPT:-0}" = "1" ]; then
+  exec bash -c "$CMD" bash "$PROMPT"
+else
+  exec bash -c "$CMD"
+fi

@@ -29,9 +29,9 @@ Disk free: 80.4GB
 ## Network
 ```text
 lo               UNKNOWN        127.0.0.1/8 ::1/128 
-wlan0            UP             <redacted>/24 <redacted>/64 fe80::5102:14bc:54f8:a60f/64 
-tailscale0       UNKNOWN        100.117.132.49/32 fd7a:115c:a1e0::e101:84d5/128 fe80::98c2:1dce:caed:d0d5/64 
-proton0          UNKNOWN        10.2.0.2/32 
+wlan0            UP             192.168.x.x/24 xxxx:xxxx:xxxx:xxxx::/64 fe80::xxxx:xxxx:xxxx:xxxx/64 
+tailscale0       UNKNOWN        100.x.x.x/32 fd7a:xxxx:xxxx::x:xxxx/128 fe80::xxxx:xxxx:xxxx:xxxx/64 
+proton0          UNKNOWN        10.x.x.x/32 
 ipv6leakintrf0   UNKNOWN        fdeb:446c:912d:8da::/64 fe80::288c:361:4cf:ad9c/64
 ```
 
