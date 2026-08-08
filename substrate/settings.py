@@ -23,9 +23,11 @@ STANDARDS_FILE = "standards.yaml"
 TOOL_PROFILES_FILE = "tool_profiles.yaml"
 INTEGRATIONS_FILE = "integrations.yaml"
 CONFIG_SYNC_PROFILES_FILE = "config_sync_profiles.yaml"
+RENDER_PROFILES_FILE = "render_profiles.yaml"
 STATE_DIR = "state"
 MEMORY_DIR = "memory"
 RESEARCH_DIR = ".research"
+GENERATED_DIR = "generated"
 
 DEFAULT_IGNORED_PATHS = [
     ".git",
@@ -61,6 +63,7 @@ def workspace_paths(root: Path) -> dict[str, Path]:
         "tool_profiles": root / TOOL_PROFILES_FILE,
         "integrations": root / INTEGRATIONS_FILE,
         "config_sync_profiles": root / CONFIG_SYNC_PROFILES_FILE,
+        "render_profiles": root / RENDER_PROFILES_FILE,
         "memory": root / MEMORY_DIR,
         "state": root / STATE_DIR,
         "research": root / RESEARCH_DIR,
@@ -69,6 +72,9 @@ def workspace_paths(root: Path) -> dict[str, Path]:
         "learning_index": root / STATE_DIR / "learning-index.json",
         "learning_log": root / MEMORY_DIR / "dev-history.jsonl",
         "config_sync_index": root / STATE_DIR / "config-sync-index.json",
+        "render_state": root / STATE_DIR / "render-state.json",
+        "render_cache": root / STATE_DIR / "render-cache",
+        "render_output": root / GENERATED_DIR / "renders",
         "config_sync_backups": root / MEMORY_DIR / "config-sync" / "backups",
         "config_sync_deployments": root / MEMORY_DIR / "config-sync" / "deployments",
         # Legacy path keys retained for backward compatibility.
@@ -83,6 +89,8 @@ def ensure_runtime_dirs(root: Path) -> None:
     paths["memory"].mkdir(parents=True, exist_ok=True)
     paths["state"].mkdir(parents=True, exist_ok=True)
     paths["research"].mkdir(parents=True, exist_ok=True)
+    paths["render_cache"].mkdir(parents=True, exist_ok=True)
+    paths["render_output"].mkdir(parents=True, exist_ok=True)
 
 
 def _default_slug(path: Path) -> str:

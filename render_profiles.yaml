@@ -1,0 +1,289 @@
+version: 1
+
+defaults:
+  optimize_for: quality
+  allow_hosted: false
+  max_cost_usd: 0.50
+  fallback_order:
+    - local_flux2_klein
+    - local_z_image_turbo
+    - local_noobai_xl
+    - local_sdxl
+    - local_flux1_dev_gguf
+    - openai_gpt_image
+    - reveal
+    - gemini_image
+    - bfl_flux2
+    - openrouter_image
+  local_first: true
+  quality_gate: 0.0
+
+engines:
+  - id: local_flux2_klein
+    name: FLUX.2 Klein 4B (local)
+    kind: local_gpu
+    impl: substrate.render_engines.local_diffusers:Flux2KleinEngine
+    model_id: black-forest-labs/FLUX.2-klein-4B
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - style_reference
+    quality_tier: high
+    speed_tier: fast
+    cost_per_image_usd: 0.0
+    memory_strategy: model_cpu_offload
+    api_key_env: null
+    license: Apache-2.0
+    gated: false
+    max_pixels: 4194304
+    supports_style_refs: false
+    style_ref_max: 0
+    requires:
+      - torch
+      - diffusers
+      - transformers
+      - accelerate
+    enabled: true
+    notes: Default local engine. 4 steps, guidance 1.0. Best modern look per GB.
+
+  - id: local_z_image_turbo
+    name: Z-Image Turbo (local)
+    kind: local_gpu
+    impl: substrate.render_engines.local_diffusers:ZImageTurboEngine
+    model_id: Tongyi-MAI/Z-Image-Turbo
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - style_reference
+    quality_tier: high
+    speed_tier: fast
+    cost_per_image_usd: 0.0
+    memory_strategy: model_cpu_offload
+    api_key_env: null
+    license: Apache-2.0
+    gated: false
+    max_pixels: 4194304
+    supports_style_refs: false
+    style_ref_max: 0
+    requires:
+      - torch
+      - diffusers
+      - transformers
+      - accelerate
+    enabled: true
+    notes: 8–9 steps, guidance 0.0. Very high photoreal quality; low diversity.
+
+  - id: local_noobai_xl
+    name: NoobAI-XL v-pred (local SDXL)
+    kind: local_gpu
+    impl: substrate.render_engines.local_diffusers:NoobAIXLEngine
+    model_id: Illustrious/NoobAI-XL-v-pred
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - style_reference
+    quality_tier: high
+    speed_tier: fast
+    cost_per_image_usd: 0.0
+    memory_strategy: model_cpu_offload
+    api_key_env: null
+    license: Fair AI Public License
+    gated: false
+    max_pixels: 1572864
+    supports_style_refs: false
+    style_ref_max: 0
+    requires:
+      - torch
+      - diffusers
+      - transformers
+      - accelerate
+    enabled: true
+    notes: >-
+      Illustrious/NoobAI-XL v-prediction SDXL checkpoint for neon/cyberpunk.
+      Requires Euler or DDIM samplers ONLY — NEVER Karras.
+      CFG 3–5 recommended.
+
+  - id: local_sdxl
+    name: SDXL Base 1.0 (local)
+    kind: local_gpu
+    impl: substrate.render_engines.local_diffusers:SDXLEngine
+    model_id: stabilityai/stable-diffusion-xl-base-1.0
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - edit
+      - inpaint
+    quality_tier: medium
+    speed_tier: medium
+    cost_per_image_usd: 0.0
+    memory_strategy: model_cpu_offload
+    api_key_env: null
+    license: OpenRAIL++
+    gated: false
+    max_pixels: 1572864
+    supports_style_refs: false
+    style_ref_max: 0
+    requires:
+      - torch
+      - diffusers
+      - transformers
+      - accelerate
+    enabled: true
+    notes: >-
+      Legacy / dated-looking. Retained only as a last-resort fallback when
+      newer local engines are unavailable.
+
+  - id: local_flux1_dev_gguf
+    name: FLUX.1-dev GGUF (local)
+    kind: local_gpu
+    impl: substrate.render_engines.local_diffusers:Flux1DevGGUFEngine
+    model_id: city96/FLUX.1-dev-gguf
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - style_reference
+      - edit
+    quality_tier: high
+    speed_tier: slow
+    cost_per_image_usd: 0.0
+    memory_strategy: model_cpu_offload
+    api_key_env: null
+    license: FLUX.1-dev Non-Commercial
+    gated: true
+    max_pixels: 4194304
+    supports_style_refs: true
+    style_ref_max: 8
+    requires:
+      - torch
+      - diffusers
+      - transformers
+      - accelerate
+    enabled: true
+    notes: >-
+      Q4_K_S quant. Adapter ecosystem: Redux, ControlNet-Union-Pro.
+      Non-commercial license — verify use case before deploying.
+
+  - id: openai_gpt_image
+    name: OpenAI GPT Image 2
+    kind: hosted_api
+    impl: substrate.render_engines.hosted:OpenAIGPTImageEngine
+    model_id: gpt-image-2
+    capabilities:
+      - text_to_image
+      - edit
+      - inpaint
+    quality_tier: ultra
+    speed_tier: fast
+    cost_per_image_usd: 0.211
+    memory_strategy: none
+    api_key_env: OPENAI_API_KEY
+    license: OpenAI API Terms
+    gated: false
+    max_pixels: 1572864
+    supports_style_refs: true
+    style_ref_max: 10
+    requires: []
+    enabled: true
+    notes: OpenAI API Organization Verification is required.
+
+  - id: reveal
+    name: Reve 2.1
+    kind: hosted_api
+    impl: substrate.render_engines.hosted:ReveEngine
+    model_id: reve:2@1
+    capabilities:
+      - text_to_image
+      - edit
+      - inpaint
+      - style_reference
+    quality_tier: ultra
+    speed_tier: fast
+    cost_per_image_usd: 0.20
+    memory_strategy: none
+    api_key_env: REVE_API_KEY
+    license: Reve API License
+    gated: false
+    max_pixels: 16777216
+    supports_style_refs: true
+    style_ref_max: 8
+    requires: []
+    enabled: true
+    notes: Best target for ~4K print. Native 4096x4096 output.
+
+  - id: gemini_image
+    name: Gemini 3 Pro Image (Nano Banana Pro)
+    kind: hosted_api
+    impl: substrate.render_engines.hosted:GeminiImageEngine
+    model_id: gemini-3-pro-image
+    capabilities:
+      - text_to_image
+      - edit
+      - style_reference
+    quality_tier: ultra
+    speed_tier: medium
+    cost_per_image_usd: 0.134
+    memory_strategy: none
+    api_key_env: GEMINI_API_KEY
+    license: Google API Terms
+    gated: false
+    max_pixels: 16777216
+    supports_style_refs: true
+    style_ref_max: 14
+    requires: []
+    enabled: true
+    notes: >-
+      Mandatory SynthID watermark on every output.
+      p50 latency ~23 s. Native 4096x4096.
+
+  - id: bfl_flux2
+    name: BFL FLUX.2 [max] / [pro]
+    kind: hosted_api
+    impl: substrate.render_engines.hosted:BFLFlux2Engine
+    model_id: flux-2-max
+    capabilities:
+      - text_to_image
+      - edit
+      - inpaint
+      - style_reference
+    quality_tier: ultra
+    speed_tier: fast
+    cost_per_image_usd: 0.07
+    memory_strategy: none
+    api_key_env: BFL_API_KEY
+    license: BFL API Terms
+    gated: false
+    max_pixels: 4194304
+    supports_style_refs: true
+    style_ref_max: 8
+    requires: []
+    enabled: true
+    notes: >-
+      Auth uses the x-key header (NOT Bearer).
+      Result URLs expire in 10 minutes — download immediately.
+      Priced per megapixel.
+
+  - id: openrouter_image
+    name: OpenRouter Image Router
+    kind: hosted_api
+    impl: substrate.render_engines.hosted:OpenRouterImageEngine
+    model_id: google/gemini-3-pro-image
+    capabilities:
+      - text_to_image
+      - edit
+      - style_reference
+    quality_tier: ultra
+    speed_tier: fast
+    cost_per_image_usd: 0.134
+    memory_strategy: none
+    api_key_env: OPENROUTER_API_KEY
+    license: OpenRouter Terms
+    gated: false
+    max_pixels: 16777216
+    supports_style_refs: true
+    style_ref_max: 14
+    requires: []
+    enabled: true
+    notes: >-
+      Multi-model transport with allow_fallbacks.
+      Failed generations return 502 and are NOT billed.
+      Supports input_references for style conditioning.
