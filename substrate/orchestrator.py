@@ -256,6 +256,19 @@ class Orchestrator:
                 "Use --allow-stage-skip to bypass."
             )
 
+    def _assert_restricted_terms(self, text: str, context: str = "") -> None:
+        terms = self.runtime.workspace.policy.restricted_terms
+        if not terms:
+            return
+        haystack = text.lower()
+        matches = [term for term in terms if term.lower() in haystack]
+        if not matches:
+            return
+        raise PermissionError(
+            f"Restricted term(s) detected in {context or 'input'}: {matches}. "
+            "This content is blocked by policy."
+        )
+
     def _chain_retry_policy(self, defaults: dict[str, Any]) -> RetryPolicy:
         raw_retry = defaults.get("retry_policy", {})
         if not isinstance(raw_retry, dict):
@@ -735,6 +748,10 @@ class Orchestrator:
             requested_mode=requested_mode, repo=repo, allow_mutations=allow_mutations
         )
         self._assert_mutation_policy(mode)
+        self._assert_restricted_terms(
+            " ".join([objective, chain_path]),
+            context="chain objective/path",
+        )
 
         run_id = run_id or self._new_run_id()
         chain_file = (self.runtime.root / chain_path).resolve()
@@ -1032,6 +1049,10 @@ class Orchestrator:
                     rendered_prompt = _render_prompt(
                         prompt_path,
                         {"objective": objective, "context": context, "outputs": outputs},
+                    )
+                    self._assert_restricted_terms(
+                        rendered_prompt,
+                        context=f"step '{step_id}' prompt",
                     )
                     pass_name = str(step.get("pass") or step_id).strip().lower()
                     should_attempt_openclaw = bool(openclaw_manual_trigger)
@@ -1409,6 +1430,10 @@ class Orchestrator:
 
         command = task.command_for_platform(platform_key())
         command = [os.path.expandvars(token) for token in command]
+        self._assert_restricted_terms(
+            " ".join([task_id, task.description, *command]),
+            context=f"task '{task_id}'",
+        )
         policy = self.runtime.workspace.policy
         bounded_validation = self._is_bounded_validation_task(
             task_id=task_id,

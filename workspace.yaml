@@ -36,6 +36,11 @@ policy:
   rc1_watchdog_stuck_confirmation_seconds: 2.0
   rc1_watchdog_poll_interval_seconds: 0.5
   rc1_watchdog_terminate_grace_seconds: 1.0
+  restricted_terms:
+    - concepts2code
+    - concepts2code.com
+    - dialconnection
+    - dialconnection.com
 
 discovery:
   enabled: true

@@ -99,6 +99,7 @@ class PolicyConfig:
     rc1_watchdog_stuck_confirmation_seconds: float = 2.0
     rc1_watchdog_poll_interval_seconds: float = 0.5
     rc1_watchdog_terminate_grace_seconds: float = 1.0
+    restricted_terms: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)

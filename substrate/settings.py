@@ -252,6 +252,11 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
     rc1_watchdog_terminate_grace_seconds = float(
         raw_policy.get("rc1_watchdog_terminate_grace_seconds", 1.0)
     )
+    restricted_terms = [
+        str(term).strip()
+        for term in (raw_policy.get("restricted_terms") or [])
+        if str(term).strip()
+    ]
 
     policy = PolicyConfig(
         default_mode=str(raw_policy.get("default_mode", "observe")),  # type: ignore[arg-type]
@@ -290,6 +295,7 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
         rc1_watchdog_stuck_confirmation_seconds=rc1_watchdog_stuck_confirmation_seconds,
         rc1_watchdog_poll_interval_seconds=rc1_watchdog_poll_interval_seconds,
         rc1_watchdog_terminate_grace_seconds=rc1_watchdog_terminate_grace_seconds,
+        restricted_terms=restricted_terms,
     )
     if policy.default_mode not in {"observe", "mutate"}:
         raise ValueError("policy.default_mode must be observe|mutate.")
