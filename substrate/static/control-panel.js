@@ -56,7 +56,13 @@ class ControlPanel {
             
             // Update active nav item
             document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.page === page);
+                const isActive = item.dataset.page === page;
+                item.classList.toggle('active', isActive);
+                if (isActive) {
+                    item.setAttribute('aria-current', 'page');
+                } else {
+                    item.removeAttribute('aria-current');
+                }
             });
             
             // Load page-specific data

@@ -10,40 +10,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Skip link for keyboard and screen-reader users. -->
+    <a href="#main" class="skip-link">Skip to main content</a>
+
     <!-- Ambient Background -->
-    <div class="ambient-bg"></div>
+    <div class="ambient-bg" aria-hidden="true"></div>
     
     <!-- Command Palette Overlay -->
-    <div id="commandPalette" class="command-palette hidden">
+    <div id="commandPalette" class="command-palette hidden" role="search" aria-label="Command palette.">
         <div class="command-palette-content">
-            <input type="text" id="commandSearch" placeholder="Type a command or search..." autocomplete="off">
-            <div class="command-results" id="commandResults"></div>
+            <input type="text" id="commandSearch" placeholder="Type a command or search..." autocomplete="off" aria-label="Search commands.">
+            <div class="command-results" id="commandResults" role="listbox" aria-label="Search results."></div>
         </div>
     </div>
 
     <!-- Main Layout -->
     <div class="app-layout">
         <!-- Sidebar Navigation -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar" role="complementary" aria-label="Sidebar.">
             <div class="sidebar-header">
                 <div class="brand">
-                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                     </svg>
                     <span class="brand-text">Substrate</span>
                 </div>
-                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar.">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6"/>
                     </svg>
                 </button>
             </div>
 
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" role="navigation" aria-label="Main navigation.">
                 <div class="nav-section">
                     <div class="nav-section-title">Overview</div>
-                    <a href="#overview" class="nav-item active" data-page="overview">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#overview" class="nav-item active" data-page="overview" aria-label="Dashboard" aria-current="page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <rect x="3" y="3" width="7" height="7"/>
                             <rect x="14" y="3" width="7" height="7"/>
                             <rect x="14" y="14" width="7" height="7"/>
@@ -51,8 +54,8 @@
                         </svg>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#metrics" class="nav-item" data-page="metrics">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#metrics" class="nav-item" data-page="metrics" aria-label="Metrics">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M18 20V10M12 20V4M6 20v-6"/>
                         </svg>
                         <span>Metrics</span>
@@ -61,23 +64,23 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
-                    <a href="#repositories" class="nav-item" data-page="repositories">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#repositories" class="nav-item" data-page="repositories" aria-label="Repositories">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                         </svg>
                         <span>Repositories</span>
                         <span class="nav-badge" id="repoCount">0</span>
                     </a>
-                    <a href="#runs" class="nav-item" data-page="runs">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#runs" class="nav-item" data-page="runs" aria-label="Runs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
                         <span>Runs</span>
                         <span class="nav-badge" id="runCount">0</span>
                     </a>
-                    <a href="#tasks" class="nav-item" data-page="tasks">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#tasks" class="nav-item" data-page="tasks" aria-label="Tasks">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M9 11l3 3L22 4"/>
                             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                         </svg>
@@ -87,33 +90,33 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">Intelligence</div>
-                    <a href="#learning" class="nav-item" data-page="learning">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#learning" class="nav-item" data-page="learning" aria-label="Learning">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
                         </svg>
                         <span>Learning</span>
                     </a>
-                    <a href="#kilo" class="nav-item" data-page="kilo">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#kilo" class="nav-item" data-page="kilo" aria-label="Kilo Code">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
                         <span>Kilo Code</span>
                     </a>
-                    <a href="#automations" class="nav-item" data-page="automations">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#automations" class="nav-item" data-page="automations" aria-label="Automations">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                         </svg>
                         <span>Automations</span>
                     </a>
-                    <a href="#system" class="nav-item" data-page="system">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#system" class="nav-item" data-page="system" aria-label="System">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
                         </svg>
                         <span>System</span>
                     </a>
-                    <a href="#terminal" class="nav-item" data-page="terminal">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#terminal" class="nav-item" data-page="terminal" aria-label="Terminal">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M4 17l6-5-6-5M12 19h8"/>
                         </svg>
                         <span>Terminal</span>
@@ -122,22 +125,22 @@
 
                 <div class="nav-section">
                     <div class="nav-section-title">System</div>
-                    <a href="#integrations" class="nav-item" data-page="integrations">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#integrations" class="nav-item" data-page="integrations" aria-label="Integrations">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="12" cy="12" r="10"/>
                             <line x1="2" y1="12" x2="22" y2="12"/>
                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
                         <span>Integrations</span>
                     </a>
-                    <a href="#whatsapp-setup" class="nav-item" data-page="whatsapp-setup">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#whatsapp-setup" class="nav-item" data-page="whatsapp-setup" aria-label="WhatsApp Setup">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                         </svg>
                         <span>WhatsApp Setup</span>
                     </a>
-                    <a href="#config" class="nav-item" data-page="config">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#config" class="nav-item" data-page="config" aria-label="Configuration">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="12" cy="12" r="3"/>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                         </svg>
@@ -148,11 +151,11 @@
 
             <div class="sidebar-footer">
                 <div class="status-indicator">
-                    <div class="status-dot online"></div>
+                    <div class="status-dot online" aria-hidden="true"></div>
                     <span class="status-text">System Online</span>
                 </div>
-                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme.">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <circle cx="12" cy="12" r="5"/>
                         <line x1="12" y1="1" x2="12" y2="3"/>
                         <line x1="12" y1="21" x2="12" y2="23"/>
@@ -163,7 +166,7 @@
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                     </svg>
-                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                     </svg>
                 </button>
@@ -171,11 +174,11 @@
         </aside>
 
         <!-- Main Content Area -->
-        <main class="main-content">
+        <main class="main-content" id="main" role="main" tabindex="-1">
             <!-- Top Bar -->
-            <header class="topbar">
-                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <header class="topbar" role="banner">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu.">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <line x1="3" y1="12" x2="21" y2="12"/>
                         <line x1="3" y1="6" x2="21" y2="6"/>
                         <line x1="3" y1="18" x2="21" y2="18"/>
@@ -183,12 +186,12 @@
                 </button>
                 
                 <div class="breadcrumb">
-                    <span class="breadcrumb-item" id="currentPage">Dashboard</span>
+                    <span class="breadcrumb-item" id="currentPage" aria-live="polite">Dashboard</span>
                 </div>
 
                 <div class="topbar-actions">
-                    <button class="command-palette-trigger" id="commandPaletteTrigger">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="command-palette-trigger" id="commandPaletteTrigger" aria-label="Open command palette.">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="11" cy="11" r="8"/>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
@@ -196,8 +199,8 @@
                         <kbd>⌘K</kbd>
                     </button>
                     
-                    <button class="refresh-btn" id="refreshBtn" aria-label="Refresh data">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <button class="refresh-btn" id="refreshBtn" aria-label="Refresh data.">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <polyline points="23 4 23 10 17 10"/>
                             <polyline points="1 20 1 14 7 14"/>
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
@@ -209,10 +212,10 @@
             <!-- Page Content Container -->
             <div class="page-container">
                 <!-- Overview Page -->
-                <div class="page active" id="page-overview">
+                <div class="page active" id="page-overview" role="region" aria-label="System overview.">
                     <div class="page-header">
                         <h1>System Overview</h1>
-                        <p class="page-subtitle">Real-time monitoring and control plane for your substrate</p>
+                        <p class="page-subtitle">Real-time monitoring and control plane for your substrate.</p>
                     </div>
 
                     <!-- Metrics Grid -->
@@ -220,7 +223,7 @@
                         <div class="metric-card glass">
                             <div class="metric-header">
                                 <span class="metric-label">Repositories</span>
-                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
                                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
                                 </svg>
@@ -235,7 +238,7 @@
                         <div class="metric-card glass">
                             <div class="metric-header">
                                 <span class="metric-label">Active Runs</span>
-                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <polygon points="5 3 19 12 5 21 5 3"/>
                                 </svg>
                             </div>
@@ -249,7 +252,7 @@
                         <div class="metric-card glass">
                             <div class="metric-header">
                                 <span class="metric-label">Success Rate</span>
-                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                     <polyline points="22 4 12 14.01 9 11.01"/>
                                 </svg>
@@ -264,7 +267,7 @@
                         <div class="metric-card glass">
                             <div class="metric-header">
                                 <span class="metric-label">System Health</span>
-                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                                 </svg>
                             </div>
@@ -283,30 +286,30 @@
                         <div class="bento-card glass bento-large">
                             <div class="card-header">
                                 <h3>Recent Activity</h3>
-                                <button class="card-action">View All</button>
+                                <button class="card-action" aria-label="View all activity.">View All</button>
                             </div>
                             <div class="activity-list" id="activityList">
                                 <div class="activity-item">
                                     <div class="activity-icon success">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <polyline points="20 6 9 17 4 12"/>
                                         </svg>
                                     </div>
                                     <div class="activity-content">
                                         <div class="activity-title">Task completed: scan</div>
-                                        <div class="activity-meta">substrate-core • 2 minutes ago</div>
+                                        <div class="activity-meta">substrate-core. 2 minutes ago.</div>
                                     </div>
                                 </div>
                                 <div class="activity-item">
                                     <div class="activity-icon running">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <circle cx="12" cy="12" r="10"/>
                                             <polyline points="12 6 12 12 16 14"/>
                                         </svg>
                                     </div>
                                     <div class="activity-content">
-                                        <div class="activity-title">Chain running: research → development</div>
-                                        <div class="activity-meta">batocera-buildroot • 5 minutes ago</div>
+                                        <div class="activity-title">Chain running: research then development.</div>
+                                        <div class="activity-meta">batocera-buildroot. 5 minutes ago.</div>
                                     </div>
                                 </div>
                             </div>
@@ -318,29 +321,29 @@
                                 <h3>Quick Actions</h3>
                             </div>
                             <div class="quick-actions">
-                                <button class="action-btn" data-action="scan">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button class="action-btn" data-action="scan" aria-label="Scan repositories.">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <circle cx="11" cy="11" r="8"/>
                                         <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                                     </svg>
                                     <span>Scan Repos</span>
                                 </button>
-                                <button class="action-btn" data-action="refresh">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button class="action-btn" data-action="refresh" aria-label="Refresh sources.">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <polyline points="23 4 23 10 17 10"/>
                                         <polyline points="1 20 1 14 7 14"/>
                                         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                                     </svg>
                                     <span>Refresh Sources</span>
                                 </button>
-                                <button class="action-btn" data-action="run-task">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button class="action-btn" data-action="run-task" aria-label="Run a task.">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <polygon points="5 3 19 12 5 21 5 3"/>
                                     </svg>
                                     <span>Run Task</span>
                                 </button>
-                                <button class="action-btn" data-action="run-chain">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <button class="action-btn" data-action="run-chain" aria-label="Run a chain.">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                                     </svg>
@@ -356,23 +359,23 @@
                             </div>
                             <div class="pipeline">
                                 <div class="pipeline-stage active">
-                                    <div class="stage-dot"></div>
+                                    <div class="stage-dot" aria-hidden="true"></div>
                                     <div class="stage-content">
                                         <div class="stage-name">Local</div>
                                         <div class="stage-count">5 tasks</div>
                                     </div>
                                 </div>
-                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-connector" aria-hidden="true"></div>
                                 <div class="pipeline-stage">
-                                    <div class="stage-dot"></div>
+                                    <div class="stage-dot" aria-hidden="true"></div>
                                     <div class="stage-content">
                                         <div class="stage-name">Hosted Dev</div>
                                         <div class="stage-count">2 tasks</div>
                                     </div>
                                 </div>
-                                <div class="pipeline-connector"></div>
+                                <div class="pipeline-connector" aria-hidden="true"></div>
                                 <div class="pipeline-stage">
-                                    <div class="stage-dot"></div>
+                                    <div class="stage-dot" aria-hidden="true"></div>
                                     <div class="stage-content">
                                         <div class="stage-name">Production</div>
                                         <div class="stage-count">1 task</div>
@@ -384,10 +387,10 @@
                 </div>
 
                 <!-- Metrics Page -->
-                <div class="page" id="page-metrics">
+                <div class="page" id="page-metrics" role="region" aria-label="Live metrics.">
                     <div class="page-header">
                         <h1>Live Metrics</h1>
-                        <p class="page-subtitle">Real-time system performance and resource utilization</p>
+                        <p class="page-subtitle">Real-time system performance and resource utilization.</p>
                     </div>
                     <div class="metrics-dashboard">
                         <div class="chart-card glass">
@@ -418,10 +421,10 @@
                 </div>
 
                 <!-- Repositories Page -->
-                <div class="page" id="page-repositories">
+                <div class="page" id="page-repositories" role="region" aria-label="Repositories.">
                     <div class="page-header">
                         <h1>Repositories</h1>
-                        <p class="page-subtitle">Monitor and manage your workspace repositories</p>
+                        <p class="page-subtitle">Monitor and manage your workspace repositories.</p>
                     </div>
                     <div class="repo-grid" id="repoGrid">
                         <!-- Populated dynamically -->
@@ -429,10 +432,10 @@
                 </div>
 
                 <!-- Runs Page -->
-                <div class="page" id="page-runs">
+                <div class="page" id="page-runs" role="region" aria-label="Task runs.">
                     <div class="page-header">
                         <h1>Task Runs</h1>
-                        <p class="page-subtitle">Track execution history and performance</p>
+                        <p class="page-subtitle">Track execution history and performance.</p>
                     </div>
                     <div class="runs-table glass" id="runsTable">
                         <!-- Populated dynamically -->
@@ -440,10 +443,10 @@
                 </div>
 
                 <!-- Tasks Page -->
-                <div class="page" id="page-tasks">
+                <div class="page" id="page-tasks" role="region" aria-label="Task orchestration.">
                     <div class="page-header">
                         <h1>Task Orchestration</h1>
-                        <p class="page-subtitle">Configure and execute automated workflows</p>
+                        <p class="page-subtitle">Configure and execute automated workflows.</p>
                     </div>
                     <div class="task-controls glass">
                         <form id="taskForm">
@@ -485,10 +488,10 @@
                 </div>
 
                 <!-- Learning Page -->
-                <div class="page" id="page-learning">
+                <div class="page" id="page-learning" role="region" aria-label="Learning index.">
                     <div class="page-header">
                         <h1>Learning Index</h1>
-                        <p class="page-subtitle">Track known-good paths and recurring errors</p>
+                        <p class="page-subtitle">Track known-good paths and recurring errors.</p>
                     </div>
                     <div class="learning-grid">
                         <div class="learning-card glass">
@@ -507,29 +510,29 @@
                 </div>
 
                 <!-- Kilo Code Page -->
-                <div class="page" id="page-kilo">
+                <div class="page" id="page-kilo" role="region" aria-label="Kilo Code integration.">
                     <div class="page-header">
                         <h1>Kilo Code Integration</h1>
-                        <p class="page-subtitle">AI-powered code generation and assistance</p>
+                        <p class="page-subtitle">AI-powered code generation and assistance.</p>
                     </div>
                     <div class="kilo-interface glass">
                         <div class="kilo-chat" id="kiloChat">
                             <div class="chat-messages" id="chatMessages">
                                 <div class="chat-message assistant">
                                     <div class="message-avatar">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                                         </svg>
                                     </div>
                                     <div class="message-content">
-                                        <div class="message-text">Hello! I'm Kilo Code, your AI assistant. How can I help you with your substrate today?</div>
+                                        <div class="message-text">Hello! I am Kilo Code, your AI assistant. How can I help you with your substrate today?</div>
                                     </div>
                                 </div>
                             </div>
                             <div class="chat-input-area">
-                                <textarea id="chatInput" placeholder="Ask me anything about your codebase..." rows="3"></textarea>
-                                <button class="send-btn" id="sendBtn">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <textarea id="chatInput" placeholder="Ask me anything about your codebase..." rows="3" aria-label="Chat message."></textarea>
+                                <button class="send-btn" id="sendBtn" aria-label="Send message.">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <line x1="22" y1="2" x2="11" y2="13"/>
                                         <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                                     </svg>
@@ -556,10 +559,10 @@
                 </div>
 
                 <!-- Integrations Page -->
-                <div class="page" id="page-integrations">
+                <div class="page" id="page-integrations" role="region" aria-label="Integrations.">
                     <div class="page-header">
                         <h1>Integrations</h1>
-                        <p class="page-subtitle">Manage external service connections</p>
+                        <p class="page-subtitle">Manage external service connections.</p>
                     </div>
                     <div class="integrations-grid" id="integrationsGrid">
                         <!-- Populated dynamically -->
@@ -567,32 +570,32 @@
                 </div>
 
                 <!-- WhatsApp Setup Page -->
-                <div class="page" id="page-whatsapp-setup">
+                <div class="page" id="page-whatsapp-setup" role="region" aria-label="WhatsApp setup.">
                     <div class="page-header">
                         <h1>WhatsApp Connection Setup</h1>
-                        <p class="page-subtitle">Connect your WhatsApp Business account to chat with Kilo Code</p>
+                        <p class="page-subtitle">Connect your WhatsApp Business account to chat with Kilo Code.</p>
                     </div>
 
                     <!-- Progress Indicator -->
                     <div class="setup-progress glass">
                         <div class="progress-steps">
                             <div class="progress-step active" data-step="1">
-                                <div class="step-number">1</div>
+                                <div class="step-number" aria-hidden="true">1</div>
                                 <div class="step-label">Prerequisites</div>
                             </div>
-                            <div class="progress-connector"></div>
+                            <div class="progress-connector" aria-hidden="true"></div>
                             <div class="progress-step" data-step="2">
-                                <div class="step-number">2</div>
+                                <div class="step-number" aria-hidden="true">2</div>
                                 <div class="step-label">Configure</div>
                             </div>
-                            <div class="progress-connector"></div>
+                            <div class="progress-connector" aria-hidden="true"></div>
                             <div class="progress-step" data-step="3">
-                                <div class="step-number">3</div>
+                                <div class="step-number" aria-hidden="true">3</div>
                                 <div class="step-label">Connect</div>
                             </div>
-                            <div class="progress-connector"></div>
+                            <div class="progress-connector" aria-hidden="true"></div>
                             <div class="progress-step" data-step="4">
-                                <div class="step-number">4</div>
+                                <div class="step-number" aria-hidden="true">4</div>
                                 <div class="step-label">Verify</div>
                             </div>
                         </div>
@@ -607,41 +610,41 @@
                         <div class="step-content">
                             <div class="prerequisites-list">
                                 <div class="prerequisite-item">
-                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M9 11l3 3L22 4"/>
                                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                                     </svg>
                                     <div class="prereq-content">
                                         <h4>Meta Business Account</h4>
-                                        <p>You need a verified Meta Business account to access the WhatsApp Cloud API.</p>
-                                        <a href="https://business.facebook.com/" target="_blank" class="prereq-link">Create Business Account →</a>
+                                        <p>You need a verified Meta Business account to access the WhatsApp Cloud service.</p>
+                                        <a href="https://business.facebook.com/" target="_blank" class="prereq-link">Create Business Account.</a>
                                     </div>
                                 </div>
                                 <div class="prerequisite-item">
-                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M9 11l3 3L22 4"/>
                                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                                     </svg>
                                     <div class="prereq-content">
                                         <h4>WhatsApp Business Phone Number</h4>
-                                        <p>A dedicated phone number for WhatsApp Business (can be new or existing).</p>
-                                        <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started" target="_blank" class="prereq-link">Learn More →</a>
+                                        <p>A dedicated phone number for WhatsApp Business. This can be new or existing.</p>
+                                        <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started" target="_blank" class="prereq-link">Learn more.</a>
                                     </div>
                                 </div>
                                 <div class="prerequisite-item">
-                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="prereq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M9 11l3 3L22 4"/>
                                         <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                                     </svg>
                                     <div class="prereq-content">
-                                        <h4>API Credentials</h4>
-                                        <p>Phone Number ID, Access Token, App Secret, and Verify Token from Meta Developer Dashboard.</p>
-                                        <a href="https://developers.facebook.com/apps/" target="_blank" class="prereq-link">Get Credentials →</a>
+                                        <h4>Application Programming Interface (API) Credentials</h4>
+                                        <p>Phone Number ID, Access Token, App Secret, and Verify Token. Get these from the Meta Developer Dashboard.</p>
+                                        <a href="https://developers.facebook.com/apps/" target="_blank" class="prereq-link">Get credentials.</a>
                                     </div>
                                 </div>
                             </div>
                             <div class="step-actions">
-                                <button class="btn-primary" onclick="nextStep(2)">I Have All Prerequisites →</button>
+                                <button class="btn-primary" onclick="nextStep(2)">I Have All Prerequisites.</button>
                                 <a href="/docs/WHATSAPP_GATEWAY_SETUP.md" target="_blank" class="btn-secondary">View Full Guide</a>
                             </div>
                         </div>
@@ -658,32 +661,32 @@
                                 <div class="form-field">
                                     <label for="whatsappPhoneId">Phone Number ID</label>
                                     <input type="text" id="whatsappPhoneId" placeholder="e.g., 123456789012345">
-                                    <span class="form-hint">Found in Meta Developer Dashboard → WhatsApp → API Setup</span>
+                                    <span class="form-hint">Found in Meta Developer Dashboard. Go to WhatsApp, then setup.</span>
                                 </div>
                                 <div class="form-field">
                                     <label for="whatsappAccessToken">Access Token</label>
                                     <input type="password" id="whatsappAccessToken" placeholder="Your permanent access token">
-                                    <span class="form-hint">Generate from System User in Business Settings</span>
+                                    <span class="form-hint">Generate from System User in Business Settings.</span>
                                 </div>
                                 <div class="form-field">
                                     <label for="whatsappAppSecret">App Secret</label>
                                     <input type="password" id="whatsappAppSecret" placeholder="Your app secret">
-                                    <span class="form-hint">Found in App Dashboard → Settings → Basic</span>
+                                    <span class="form-hint">Found in App Dashboard. Go to Settings, then Basic.</span>
                                 </div>
                                 <div class="form-field">
                                     <label for="whatsappVerifyToken">Verify Token</label>
                                     <input type="text" id="whatsappVerifyToken" placeholder="Choose a random string">
-                                    <span class="form-hint">A secret string you choose for webhook verification</span>
+                                    <span class="form-hint">A secret string you choose for webhook verification.</span>
                                 </div>
                                 <div class="form-field">
-                                    <label for="whatsappWebhookUrl">Webhook URL</label>
+                                    <label for="whatsappWebhookUrl">Webhook Address</label>
                                     <input type="text" id="whatsappWebhookUrl" readonly>
-                                    <span class="form-hint">Your public webhook endpoint (auto-generated)</span>
+                                    <span class="form-hint">Your public webhook endpoint. This is auto-generated.</span>
                                 </div>
                             </div>
                             <div class="step-actions">
-                                <button class="btn-secondary" onclick="prevStep(1)">← Back</button>
-                                <button class="btn-primary" onclick="saveConfig()">Save Configuration →</button>
+                                <button class="btn-secondary" onclick="prevStep(1)">Back.</button>
+                                <button class="btn-primary" onclick="saveConfig()">Save Configuration.</button>
                             </div>
                         </div>
                     </div>
@@ -697,34 +700,35 @@
                         <div class="step-content">
                             <div class="qr-section">
                                 <div class="qr-container" id="qrContainer">
+                                    <img alt="WhatsApp QR code" id="qrCodeImg" class="hidden" />
                                     <div class="qr-placeholder">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <rect x="3" y="3" width="7" height="7"/>
                                             <rect x="14" y="3" width="7" height="7"/>
                                             <rect x="14" y="14" width="7" height="7"/>
                                             <rect x="3" y="14" width="7" height="7"/>
                                         </svg>
-                                        <p>QR Code will appear here</p>
+                                        <p>QR Code will appear here.</p>
                                     </div>
                                 </div>
                                 <div class="qr-instructions">
                                     <h3>Scan with WhatsApp</h3>
                                     <ol>
-                                        <li>Open WhatsApp on your phone</li>
-                                        <li>Tap <strong>Settings</strong> → <strong>Linked Devices</strong></li>
-                                        <li>Tap <strong>Link a Device</strong></li>
-                                        <li>Point your phone at the QR code above</li>
+                                        <li>Open WhatsApp on your phone.</li>
+                                        <li>Tap <strong>Settings</strong>, then <strong>Linked Devices</strong>.</li>
+                                        <li>Tap <strong>Link a Device</strong>.</li>
+                                        <li>Point your phone at the QR code above.</li>
                                     </ol>
-                                    <div class="qr-timer" id="qrTimer">
-                                        <span class="timer-icon">⏱️</span>
+                                    <div class="qr-timer" id="qrTimer" role="timer" aria-live="polite">
+                                        <span class="timer-icon" aria-hidden="true">⏱️</span>
                                         <span>QR code expires in: <strong id="qrCountdown">5:00</strong></span>
                                     </div>
                                 </div>
                             </div>
                             <div class="connection-actions">
-                                <button class="btn-secondary" onclick="prevStep(2)">← Back</button>
-                                <button class="btn-primary" id="generateQrBtn" onclick="generateQR()">Generate QR Code</button>
-                                <button class="btn-secondary hidden" id="refreshQrBtn" onclick="refreshQR()">Refresh QR Code</button>
+                                <button class="btn-secondary" onclick="prevStep(2)">Back.</button>
+                                <button class="btn-primary" id="generateQrBtn" onclick="generateQR()">Generate QR Code.</button>
+                                <button class="btn-secondary hidden" id="refreshQrBtn" onclick="refreshQR()">Refresh QR Code.</button>
                             </div>
                         </div>
                     </div>
@@ -733,28 +737,28 @@
                     <div class="setup-step glass hidden" id="step-4">
                         <div class="step-header">
                             <h2>Step 4: Verify Connection</h2>
-                            <span class="step-status" id="verifyStatus">Waiting...</span>
+                            <span class="step-status" id="verifyStatus">Waiting.</span>
                         </div>
                         <div class="step-content">
                             <div class="verification-section">
                                 <div class="status-indicator-large" id="connectionIndicator">
                                     <div class="status-icon pending">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                             <circle cx="12" cy="12" r="10"/>
                                             <polyline points="12 6 12 12 16 14"/>
                                         </svg>
                                     </div>
                                     <div class="status-text">
                                         <h3 id="connectionTitle">Waiting for Connection</h3>
-                                        <p id="connectionMessage">Scan the QR code with WhatsApp to establish connection</p>
+                                        <p id="connectionMessage">Scan the QR code with WhatsApp to connect.</p>
                                     </div>
                                 </div>
                                 <div class="test-section">
                                     <h3>Test Your Connection</h3>
-                                    <p>Send a test message to verify everything is working:</p>
+                                    <p>Send a test message to verify everything is working.</p>
                                     <div class="test-message">
-                                        <input type="text" id="testMessage" placeholder="Type a test message..." value="Hello from Substrate!">
-                                        <button class="btn-primary" onclick="sendTestMessage()">Send Test</button>
+                                        <input type="text" id="testMessage" placeholder="Type a test message..." value="Hello from Substrate!" aria-label="Test message.">
+                                        <button class="btn-primary" onclick="sendTestMessage()">Send Test.</button>
                                     </div>
                                     <div class="test-result hidden" id="testResult">
                                         <!-- Populated dynamically -->
@@ -762,8 +766,8 @@
                                 </div>
                             </div>
                             <div class="step-actions">
-                                <button class="btn-secondary" onclick="prevStep(3)">← Back</button>
-                                <button class="btn-primary" onclick="completeSetup()">Complete Setup ✓</button>
+                                <button class="btn-secondary" onclick="prevStep(3)">Back.</button>
+                                <button class="btn-primary" onclick="completeSetup()">Complete Setup.</button>
                             </div>
                         </div>
                     </div>
@@ -771,15 +775,15 @@
                     <!-- Troubleshooting Section -->
                     <div class="troubleshooting-section glass">
                         <div class="troubleshooting-header">
-                            <h2>Common Issues & Solutions</h2>
+                            <h2>Common Issues and Solutions</h2>
                             <button class="btn-link" onclick="toggleTroubleshooting()">
-                                <span id="troubleshootingToggle">Show</span> Troubleshooting Guide
+                                <span id="troubleshootingToggle">Show</span> Troubleshooting Guide.
                             </button>
                         </div>
                         <div class="troubleshooting-content hidden" id="troubleshootingContent">
                             <div class="issue-item">
                                 <div class="issue-header">
-                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                                         <line x1="12" y1="9" x2="12" y2="13"/>
                                         <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -787,13 +791,13 @@
                                     <h4>QR Code Expired</h4>
                                 </div>
                                 <div class="issue-content">
-                                    <p><strong>Symptom:</strong> QR code shows "Expired" or scanning doesn't work</p>
+                                    <p><strong>Symptom:</strong> QR code shows "Expired" or scanning fails.</p>
                                     <p><strong>Solution:</strong> QR codes expire after 5 minutes for security. Click "Refresh QR Code" to generate a new one.</p>
                                 </div>
                             </div>
                             <div class="issue-item">
                                 <div class="issue-header">
-                                    <svg class="issue-icon error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="issue-icon error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <circle cx="12" cy="12" r="10"/>
                                         <line x1="15" y1="9" x2="9" y2="15"/>
                                         <line x1="9" y1="9" x2="15" y2="15"/>
@@ -801,19 +805,19 @@
                                     <h4>Authentication Failed</h4>
                                 </div>
                                 <div class="issue-content">
-                                    <p><strong>Symptom:</strong> Connection fails with "Invalid credentials" error</p>
+                                    <p><strong>Symptom:</strong> Connection fails with "Invalid credentials" error.</p>
                                     <p><strong>Solution:</strong></p>
                                     <ul>
-                                        <li>Verify your Access Token is a permanent system user token (not temporary)</li>
-                                        <li>Ensure Phone Number ID matches your WhatsApp Business number</li>
-                                        <li>Check that App Secret is correct (found in App Settings → Basic)</li>
-                                        <li>Regenerate tokens if they've expired</li>
+                                        <li>Verify your Access Token is a permanent system user token. It must not be temporary.</li>
+                                        <li>Ensure Phone Number ID matches your WhatsApp Business number.</li>
+                                        <li>Check that App Secret is correct. Find it in App Settings, then Basic.</li>
+                                        <li>Regenerate tokens if they have expired.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="issue-item">
                                 <div class="issue-header">
-                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <circle cx="12" cy="12" r="10"/>
                                         <line x1="12" y1="8" x2="12" y2="12"/>
                                         <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -821,20 +825,20 @@
                                     <h4>Webhook Verification Failed</h4>
                                 </div>
                                 <div class="issue-content">
-                                    <p><strong>Symptom:</strong> Meta cannot verify your webhook URL</p>
+                                    <p><strong>Symptom:</strong> Meta cannot verify your webhook address.</p>
                                     <p><strong>Solution:</strong></p>
                                     <ul>
-                                        <li>Ensure your server is publicly accessible (not localhost)</li>
-                                        <li>Verify webhook URL is HTTPS (required by Meta)</li>
-                                        <li>Check that Verify Token matches exactly what you configured</li>
-                                        <li>Ensure server is running and responding to requests</li>
-                                        <li>Use ngrok or similar for local development</li>
+                                        <li>Ensure your server is publicly accessible. It must not be localhost.</li>
+                                        <li>Verify the webhook address uses HTTPS. Meta requires this.</li>
+                                        <li>Check that Verify Token matches exactly what you configured.</li>
+                                        <li>Ensure server is running and responding to requests.</li>
+                                        <li>Use ngrok or similar for local development.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="issue-item">
                                 <div class="issue-header">
-                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="issue-icon warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                                         <line x1="12" y1="9" x2="12" y2="13"/>
                                         <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -842,19 +846,19 @@
                                     <h4>Network Connection Issues</h4>
                                 </div>
                                 <div class="issue-content">
-                                    <p><strong>Symptom:</strong> Connection times out or shows "Network Error"</p>
+                                    <p><strong>Symptom:</strong> Connection times out or shows "Network Error."</p>
                                     <p><strong>Solution:</strong></p>
                                     <ul>
-                                        <li>Check your internet connection</li>
-                                        <li>Verify firewall allows outbound connections to graph.facebook.com</li>
-                                        <li>Ensure port 443 (HTTPS) is not blocked</li>
-                                        <li>Try refreshing the page and retrying</li>
+                                        <li>Check your internet connection.</li>
+                                        <li>Verify firewall allows outbound connections to graph.facebook.com.</li>
+                                        <li>Ensure port 443 (HTTPS) is not blocked.</li>
+                                        <li>Try refreshing the page and retrying.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="issue-item">
                                 <div class="issue-header">
-                                    <svg class="issue-icon info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg class="issue-icon info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                         <circle cx="12" cy="12" r="10"/>
                                         <line x1="12" y1="16" x2="12" y2="12"/>
                                         <line x1="12" y1="8" x2="12.01" y2="8"/>
@@ -862,22 +866,22 @@
                                     <h4>Session Disconnected</h4>
                                 </div>
                                 <div class="issue-content">
-                                    <p><strong>Symptom:</strong> Connection was working but now shows "Disconnected"</p>
+                                    <p><strong>Symptom:</strong> Connection was working but now shows "Disconnected."</p>
                                     <p><strong>Solution:</strong></p>
                                     <ul>
-                                        <li>WhatsApp sessions can expire after extended inactivity</li>
-                                        <li>Return to Step 3 and generate a new QR code</li>
-                                        <li>Re-scan with WhatsApp to re-establish connection</li>
-                                        <li>Check server logs for detailed error messages</li>
+                                        <li>WhatsApp sessions can expire after extended inactivity.</li>
+                                        <li>Return to Step 3 and generate a new QR code.</li>
+                                        <li>Re-scan with WhatsApp to re-establish connection.</li>
+                                        <li>Check server logs for detailed error messages.</li>
                                     </ul>
                                 </div>
                             </div>
                             <div class="help-section">
                                 <h3>Need More Help?</h3>
-                                <p>Check the comprehensive setup guide or view server logs for detailed error information:</p>
+                                <p>Check the comprehensive setup guide. You can also view server logs for detailed error information.</p>
                                 <div class="help-actions">
                                     <a href="/docs/WHATSAPP_GATEWAY_SETUP.md" target="_blank" class="btn-secondary">View Full Documentation</a>
-                                    <button class="btn-secondary" onclick="viewLogs()">View Server Logs</button>
+                                    <button class="btn-secondary" onclick="viewLogs()">View Server Logs.</button>
                                 </div>
                             </div>
                         </div>
@@ -885,10 +889,10 @@
                 </div>
 
                 <!-- Configuration Page -->
-                <div class="page" id="page-config">
+                <div class="page" id="page-config" role="region" aria-label="Configuration.">
                     <div class="page-header">
                         <h1>Configuration</h1>
-                        <p class="page-subtitle">System settings and preferences</p>
+                        <p class="page-subtitle">System settings and preferences.</p>
                     </div>
                     <div class="config-sections">
                         <div class="config-card glass">
@@ -926,34 +930,34 @@
             </div>
 
             <!-- Automations Page -->
-            <div class="page" id="page-automations">
+            <div class="page" id="page-automations" role="region" aria-label="Automations.">
                 <div class="page-header">
                     <h1>Automations</h1>
-                    <p class="page-subtitle">Direct system actions — no AI in the loop. One click runs the command on this host.</p>
+                    <p class="page-subtitle">Direct system actions with no AI in the loop. One click runs the command on this host.</p>
                 </div>
                 <div class="automation-grid" id="automationGrid">
-                    <div class="automation-loading">Loading actions…</div>
+                    <div class="automation-loading">Loading actions.</div>
                 </div>
-                <div class="automation-result glass" id="automationResult" style="display:none">
+                <div class="automation-result glass" id="automationResult" style="display:none" role="status" aria-live="polite">
                     <h3 id="automationResultTitle">Result</h3>
                     <pre id="automationResultBody"></pre>
                 </div>
             </div>
 
             <!-- System Page -->
-            <div class="page" id="page-system">
+            <div class="page" id="page-system" role="region" aria-label="System metrics.">
                 <div class="page-header">
                     <h1>System</h1>
-                    <p class="page-subtitle">Live host metrics — CPU, memory, disk, Tailscale, services. Updates every 2 seconds.</p>
+                    <p class="page-subtitle">Live host metrics: CPU, memory, disk, Tailscale, services. Updates every 2 seconds.</p>
                 </div>
-                <div class="system-live glass" id="systemLive">Connecting…</div>
+                <div class="system-live glass" id="systemLive" role="status" aria-live="polite">Connecting.</div>
             </div>
 
             <!-- Terminal Page -->
-            <div class="page" id="page-terminal">
+            <div class="page" id="page-terminal" role="region" aria-label="Terminal.">
                 <div class="page-header">
                     <h1>Terminal</h1>
-                    <p class="page-subtitle">Web shell (ttyd) — full terminal access to this host.</p>
+                    <p class="page-subtitle">Web shell (ttyd). Full terminal access to this host.</p>
                 </div>
                 <div class="terminal-frame glass">
                     <iframe src="http://127.0.0.1:8765" title="ttyd web shell" style="width:100%;height:520px;border:0;border-radius:8px;background:#0a0a0f"></iframe>
@@ -963,7 +967,7 @@
     </div>
 
     <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" role="region" aria-label="Notifications." aria-live="polite"></div>
 
     <script src="/static/control-panel.js"></script>
 </body>

@@ -2352,3 +2352,65 @@ body {
 @media (max-width: 768px) {
     .metric--wide { grid-column: span 1; }
 }
+
+/* --- Accessibility utilities --- */
+
+/* Visually hidden but available to screen readers. */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+/* Skip link — visible only when focused. */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    z-index: 3000;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--accent-primary);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 0 0 var(--radius-md) 0;
+    transition: top var(--transition-fast);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+}
+
+/* Generic hidden utility (safe to combine with any class). */
+.hidden {
+    display: none !important;
+}
+
+/* Visible keyboard focus indicator for all interactive elements. */
+*:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Ensure focus ring is visible on elements with dark backgrounds. */
+.nav-item:focus-visible,
+.btn-primary:focus-visible,
+.action-btn:focus-visible,
+.command-result-item:focus-visible {
+    outline: 2px solid var(--accent-secondary);
+    outline-offset: 2px;
+}
+
+/* Remove default outline only when :focus-visible is supported. */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
