@@ -48,6 +48,100 @@ def _normalize_capability(value: str | CapabilityClass | None) -> ResolvedCapabi
     return "api"
 
 
+@dataclass(slots=True)
+class HardwareProfile:
+    accelerators: list[str] = field(default_factory=list)
+    gpu_vram_total_mb: int = 0
+    gpu_vram_free_mb: int = 0
+    cpu_count: int = 0
+    ram_total_gb: float = 0.0
+    ram_free_gb: float = 0.0
+    is_apple_silicon: bool = False
+    apple_chip: str = ""
+    npu_available: bool = False
+    tags: list[str] = field(default_factory=list)
+
+    def has_gpu(self) -> bool:
+        return self.gpu_vram_total_mb > 0 or any(a.startswith("nvidia:") or a.startswith("amd:") for a in self.accelerators)
+
+    def has_npu(self) -> bool:
+        return self.npu_available or any(a.startswith("npu:") for a in self.accelerators)
+
+    def has_apple_silicon(self) -> bool:
+        return self.is_apple_silicon or any(a.startswith("apple-silicon:") for a in self.accelerators)
+
+    def local_model_tier(self) -> str:
+        if self.has_apple_silicon():
+            return "medium"
+        if self.has_gpu() and self.gpu_vram_total_mb >= 16000:
+            return "large"
+        if self.has_gpu() and self.gpu_vram_total_mb >= 8000:
+            return "medium"
+        if self.ram_total_gb >= 32:
+            return "medium"
+        if self.ram_total_gb >= 16:
+            return "small"
+        return "tiny"
+
+    def has_apple_silicon(self) -> bool:
+        return self.is_apple_silicon or any(a.startswith("apple-silicon:") for a in self.accelerators)
+
+    def available_local_capabilities(self) -> tuple[str, ...]:
+        caps: list[str] = ["cpu"]
+        if self.has_gpu():
+            caps.append("gpu")
+        return tuple(caps)
+
+
+def hardware_profile_from_probe(probe_text: str) -> HardwareProfile:
+    profile = HardwareProfile()
+    if "Apple Silicon" in probe_text or "apple-silicon:" in probe_text:
+        profile.is_apple_silicon = True
+        profile.tags.append("apple-silicon")
+    if "NVIDIA GPUs" in probe_text or "nvidia:" in probe_text:
+        profile.tags.append("nvidia")
+    if "AMD GPUs" in probe_text or "amd:" in probe_text:
+        profile.tags.append("amd")
+    if "Intel GPU" in probe_text or "intel:igpu" in probe_text:
+        profile.tags.append("intel-igpu")
+    if "NPU" in probe_text or "npu:available" in probe_text:
+        profile.npu_available = True
+        profile.tags.append("npu")
+    for line in probe_text.splitlines():
+        line = line.strip()
+        if line.startswith("CPU count:"):
+            try:
+                profile.cpu_count = int(line.split(":", 1)[1].strip())
+            except (ValueError, IndexError):
+                pass
+        if line.startswith("RAM total:"):
+            raw = line.split(":", 1)[1].strip()
+            try:
+                if raw.endswith("GB"):
+                    profile.ram_total_gb = float(raw[:-2].strip())
+                elif raw.endswith("MB"):
+                    profile.ram_total_gb = float(raw[:-2].strip()) / 1024.0
+                elif raw.endswith("TB"):
+                    profile.ram_total_gb = float(raw[:-2].strip()) * 1024.0
+            except (ValueError, IndexError):
+                pass
+        if "VRAM" in line and "MB" in line:
+            try:
+                vram_mb = int(line.split("VRAM")[1].split("MB")[0].strip())
+                profile.gpu_vram_total_mb = max(profile.gpu_vram_total_mb, vram_mb)
+                free_match = line.split("free")[1].split("MB")[0].strip() if "free" in line else None
+                if free_match:
+                    profile.gpu_vram_free_mb = max(profile.gpu_vram_free_mb, int(free_match))
+            except (ValueError, IndexError):
+                pass
+        if "apple-silicon:" in line:
+            profile.apple_chip = line.split("apple-silicon:", 1)[1].strip()
+            profile.is_apple_silicon = True
+    if profile.ram_total_gb == 0.0 and profile.cpu_count:
+        profile.ram_total_gb = float(max(4, profile.cpu_count * 2))
+    return profile
+
+
 def provider_capabilities(provider: str) -> tuple[ResolvedCapabilityClass, ...]:
     normalized = provider.strip().lower()
     if normalized in {"local", "roo-router"}:
@@ -293,6 +387,95 @@ class SchedulingDecision:
         }
 
 
+def default_resource_pools(
+    *,
+    hardware_profile: HardwareProfile | None = None,
+    keep_reliability_reserve: bool = True,
+) -> list[ResourcePoolState]:
+    if hardware_profile is None:
+        return _legacy_default_resource_pools(keep_reliability_reserve=keep_reliability_reserve)
+    profile = hardware_profile
+    local_reserve = 1 if keep_reliability_reserve else 0
+    local_cpu = max(1, min(profile.cpu_count, 2)) if profile.cpu_count else 2
+    local_gpu = 1 if profile.has_gpu() else 0
+    cloud_cpu = max(2, local_cpu)
+    cloud_gpu = 1 if profile.has_gpu() else 0
+    api_workers = max(4, local_cpu * 2)
+    return [
+        ResourcePoolState(
+            name="local_cpu_pool",
+            location="local",
+            capability="cpu",
+            max_workers=local_cpu,
+            safety_reserved=local_reserve,
+        ),
+        ResourcePoolState(
+            name="local_gpu_pool",
+            location="local",
+            capability="gpu",
+            max_workers=local_gpu,
+        ),
+        ResourcePoolState(
+            name="cloud_cpu_pool",
+            location="cloud",
+            capability="cpu",
+            max_workers=cloud_cpu,
+        ),
+        ResourcePoolState(
+            name="cloud_gpu_pool",
+            location="cloud",
+            capability="gpu",
+            max_workers=cloud_gpu,
+        ),
+        ResourcePoolState(
+            name="api_model_pool",
+            location="cloud",
+            capability="api",
+            max_workers=api_workers,
+        ),
+    ]
+
+
+def _legacy_default_resource_pools(
+    *,
+    keep_reliability_reserve: bool = True,
+) -> list[ResourcePoolState]:
+    local_reserve = 1 if keep_reliability_reserve else 0
+    return [
+        ResourcePoolState(
+            name="local_cpu_pool",
+            location="local",
+            capability="cpu",
+            max_workers=2,
+            safety_reserved=local_reserve,
+        ),
+        ResourcePoolState(
+            name="local_gpu_pool",
+            location="local",
+            capability="gpu",
+            max_workers=1,
+        ),
+        ResourcePoolState(
+            name="cloud_cpu_pool",
+            location="cloud",
+            capability="cpu",
+            max_workers=4,
+        ),
+        ResourcePoolState(
+            name="cloud_gpu_pool",
+            location="cloud",
+            capability="gpu",
+            max_workers=2,
+        ),
+        ResourcePoolState(
+            name="api_model_pool",
+            location="cloud",
+            capability="api",
+            max_workers=8,
+        ),
+    ]
+
+
 class ResourceScheduler:
     def __init__(
         self,
@@ -303,17 +486,20 @@ class ResourceScheduler:
         pools: Sequence[ResourcePoolState] | None = None,
         config: SchedulingPolicyConfig | None = None,
         scale_hooks: ElasticScaleHooks | None = None,
+        hardware_profile: HardwareProfile | None = None,
     ) -> None:
         self.primary_target = primary_target
         self.config = config or SchedulingPolicyConfig()
         self.scale_hooks = scale_hooks or ElasticScaleHooks()
+        self.hardware_profile = hardware_profile or HardwareProfile()
         self._lock = threading.Lock()
 
         pool_seed = (
             list(pools)
             if pools is not None
             else default_resource_pools(
-                keep_reliability_reserve=self.config.keep_reliability_reserve
+                hardware_profile=hardware_profile,
+                keep_reliability_reserve=self.config.keep_reliability_reserve,
             )
         )
         self._pools: dict[str, ResourcePoolState] = {
@@ -626,9 +812,11 @@ def _pools_from_policy(
     raw_pools: Any,
     *,
     keep_reliability_reserve: bool,
+    hardware_profile: HardwareProfile | None = None,
 ) -> list[ResourcePoolState]:
     base_pools = default_resource_pools(
-        keep_reliability_reserve=keep_reliability_reserve
+        hardware_profile=hardware_profile,
+        keep_reliability_reserve=keep_reliability_reserve,
     )
     pool_map = {pool.name: pool for pool in base_pools}
     base_order = [pool.name for pool in base_pools]
@@ -692,6 +880,7 @@ def scheduler_from_chain_defaults(
     provider_models: Mapping[str, str],
     failover_order: Sequence[str],
     scale_hooks: ElasticScaleHooks | None = None,
+    hardware_profile: HardwareProfile | None = None,
 ) -> ResourceScheduler:
     raw_policy = defaults.get("resource_policy", {})
     if not isinstance(raw_policy, Mapping):
@@ -735,6 +924,7 @@ def scheduler_from_chain_defaults(
     pools = _pools_from_policy(
         raw_policy.get("pools"),
         keep_reliability_reserve=config.keep_reliability_reserve,
+        hardware_profile=hardware_profile,
     )
 
     return ResourceScheduler(
@@ -744,4 +934,5 @@ def scheduler_from_chain_defaults(
         pools=pools,
         config=config,
         scale_hooks=scale_hooks,
+        hardware_profile=hardware_profile,
     )

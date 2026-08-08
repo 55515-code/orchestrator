@@ -25,7 +25,7 @@ policy:
     - synthetic
     - redacted
   rc1_bounded_validation_enabled: true
-  rc1_hardware_probe_enabled: false
+  rc1_hardware_probe_enabled: true
   rc1_validation_max_attempts: 2
   rc1_validation_attempt_timeout_seconds: 20
   rc1_validation_deadline_seconds: 60

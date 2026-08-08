@@ -19,7 +19,7 @@ from .cache_store import CacheStore
 from .environment import platform_key
 from .learning import record_execution
 from .models import TaskConfig
-from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model
+from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model, models_for_hardware
 from .reliability import (
     CheckpointStore,
     ExecutionTarget,
@@ -35,8 +35,10 @@ from .reliability import (
 from .registry import SubstrateRuntime
 from .resource_orchestration import (
     ElasticScaleHooks,
+    HardwareProfile,
     WorkloadPressure,
     WorkloadRequest,
+    hardware_profile_from_probe,
     scheduler_from_chain_defaults,
 )
 from .research import run_openclaw_research_assist, source_facts_ready
@@ -135,6 +137,16 @@ class Orchestrator:
             self._task_cache = TaskCache(CacheStore(cache_root))
         else:
             self._task_cache = task_cache
+
+    def _load_hardware_profile(self) -> HardwareProfile:
+        probe_path = self.runtime.root / "docs" / "system-probe.md"
+        if not probe_path.exists():
+            return HardwareProfile()
+        try:
+            text = probe_path.read_text(encoding="utf-8")
+            return hardware_profile_from_probe(text)
+        except OSError:
+            return HardwareProfile()
 
     def _new_run_id(self) -> str:
         return uuid.uuid4().hex
@@ -673,12 +685,19 @@ class Orchestrator:
             models=models,
             allow_terminal_failover=bool(raw_retry.get("allow_terminal_failover", False)),
         )
+        hardware_profile = self._load_hardware_profile()
+        hardware_aware_models = models_for_hardware(
+            tier=hardware_profile.local_model_tier(),
+            base_models=dict(failover_hook.provider_models),
+        )
+        failover_hook.provider_models = hardware_aware_models
         scheduler = scheduler_from_chain_defaults(
             defaults=defaults,
             primary_target=ExecutionTarget(provider=provider_name, model=model_name),
-            provider_models=failover_hook.provider_models,
+            provider_models=hardware_aware_models,
             failover_order=failover_hook.fallback_order,
             scale_hooks=self._scale_hooks,
+            hardware_profile=hardware_profile,
         )
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         run_dir = self.runtime.paths["memory"] / "runs" / f"{timestamp}-{run_id[:8]}"

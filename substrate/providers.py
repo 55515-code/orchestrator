@@ -25,7 +25,8 @@ FREE_FIRST_PROVIDER_ORDER = (
     "mock",
 )
 
-DEFAULT_PROVIDER_MODELS = {
+
+DEFAULT_PROVIDER_MODELS: dict[str, str] = {
     "mock": "mock-model",
     "local": "roo-router",
     "roo-router": "roo-router",
@@ -40,6 +41,26 @@ DEFAULT_PROVIDER_MODELS = {
     "anthropic": "claude-sonnet-4-20250514",
     "openai": "gpt-4.1-mini",
 }
+
+
+def models_for_hardware(
+    tier: str = "medium",
+    base_models: dict[str, str] | None = None,
+) -> dict[str, str]:
+    base = dict(base_models or DEFAULT_PROVIDER_MODELS)
+    if tier == "large":
+        base["ollama"] = "llama3.1:70b"
+        base["huggingface"] = "meta-llama/Llama-3.1-70B-Instruct"
+        base["openrouter"] = "meta-llama/llama-3.1-70b-instruct"
+    elif tier == "medium":
+        base["ollama"] = "llama3.1:8b"
+        base["huggingface"] = "meta-llama/Llama-3.1-8B-Instruct"
+        base["openrouter"] = "meta-llama/llama-3.1-8b-instruct"
+    else:
+        base["ollama"] = "llama3.2:3b"
+        base["huggingface"] = "HuggingFaceH4/zephyr-7b-beta"
+        base["openrouter"] = "HuggingFaceH4/zephyr-7b-beta"
+    return base
 
 FREE_FIRST_PROVIDERS = frozenset(
     provider for provider in FREE_FIRST_PROVIDER_ORDER if provider not in {"anthropic", "openai"}

@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.SubstrateNode" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>

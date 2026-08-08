@@ -79,3 +79,8 @@ linkedin-*.png
 *.png
 *.jpg
 *.jpeg
+
+# Android swarm build outputs
+android-swarm/.gradle/
+android-swarm/build/
+android-swarm/app/build/
