@@ -269,6 +269,12 @@ def _snapshot_to_html(snap: dict[str, Any]) -> str:
     )
 
 
+@router.get("/system/snapshot")
+async def system_snapshot() -> dict[str, Any]:
+    """Return the current system snapshot as JSON (for charts and probes)."""
+    return _gather_system_snapshot()
+
+
 @router.get("/system/stream")
 async def system_stream(request: Request):
     """SSE stream of system metrics, one event every 2s."""

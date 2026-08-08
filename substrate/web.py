@@ -5,7 +5,6 @@ import json
 import logging
 import re
 import shutil
-import time
 import traceback
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -15,12 +14,14 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 
+import httpx
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from .chatbot.app import ChatbotApp
 from .config_sync import (
     CONFIG_SYNC_TARGET_ENVS,
     backup_config_sync,
@@ -32,6 +33,13 @@ from .config_sync import (
 from .dashboard import create_dashboard_router
 from .ducky import DuckyPayloadEngine
 from .gateway import GatewayManager, MessageRouter
+from .gateway.whatsapp_state import (
+    append_log,
+    load_config,
+    public_config,
+    save_config,
+    tail_log,
+)
 from .gh_sync import GitHubSyncService
 from .integrations import (
     connect_integration,
@@ -42,6 +50,7 @@ from .integrations import (
 from .learning import learning_payload, record_execution, record_resolution_note
 from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
+from .panel_settings import load_panel_settings, save_panel_settings
 from .pipelines import PipelineEngine, PipelineRegistry, create_pipelines_router
 from .providers import SUPPORTED_PROVIDERS, provider_diagnostics
 from .registry import SubstrateRuntime
@@ -104,11 +113,12 @@ SECURITY_HEADERS = {
         "base-uri 'self'; "
         "form-action 'self'; "
         "frame-ancestors 'none'; "
+        "frame-src http://127.0.0.1:* ws://127.0.0.1:* http://localhost:* ws://localhost:*; "
         "img-src 'self' data:; "
         "script-src 'self'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
-        "connect-src 'self' ws: wss:;"
+        "connect-src 'self' ws: wss: http://127.0.0.1:* ws://127.0.0.1:*;"
     ),
 }
 
@@ -150,6 +160,12 @@ app.mount(
     StaticFiles(directory=str((RUNTIME.root / "substrate" / "static"))),
     name="static",
 )
+
+# Embedded Kilo chat agent (same engine as the desktop chatbot). The routes
+# are registered under the panel's own /api/* paths so the Kilo Code page can
+# run real autonomous sessions from the browser.
+CHATBOT = ChatbotApp()
+CHATBOT.attach(app)
 
 
 def _parse_bool(value: str | None) -> bool:
@@ -571,7 +587,43 @@ def api_dashboard() -> dict[str, Any]:
     payload["payloads"] = DUCKY_ENGINE.list_payloads()
     payload["stage_sequence"] = RUNTIME.workspace.policy.stage_sequence
     payload["pass_sequence"] = RUNTIME.workspace.policy.pass_sequence
+    payload["panel_settings"] = load_panel_settings(RUNTIME.root)
     return payload
+
+
+@app.get("/api/panel/settings")
+def api_panel_settings() -> dict[str, Any]:
+    return load_panel_settings(RUNTIME.root)
+
+
+@app.post("/api/panel/settings")
+async def api_panel_settings_save(request: Request) -> dict[str, Any]:
+    _ = request
+    try:
+        body = await request.json()
+    except Exception:  # noqa: BLE001
+        body = {}
+    saved = save_panel_settings(RUNTIME.root, body)
+    record_execution(
+        RUNTIME,
+        run_type="panel-settings",
+        run_id=None,
+        repo_slug=None,
+        stage="local",
+        command="panel-settings-save",
+        status="success",
+        exit_code=0,
+        stdout=json.dumps(saved, ensure_ascii=False),
+        note="Control panel preferences updated",
+    )
+    return {"ok": True, "settings": saved}
+
+
+@app.get("/api/runs")
+def api_runs(limit: int = 100) -> dict[str, Any]:
+    bounded_limit = max(1, min(limit, 500))
+    runs = RUNTIME.db.list_recent_runs(limit=bounded_limit)
+    return {"runs": runs, "count": len(runs)}
 
 
 @app.get("/api/hints")
@@ -1143,16 +1195,20 @@ async def stream_metrics():
         while True:
             try:
                 # Collect current metrics
-                repos = RUNTIME.repositories()
-                runs = RUNTIME.db.list_recent_runs(limit=10)
-                
-                metrics = {
+                runs = RUNTIME.db.list_recent_runs(limit=20)
+                stage_counts: dict[str, int] = {}
+                for run in runs:
+                    stage = run.get("stage") or "local"
+                    stage_counts[stage] = stage_counts.get(stage, 0) + 1
+
+                payload = {
                     "metrics": {
-                        "repositories": len(repos),
-                        "runs": len(runs),
+                        "repositories": RUNTIME.db.latest_repository_snapshots(),
+                        "runs": runs,
                         "success_rate": _calculate_success_rate(runs),
                         "health": "healthy" if RUNTIME.workspace.repositories else "degraded",
                     },
+                    "stage_counts": stage_counts,
                     "activity": [
                         {
                             "status": run.get("status", "unknown"),
@@ -1164,13 +1220,13 @@ async def stream_metrics():
                     ],
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
-                
-                yield f"data: {json.dumps(metrics)}\n\n"
+
+                yield f"data: {json.dumps(payload)}\n\n"
                 await asyncio.sleep(2)  # Update every 2 seconds
             except Exception as e:
                 print(f"Error in metrics stream: {e}")
                 await asyncio.sleep(5)
-    
+
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
@@ -1203,12 +1259,16 @@ async def gateway_webhook_verify(service_id: str, request: Request):
     
     # Get query parameters
     params = dict(request.query_params)
-    
+
     # Verify webhook challenge
     challenge = plugin.verify_webhook_challenge(params)
     if challenge is None:
+        append_log(RUNTIME.root, "webhook", f"verification failed for {service_id}")
         raise HTTPException(status_code=403, detail="Webhook verification failed")
-    
+
+    append_log(
+        RUNTIME.root, "webhook", f"verification challenge answered for {service_id}"
+    )
     return PlainTextResponse(challenge)
 
 
@@ -1228,13 +1288,20 @@ async def gateway_webhook_receive(service_id: str, request: Request):
     # Verify signature
     signature = request.headers.get("x-hub-signature-256", "")
     if not plugin.verify_webhook_signature(body, signature):
+        append_log(RUNTIME.root, "webhook", f"signature validation failed for {service_id}")
         raise HTTPException(status_code=403, detail="Invalid signature")
-    
+
     # Parse payload
     try:
         payload = await request.json()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+
+    append_log(
+        RUNTIME.root,
+        "webhook",
+        f"received payload for {service_id} ({len(body)} bytes)",
+    )
     
     # Parse messages
     messages = plugin.parse_inbound(payload)
@@ -1282,6 +1349,7 @@ async def gateway_send_message(service_id: str, request: Request):
     # Send message
     try:
         result = await plugin.send_text(user_id, text)
+        append_log(RUNTIME.root, "send", f"outbound message to {user_id} via {service_id}")
         return JSONResponse({"status": "sent", "result": result})
     except Exception as e:
         logger.error(f"Error sending message: {e}")
@@ -1312,184 +1380,179 @@ async def gateway_list_services():
 
 
 # WhatsApp Setup API Endpoints
+WHATSAPP_CONFIG_KEYS = {
+    "phone_number_id",
+    "access_token",
+    "app_secret",
+    "verify_token",
+    "webhook_url",
+    "graph_api_version",
+}
+WHATSAPP_REQUIRED = ["phone_number_id", "access_token", "app_secret", "verify_token"]
+
+
+def _whatsapp_plugin():
+    """Return the live WhatsApp plugin instance or None."""
+    if not GATEWAY_MANAGER:
+        return None
+    try:
+        return GATEWAY_MANAGER.get_plugin("whatsapp")
+    except Exception:  # noqa: BLE001
+        return None
+
+
 @app.get("/api/gateway/whatsapp/config")
 async def get_whatsapp_config(request: Request):
-    """Get current WhatsApp configuration."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
-    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
-    if not whatsapp_plugin:
-        return JSONResponse({
-            "phone_number_id": "",
-            "verify_token": "",
-            "webhook_url": f"{request.base_url}gateway/whatsapp/webhook"
-        })
-    
-    config = whatsapp_plugin._config
-    return JSONResponse({
-        "phone_number_id": config.get("phone_number_id", ""),
-        "verify_token": config.get("verify_token", ""),
-        "webhook_url": config.get("webhook_url", f"{request.base_url}gateway/whatsapp/webhook")
-    })
+    """Get the persisted WhatsApp configuration (secrets masked)."""
+    stored = public_config(RUNTIME.root)
+    plugin = _whatsapp_plugin()
+    plugin_config = plugin._config if plugin else {}
+    return JSONResponse(
+        {
+            "phone_number_id": stored.get("phone_number_id", ""),
+            "verify_token": stored.get("verify_token", ""),
+            "access_token_configured": bool(stored.get("access_token")),
+            "app_secret_configured": bool(stored.get("app_secret")),
+            "webhook_url": plugin_config.get(
+                "webhook_url",
+                stored.get("webhook_url")
+                or f"{request.base_url}gateway/whatsapp/webhook",
+            ),
+        }
+    )
 
 
 @app.post("/api/gateway/whatsapp/config")
 async def save_whatsapp_config(request: Request):
-    """Save WhatsApp configuration."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
+    """Validate and persist WhatsApp Cloud API credentials, then load the plugin."""
+    body = await request.json()
+    config = {key: (body.get(key) or "").strip() for key in WHATSAPP_CONFIG_KEYS}
+    missing = [field for field in WHATSAPP_REQUIRED if not config[field]]
+    if missing:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing required field(s): {', '.join(missing)}",
+        )
+    if config.get("graph_api_version") and not re.match(
+        r"^v\d+(\.\d+)?$", config["graph_api_version"]
+    ):
+        raise HTTPException(status_code=400, detail="Invalid graph_api_version.")
+
+    # Load the plugin (re-registration overwrites any prior instance).
+    loaded = GATEWAY_MANAGER.load_plugin("whatsapp", config)
+    if not loaded:
+        raise HTTPException(
+            status_code=500, detail="Failed to initialize the WhatsApp plugin."
+        )
+
+    save_config(RUNTIME.root, config)
+    return JSONResponse({"status": "success", "message": "Configuration saved"})
+
+
+@app.post("/api/gateway/whatsapp/verify")
+async def verify_whatsapp_config(request: Request):
+    """Check the saved credentials against the WhatsApp Graph API for real."""
+    stored = load_config(RUNTIME.root)
+    if not stored.get("phone_number_id") or not stored.get("access_token"):
+        raise HTTPException(status_code=400, detail="No configuration saved yet.")
+    version = stored.get("graph_api_version", "v21.0")
+    phone_id = stored["phone_number_id"]
+    url = f"https://graph.facebook.com/{version}/{phone_id}"
     try:
-        body = await request.json()
-        config = {
-            "phone_number_id": body.get("phone_number_id"),
-            "access_token": body.get("access_token"),
-            "app_secret": body.get("app_secret"),
-            "verify_token": body.get("verify_token"),
-            "webhook_url": body.get("webhook_url")
-        }
-        
-        # Validate required fields
-        required = ["phone_number_id", "access_token", "app_secret", "verify_token"]
-        for field in required:
-            if not config.get(field):
-                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
-        
-        # Update plugin configuration
-        whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
-        if whatsapp_plugin:
-            whatsapp_plugin.initialize(config)
-        
-        return JSONResponse({"status": "success", "message": "Configuration saved"})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            response = await client.get(
+                url,
+                params={
+                    "fields": "display_phone_number,verified_name,quality_rating",
+                    "access_token": stored["access_token"],
+                },
+            )
+    except Exception as exc:  # noqa: BLE001
+        append_log(
+            RUNTIME.root, "verify", f"network error while verifying credentials: {exc}"
+        )
+        return JSONResponse(
+            {"valid": False, "error": f"Network error: {exc}"}, status_code=200
+        )
 
+    if response.status_code != 200:
+        detail = response.text[:500]
+        append_log(
+            RUNTIME.root, "verify", f"credential check rejected by Graph API: {detail}"
+        )
+        return JSONResponse(
+            {
+                "valid": False,
+                "status_code": response.status_code,
+                "error": detail,
+            },
+            status_code=200,
+        )
 
-@app.post("/api/gateway/whatsapp/qr")
-async def generate_whatsapp_qr():
-    """Generate WhatsApp QR code for connection."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
-    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
-    if not whatsapp_plugin:
-        raise HTTPException(status_code=404, detail="WhatsApp plugin not found")
-    
-    try:
-        # Generate QR code using a simple SVG placeholder
-        # In production, this would integrate with WhatsApp Business API
-        # and generate a real QR code for WhatsApp Web linking
-
-        # Create a simple SVG QR code placeholder
-        # This is a visual representation - in production, use proper QR generation
-        svg_qr = '''<svg width="280" height="280" xmlns="http://www.w3.org/2000/svg">
-            <rect width="280" height="280" fill="white"/>
-            <text x="140" y="140" font-family="Arial" font-size="14" text-anchor="middle" fill="black">
-                WhatsApp QR Code
-            </text>
-            <text x="140" y="160" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">
-                Scan with WhatsApp
-            </text>
-            <rect x="40" y="40" width="200" height="200" fill="none" stroke="black" stroke-width="2"/>
-            <rect x="60" y="60" width="40" height="40" fill="black"/>
-            <rect x="180" y="60" width="40" height="40" fill="black"/>
-            <rect x="60" y="180" width="40" height="40" fill="black"/>
-        </svg>'''
-        
-        import base64
-        qr_base64 = base64.b64encode(svg_qr.encode()).decode()
-        
-        return JSONResponse({
-            "qr_code": f"data:image/svg+xml;base64,{qr_base64}",
-            "expires_in": 300  # 5 minutes
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate QR code: {str(e)}")
+    data = response.json()
+    append_log(
+        RUNTIME.root,
+        "verify",
+        f"credentials valid for {data.get('display_phone_number', phone_id)}",
+    )
+    return JSONResponse({"valid": True, "account": data})
 
 
 @app.get("/api/gateway/whatsapp/status")
 async def get_whatsapp_status():
-    """Get WhatsApp connection status."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
-    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
-    if not whatsapp_plugin:
-        return JSONResponse({
-            "connected": False,
-            "status": "not_configured"
-        })
-    
-    # Check connection status
-    # This would check actual WhatsApp Business API connection
-    return JSONResponse({
-        "connected": whatsapp_plugin.is_connected if hasattr(whatsapp_plugin, 'is_connected') else False,
-        "status": "connected" if hasattr(whatsapp_plugin, 'is_connected') and whatsapp_plugin.is_connected else "disconnected",
-        "phone_number": whatsapp_plugin._config.get("phone_number_id", "")
-    })
+    """Return the real WhatsApp connection status."""
+    stored = load_config(RUNTIME.root)
+    plugin = _whatsapp_plugin()
+    connected = bool(plugin) and plugin._client is not None
+    return JSONResponse(
+        {
+            "configured": bool(stored.get("phone_number_id")),
+            "connected": connected,
+            "status": "connected" if connected else "configured" if stored else "not_configured",
+            "phone_number_id": stored.get("phone_number_id", ""),
+            "verify_token": stored.get("verify_token", ""),
+        }
+    )
 
 
 @app.post("/api/gateway/whatsapp/test")
 async def send_whatsapp_test(request: Request):
-    """Send a test message via WhatsApp."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
-    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
-    if not whatsapp_plugin:
-        raise HTTPException(status_code=404, detail="WhatsApp plugin not found")
-    
+    """Send a real test message to a recipient via the WhatsApp Cloud API."""
+    plugin = _whatsapp_plugin()
+    if not plugin:
+        raise HTTPException(status_code=400, detail="Save your configuration first.")
     try:
         body = await request.json()
-        message = body.get("message", "Test message from Substrate")
-        
-        # Send test message
-        # This would use the WhatsApp Business API to send a message
-        # For now, just return success
-        return JSONResponse({
-            "status": "success",
-            "message": "Test message sent",
-            "received": message,
-            "message_id": f"test_{int(time.time())}"
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send test message: {str(e)}")
-
-
-@app.post("/api/gateway/whatsapp/complete")
-async def complete_whatsapp_setup():
-    """Mark WhatsApp setup as complete."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
+    except Exception:  # noqa: BLE001
+        body = {}
+    to = str(body.get("to") or "").strip()
+    message = str(body.get("message") or "Test message from Substrate").strip()
+    if not to:
+        raise HTTPException(
+            status_code=400,
+            detail="A recipient phone number is required (E.164 format, e.g. 15551234567).",
+        )
     try:
-        # Mark setup as complete in the gateway state
-        # This would update the gateway configuration
-        return JSONResponse({
-            "status": "success",
-            "message": "WhatsApp setup completed"
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        result = await plugin.send_text(to, message)
+    except Exception as exc:  # noqa: BLE001
+        append_log(RUNTIME.root, "send", f"send failed to {to}: {exc}")
+        raise HTTPException(status_code=502, detail=f"Send failed: {exc}") from exc
+    append_log(RUNTIME.root, "send", f"test message sent to {to}")
+    message_id = "unknown"
+    try:
+        message_id = result["messages"][0]["id"]
+    except Exception:  # noqa: BLE001
+        pass
+    return JSONResponse(
+        {"status": "success", "message": "Test message sent", "message_id": message_id}
+    )
 
 
 @app.get("/api/gateway/whatsapp/logs")
 async def get_whatsapp_logs():
-    """Get WhatsApp gateway logs."""
-    if not GATEWAY_MANAGER:
-        raise HTTPException(status_code=503, detail="Gateway not initialized")
-    
-    try:
-        # Read gateway logs
-        # This would read from the gateway log file or database
-        logs = "WhatsApp Gateway Logs\n====================\n\n[INFO] Gateway initialized\n[INFO] WhatsApp plugin loaded\n[INFO] Webhook endpoint registered\n"
-        
-        return JSONResponse({
-            "logs": logs
-        })
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Return the tail of the real gateway event log."""
+    return JSONResponse({"logs": tail_log(RUNTIME.root, limit=200)})
+
 
 
 # Legacy ops panel endpoints and API routes above.

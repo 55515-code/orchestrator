@@ -63,10 +63,24 @@ class ChatbotApp:
 
     # -- routes ---------------------------------------------------------
 
+    def attach(self, app: FastAPI) -> None:
+        """Register chatbot routes on an existing FastAPI app (e.g. the panel)."""
+        self._register_routes(app)
+
     def _build_app(self) -> FastAPI:
         app = FastAPI(title="Substrate Chatbot", version="1.0.0")
+        self._register_routes(app)
+        self._register_index(app, root_path="/")
+        return app
 
-        @app.get("/", response_class=HTMLResponse)
+    def _register_index(self, app: FastAPI, *, root_path: str) -> None:
+        @app.get(root_path, response_class=HTMLResponse)
+        def index() -> str:
+            html_path = STATIC_DIR / "index.html"
+            return html_path.read_text(encoding="utf-8")
+
+    def _register_routes(self, app: FastAPI) -> None:
+        @app.get("/api/chatbot", response_class=HTMLResponse)
         def index() -> str:
             html_path = STATIC_DIR / "index.html"
             return html_path.read_text(encoding="utf-8")
@@ -143,8 +157,6 @@ class ChatbotApp:
                     "X-Accel-Buffering": "no",
                 },
             )
-
-        return app
 
     def _event_stream(self, task: Any):
         """Generator that relays a task's event queue to the SSE stream."""
