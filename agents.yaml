@@ -1,0 +1,119 @@
+version: 1
+
+# Agent roster for automated development, research, and moderation.
+# Autonomy tiers:
+#   0 — always automatic (notes, reports, branches, test runs)
+#   1 — automatic only when validation is green (branch commits, queue holds)
+#   2 — always requires an explicit human directive (merges, deploys, approvals, outbound replies)
+# Cadences: hourly, every_4_hours, daily, weekly, on_demand
+
+agents:
+  - id: research-substrate
+    role: research-agent
+    repo_slug: substrate-core
+    pass: research
+    cadence: daily
+    autonomy_tier: 0
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role research-agent --repo substrate-core
+
+  - id: research-luigios
+    role: research-agent
+    repo_slug: luigios
+    pass: research
+    cadence: daily
+    autonomy_tier: 0
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role research-agent --repo luigios
+
+  - id: research-site
+    role: research-agent
+    repo_slug: ahrondarnell-site
+    pass: research
+    cadence: daily
+    autonomy_tier: 0
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role research-agent --repo ahrondarnell-site
+
+  - id: dev-substrate
+    role: dev-agent
+    repo_slug: substrate-core
+    pass: development
+    cadence: daily
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role dev-agent --repo substrate-core
+
+  - id: dev-luigios
+    role: dev-agent
+    repo_slug: luigios
+    pass: development
+    cadence: daily
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role dev-agent --repo luigios
+
+  - id: dev-site
+    role: dev-agent
+    repo_slug: ahrondarnell-site
+    pass: development
+    cadence: daily
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role dev-agent --repo ahrondarnell-site
+
+  - id: update-substrate
+    role: update-agent
+    repo_slug: substrate-core
+    pass: development
+    cadence: weekly
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role update-agent --repo substrate-core
+
+  - id: update-luigios
+    role: update-agent
+    repo_slug: luigios
+    pass: development
+    cadence: weekly
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role update-agent --repo luigios
+
+  - id: update-site
+    role: update-agent
+    repo_slug: ahrondarnell-site
+    pass: development
+    cadence: weekly
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role update-agent --repo ahrondarnell-site
+
+  - id: content-moderator-site
+    role: content-moderator
+    repo_slug: ahrondarnell-site
+    pass: research
+    cadence: hourly
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role content-moderator --repo ahrondarnell-site
+
+  - id: community-manager
+    role: community-manager
+    repo_slug: substrate-core
+    pass: research
+    cadence: every_4_hours
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role community-manager --repo substrate-core

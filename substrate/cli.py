@@ -11,6 +11,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Sequence
 
+from .agents import (
+    AgentConfigError,
+    agent_status_payload,
+    load_agents_config,
+    run_agent,
+    run_agent_cycle,
+)
 from .config_sync import (
     CONFIG_SYNC_TARGET_ENVS,
     backup_config_sync,
@@ -783,6 +790,48 @@ def _build_parser() -> argparse.ArgumentParser:
         "--max-size-mb", type=float, help="Cap total cache size in MiB."
     )
 
+    agent_cycle = subparsers.add_parser(
+        "agent-cycle",
+        help="Evaluate agents.yaml cadence and run every due agent sequentially.",
+    )
+    agent_cycle.add_argument(
+        "--agent",
+        action="append",
+        default=[],
+        help="Limit the cycle to specific agent id(s) (repeatable).",
+    )
+    agent_cycle.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Report which agents are due without executing them.",
+    )
+    agent_cycle.add_argument(
+        "--directive",
+        default="",
+        help="Optional explicit human directive passed to Tier 2-gated actions.",
+    )
+
+    agent_run = subparsers.add_parser(
+        "agent-run", help="Run a single agent selected by role and repository."
+    )
+    agent_run.add_argument("--role", required=True, help="Agent role from agents.yaml.")
+    agent_run.add_argument("--repo", required=True, help="Repository slug.")
+    agent_run.add_argument(
+        "--directive",
+        default="",
+        help="Optional explicit human directive passed to Tier 2-gated actions.",
+    )
+    agent_run.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass the cadence idempotency window for this run.",
+    )
+
+    subparsers.add_parser(
+        "agent-status",
+        help="Show configured agents, last run state, and next due times.",
+    )
+
     return parser
 
 
@@ -1290,6 +1339,61 @@ def main(argv: Sequence[str] | None = None) -> int:
             reload=args.reload,
             factory=False,
         )
+        return 0
+
+    if args.command == "agent-cycle":
+        try:
+            result = run_agent_cycle(
+                runtime,
+                orchestrator,
+                only_ids=args.agent or None,
+                dry_run=args.dry_run,
+                directive=args.directive,
+            )
+        except AgentConfigError as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "agent-run":
+        try:
+            agents = load_agents_config(runtime.root)
+        except AgentConfigError as exc:
+            parser.error(str(exc))
+        matches = [
+            agent
+            for agent in agents
+            if agent.role == args.role and agent.repo_slug == args.repo
+        ]
+        if not matches:
+            parser.error(
+                f"No agent with role '{args.role}' for repo '{args.repo}' in agents.yaml."
+            )
+        results = []
+        for agent in matches:
+            result = run_agent(
+                runtime,
+                orchestrator,
+                agent,
+                directive=args.directive,
+                force=args.force,
+            )
+            results.append(result.to_dict())
+        print(
+            json.dumps(
+                results[0] if len(results) == 1 else results,
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0
+
+    if args.command == "agent-status":
+        try:
+            payload = agent_status_payload(runtime)
+        except AgentConfigError as exc:
+            parser.error(str(exc))
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
         return 0
 
     parser.print_help(sys.stderr)
