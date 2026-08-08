@@ -36,3 +36,51 @@ aosp-eos-asteroids/
 # Editor metadata
 .vscode/
 work/eos-asteroids-src/
+
+# AI/operator safety ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+error.log
+
+# OpenClaw/export bundles and sensitive handoff material
+openclaw_substrate_export_*/
+openclaw_substrate_export_*.tar.gz
+*SECRETS*.env
+*secrets*.env
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
+
+# Local audit evidence and machine-specific captures
+artifacts/*/evidence/
+artifacts/*/applied/
+ahrondarnell_resume_package/
+
+# Generated binaries, screenshots, and device snapshots
+work/**/*-bin
+work/**/build/
+work/**/screenshots/
+work/**/device-current/
+work/**/device-config/*.png
+work/**/device-config/*.new
+work/**/device-config/*.test
+
+# Kilo local config/agents (contains environment-specific agent configs)
+.kilo/
+
+# iPhone panel / LinkedIn screenshots (personal data)
+linkedin-*.png
+*.png
+*.jpg
+*.jpeg
+
+# Android swarm build outputs
+android-swarm/.gradle/
+android-swarm/build/
+android-swarm/app/build/

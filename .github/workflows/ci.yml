@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: python -m pip install --upgrade uv
+      - name: Sync dependencies
+        run: uv sync --python 3.12
+      - name: Lint with ruff
+        run: uv run ruff check substrate scripts tests
+      - name: Type check with mypy
+        run: uv run mypy substrate scripts tests
+      - name: Run tests
+        run: uv run pytest tests
+      - name: Compile Python
+        run: uv run python -m compileall substrate scripts
+      - name: Verify dashboard module
+        run: uv run python -c "from substrate.dashboard import DashboardMetrics, create_dashboard_router; print('Dashboard module OK')"
+      - name: Verify pipelines module
+        run: uv run python -c "from substrate.pipelines import PipelineRegistry, PipelineEngine, create_pipelines_router; print('Pipelines module OK')"
+      - name: Verify gh_sync module
+        run: uv run python -c "from substrate.gh_sync import GitHubSyncService; print('GitHub sync module OK')"
+      - name: Infrastructure health check
+        run: bash scripts/health_check.sh
+      - name: Substrate scan
+        run: uv run python scripts/substrate_cli.py scan

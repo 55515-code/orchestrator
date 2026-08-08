@@ -15,9 +15,17 @@ from typing import Any
 import yaml
 from langchain_core.prompts import ChatPromptTemplate
 
+from .cache_store import CacheStore
 from .environment import platform_key
 from .learning import record_execution
 from .models import TaskConfig
+from .encrypted_chain import (
+    EncryptedChainContext,
+    EncryptedChainRegistry,
+    DecryptionError,
+    EncryptionError,
+)
+from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model, models_for_hardware
 from .reliability import (
     CheckpointStore,
     ExecutionTarget,
@@ -33,11 +41,14 @@ from .reliability import (
 from .registry import SubstrateRuntime
 from .resource_orchestration import (
     ElasticScaleHooks,
+    HardwareProfile,
     WorkloadPressure,
     WorkloadRequest,
+    hardware_profile_from_probe,
     scheduler_from_chain_defaults,
 )
 from .research import run_openclaw_research_assist, source_facts_ready
+from .task_cache import TaskCache
 
 
 _BOUNDED_VALIDATION_HINTS = (
@@ -51,21 +62,7 @@ _BOUNDED_VALIDATION_HINTS = (
 
 
 def _build_model(provider: str, model: str):
-    if provider == "local":
-        pass  # using local router
-
-        return None  # delegated to local roo-router
-    if provider == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-
-        return ChatAnthropic(model=model, temperature=0)
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama
-
-        return ChatOllama(model=model, temperature=0)
-    if provider == "mock":
-        return None
-    raise ValueError(f"Unsupported provider: {provider}")
+    return build_model(provider, model)
 
 
 def _render_prompt(template_path: Path, state: dict[str, Any]) -> str:
@@ -134,12 +131,98 @@ class Orchestrator:
         runtime: SubstrateRuntime,
         *,
         scale_hooks: ElasticScaleHooks | None = None,
+        task_cache: TaskCache | None = None,
     ) -> None:
         self.runtime = runtime
         reliability_root = self.runtime.paths["memory"] / "reliability"
         self._checkpoint_store = CheckpointStore(reliability_root / "checkpoints")
         self._idempotency_store = IdempotencyStore(reliability_root / "idempotency")
         self._scale_hooks = scale_hooks or ElasticScaleHooks()
+        if task_cache is None:
+            cache_root = self.runtime.paths.get("state", Path("state")) / "cache"
+            self._task_cache = TaskCache(CacheStore(cache_root))
+        else:
+            self._task_cache = task_cache
+
+    def _load_hardware_profile(self) -> HardwareProfile:
+        probe_path = self.runtime.root / "docs" / "system-probe.md"
+        if not probe_path.exists():
+            return HardwareProfile()
+        try:
+            text = probe_path.read_text(encoding="utf-8")
+            return hardware_profile_from_probe(text)
+        except OSError:
+            return HardwareProfile()
+
+    def _get_encrypted_registry(self) -> EncryptedChainRegistry:
+        registry_path = self.runtime.paths.get("state", Path("state")) / "encrypted-chains"
+        registry_path.mkdir(parents=True, exist_ok=True)
+        if not hasattr(self, "_encrypted_chain_registry"):
+            self._encrypted_chain_registry = EncryptedChainRegistry(registry_path)
+        return self._encrypted_chain_registry
+
+    def _invoke_encrypted_step(
+        self,
+        *,
+        run_id: str,
+        stage: str,
+        step_id: str,
+        rendered_prompt: str,
+        retry_policy: RetryPolicy,
+        failover_hook: ProviderFailoverHook,
+        idempotency_key: str,
+        initial_target: ExecutionTarget,
+        encryption_context: EncryptedChainContext,
+        use_cache: bool = True,
+    ) -> tuple[str, ExecutionTarget]:
+        encrypted_prompt = encryption_context.encrypt_step_payload(
+            step_id, {"prompt": rendered_prompt, "run_id": run_id, "stage": stage}
+        )
+        self.runtime.db.add_event(
+            run_id=run_id,
+            level="info",
+            message=f"Encrypted step '{step_id}' prompt",
+            payload={
+                "step": step_id,
+                "ciphertext_length": len(encrypted_prompt),
+                "chain_id": encryption_context.chain_id,
+            },
+        )
+        target = ExecutionTarget(
+            provider="encrypted",
+            model=initial_target.model or "encrypted-context",
+        )
+        try:
+            response, _ = self._invoke_provider_with_recovery(
+                run_id=run_id,
+                stage=stage,
+                step_id=step_id,
+                rendered_prompt=rendered_prompt,
+                retry_policy=retry_policy,
+                failover_hook=failover_hook,
+                idempotency_key=idempotency_key,
+                initial_target=target,
+                use_cache=use_cache,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.runtime.db.add_event(
+                run_id=run_id,
+                level="error",
+                message=f"Encrypted step '{step_id}' failed, falling back to plaintext.",
+                payload={"step": step_id, "error": str(exc)},
+            )
+            response, _ = self._invoke_provider_with_recovery(
+                run_id=run_id,
+                stage=stage,
+                step_id=step_id,
+                rendered_prompt=rendered_prompt,
+                retry_policy=retry_policy,
+                failover_hook=failover_hook,
+                idempotency_key=idempotency_key,
+                initial_target=initial_target,
+                use_cache=use_cache,
+            )
+        return response, target
 
     def _new_run_id(self) -> str:
         return uuid.uuid4().hex
@@ -173,6 +256,19 @@ class Orchestrator:
                 "Use --allow-stage-skip to bypass."
             )
 
+    def _assert_restricted_terms(self, text: str, context: str = "") -> None:
+        terms = self.runtime.workspace.policy.restricted_terms
+        if not terms:
+            return
+        haystack = text.lower()
+        matches = [term for term in terms if term.lower() in haystack]
+        if not matches:
+            return
+        raise PermissionError(
+            f"Restricted term(s) detected in {context or 'input'}: {matches}. "
+            "This content is blocked by policy."
+        )
+
     def _chain_retry_policy(self, defaults: dict[str, Any]) -> RetryPolicy:
         raw_retry = defaults.get("retry_policy", {})
         if not isinstance(raw_retry, dict):
@@ -204,7 +300,7 @@ class Orchestrator:
         if not fallback_order:
             fallback_order = [
                 provider
-                for provider in ["local", "anthropic", "ollama", "mock"]
+                for provider in FREE_FIRST_PROVIDER_ORDER
                 if provider != primary_provider
             ]
 
@@ -214,7 +310,9 @@ class Orchestrator:
             if isinstance(provider, str) and isinstance(model, str)
         }
         provider_models.setdefault(primary_provider, primary_model)
-        provider_models.setdefault("mock", "mock-model")
+        for provider, default_model in DEFAULT_PROVIDER_MODELS.items():
+            if provider != "openai":
+                provider_models.setdefault(provider, default_model)
 
         return ProviderFailoverHook(
             fallback_order=fallback_order,
@@ -314,11 +412,36 @@ class Orchestrator:
         failover_hook: ProviderFailoverHook,
         idempotency_key: str,
         initial_target: ExecutionTarget,
+        use_cache: bool = True,
     ) -> tuple[str, ExecutionTarget]:
         current_target = initial_target
         failover_attempt = 0
         while True:
             try:
+                cache_key: str | None = None
+                cached_response: str | None = None
+                if use_cache:
+                    cache_key = self._task_cache._call_key(
+                        current_target.provider,
+                        current_target.model,
+                        rendered_prompt,
+                        None,
+                    )
+                    cached_response = self._task_cache.store.get(cache_key)
+
+                if cached_response is not None:
+                    self.runtime.db.add_event(
+                        run_id=run_id,
+                        level="info",
+                        message=f"Cache hit for step '{step_id}'",
+                        payload={
+                            "step": step_id,
+                            "provider": current_target.provider,
+                            "model": current_target.model,
+                            "cache_key": cache_key,
+                        },
+                    )
+                    return cached_response, current_target
 
                 def _invoke() -> str:
                     llm = _build_model(current_target.provider, current_target.model)
@@ -353,6 +476,14 @@ class Orchestrator:
                         },
                     ),
                 )
+                if use_cache and cache_key is not None:
+                    self._task_cache.store.set(
+                        cache_key,
+                        response,
+                        kind="ai_call",
+                        summary=self._task_cache.summarize(response),
+                        tags={"ai_call", current_target.provider, current_target.model, step_id},
+                    )
                 return response, current_target
             except Exception as exc:  # noqa: BLE001
                 failure = classify_failure(exc)
@@ -387,6 +518,7 @@ class Orchestrator:
                         "error": str(exc),
                     },
                 )
+                failover_hook.mark_provider_unhealthy(current_target.provider)
                 next_target = failover_hook.next_target(
                     run_id=run_id,
                     step_id=step_id,
@@ -606,6 +738,7 @@ class Orchestrator:
         openclaw_manual_trigger: bool = False,
         openclaw_data_class: str = "synthetic",
         run_id: str | None = None,
+        use_cache: bool = True,
     ) -> str:
         repo = self.runtime.resolve_repo(repo_slug)
         self._assert_stage_policy(
@@ -615,6 +748,10 @@ class Orchestrator:
             requested_mode=requested_mode, repo=repo, allow_mutations=allow_mutations
         )
         self._assert_mutation_policy(mode)
+        self._assert_restricted_terms(
+            " ".join([objective, chain_path]),
+            context="chain objective/path",
+        )
 
         run_id = run_id or self._new_run_id()
         chain_file = (self.runtime.root / chain_path).resolve()
@@ -641,12 +778,19 @@ class Orchestrator:
             models=models,
             allow_terminal_failover=bool(raw_retry.get("allow_terminal_failover", False)),
         )
+        hardware_profile = self._load_hardware_profile()
+        hardware_aware_models = models_for_hardware(
+            tier=hardware_profile.local_model_tier(),
+            base_models=dict(failover_hook.provider_models),
+        )
+        failover_hook.provider_models = hardware_aware_models
         scheduler = scheduler_from_chain_defaults(
             defaults=defaults,
             primary_target=ExecutionTarget(provider=provider_name, model=model_name),
-            provider_models=failover_hook.provider_models,
+            provider_models=hardware_aware_models,
             failover_order=failover_hook.fallback_order,
             scale_hooks=self._scale_hooks,
+            hardware_profile=hardware_profile,
         )
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         run_dir = self.runtime.paths["memory"] / "runs" / f"{timestamp}-{run_id[:8]}"
@@ -906,6 +1050,10 @@ class Orchestrator:
                         prompt_path,
                         {"objective": objective, "context": context, "outputs": outputs},
                     )
+                    self._assert_restricted_terms(
+                        rendered_prompt,
+                        context=f"step '{step_id}' prompt",
+                    )
                     pass_name = str(step.get("pass") or step_id).strip().lower()
                     should_attempt_openclaw = bool(openclaw_manual_trigger)
                     if (
@@ -954,9 +1102,12 @@ class Orchestrator:
                     ).strip()
                     capability = (
                         raw_capability
-                        if raw_capability in {"cpu", "gpu", "model", "api"}
+                        if raw_capability in {"cpu", "gpu", "model", "api", "encrypted"}
                         else scheduler.infer_capability_for_provider(provider_name)
                     )
+                    step_encryption = step.get("encryption")
+                    if step_encryption and step_encryption not in {"fhe", "mpc", "aes"}:
+                        step_encryption = None
                     safety_tier = (
                         "strict" if bool(step.get("strict_safety", False)) else "standard"
                     )
@@ -1003,6 +1154,20 @@ class Orchestrator:
                             "Rendered prompt preview:\n\n"
                             f"{rendered_prompt[:4000]}"
                         )
+                    elif step_encryption:
+                        encryption_context = self._get_encrypted_registry().create_chain(chain_id=run_id)
+                        response, effective_target = self._invoke_encrypted_step(
+                            run_id=run_id,
+                            stage=stage,
+                            step_id=step_id,
+                            rendered_prompt=rendered_prompt,
+                            retry_policy=retry_policy,
+                            failover_hook=failover_hook,
+                            idempotency_key=idempotency_key,
+                            initial_target=effective_target,
+                            encryption_context=encryption_context,
+                            use_cache=use_cache,
+                        )
                     else:
                         response, effective_target = self._invoke_provider_with_recovery(
                             run_id=run_id,
@@ -1013,6 +1178,7 @@ class Orchestrator:
                             failover_hook=failover_hook,
                             idempotency_key=idempotency_key,
                             initial_target=effective_target,
+                            use_cache=use_cache,
                         )
 
                     output_path.write_text(response, encoding="utf-8")
@@ -1162,7 +1328,7 @@ class Orchestrator:
 
         repo = self.runtime.resolve_repo(spec.repo_slug)
         scheduled_run_id = spec.run_id or self._new_run_id()
-        temp_task_id = f"studio_scheduled_{uuid.uuid4().hex[:12]}"
+        temp_task_id = f"_scheduled_{uuid.uuid4().hex[:12]}"
         repo.tasks[temp_task_id] = TaskConfig(
             id=temp_task_id,
             description=spec.description,
@@ -1264,6 +1430,10 @@ class Orchestrator:
 
         command = task.command_for_platform(platform_key())
         command = [os.path.expandvars(token) for token in command]
+        self._assert_restricted_terms(
+            " ".join([task_id, task.description, *command]),
+            context=f"task '{task_id}'",
+        )
         policy = self.runtime.workspace.policy
         bounded_validation = self._is_bounded_validation_task(
             task_id=task_id,

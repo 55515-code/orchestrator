@@ -2,40 +2,18 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
-
+from . import _utils
 from .registry import SubstrateRuntime
 
 VALID_ACCESS_MODES = {"read", "write"}
 TOKEN_REF_RE = re.compile(r"^[A-Za-z0-9_./:-]{1,160}$")
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    if not isinstance(payload, dict):
-        raise ValueError(f"{path.name} must be a YAML mapping.")
-    return payload
-
-
-def _ensure_list(payload: Any, field: str) -> list[Any]:
-    if payload is None:
-        return []
-    if not isinstance(payload, list):
-        raise ValueError(f"{field} must be a list.")
-    return payload
-
-
 def _load_state(path: Path) -> dict[str, Any]:
+    """Load integration connection state from *path*."""
     if not path.exists():
         return {"connections": {}}
     payload = json.loads(path.read_text(encoding="utf-8") or "{}")
@@ -48,6 +26,7 @@ def _load_state(path: Path) -> dict[str, Any]:
 
 
 def _save_state(path: Path, state: dict[str, Any]) -> None:
+    """Persist integration connection state to *path*."""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
 
@@ -73,7 +52,7 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
         "auth": {
             "methods": [
                 str(item)
-                for item in _ensure_list(
+                for item in _utils.ensure_list(
                     auth.get("methods"), f"services[{service_id}].auth.methods"
                 )
             ],
@@ -82,26 +61,26 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
         },
         "cli_tools": [
             str(item)
-            for item in _ensure_list(
+            for item in _utils.ensure_list(
                 raw.get("cli_tools"), f"services[{service_id}].cli_tools"
             )
         ],
         "supported_surfaces": [
             str(item)
-            for item in _ensure_list(
+            for item in _utils.ensure_list(
                 raw.get("supported_surfaces"),
                 f"services[{service_id}].supported_surfaces",
             )
         ],
         "alternatives": [
             str(item)
-            for item in _ensure_list(
+            for item in _utils.ensure_list(
                 raw.get("alternatives"), f"services[{service_id}].alternatives"
             )
         ],
         "community_projects": [
             str(item)
-            for item in _ensure_list(
+            for item in _utils.ensure_list(
                 raw.get("community_projects"),
                 f"services[{service_id}].community_projects",
             )
@@ -109,7 +88,7 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
         "read_profile": {
             "default_scopes": [
                 str(item)
-                for item in _ensure_list(
+                for item in _utils.ensure_list(
                     read_profile.get("default_scopes"),
                     f"services[{service_id}].read_profile.default_scopes",
                 )
@@ -119,7 +98,7 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
         "write_profile": {
             "scopes": [
                 str(item)
-                for item in _ensure_list(
+                for item in _utils.ensure_list(
                     write_profile.get("scopes"),
                     f"services[{service_id}].write_profile.scopes",
                 )
@@ -130,13 +109,13 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def _catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
-    source = _load_yaml(runtime.paths["integrations"])
+    source = _utils.load_yaml(runtime.paths["integrations"])
     defaults = (
         source.get("defaults") if isinstance(source.get("defaults"), dict) else {}
     )
     services = [
         _normalize_service(raw)
-        for raw in _ensure_list(source.get("services"), "services")
+        for raw in _utils.ensure_list(source.get("services"), "services")
         if isinstance(raw, dict)
     ]
     default_mode = str(defaults.get("access_mode") or "read")
@@ -274,7 +253,7 @@ def connect_integration(
         "token_ref": _validated_token_ref(token_ref),
         "granted_scopes": _parse_scopes(granted_scopes),
         "write_directive": directive or None,
-        "updated_at": _utc_now(),
+        "updated_at": _utils.utc_now_iso(),
     }
     state["connections"][service_id] = connection
     _save_state(runtime.paths["integrations_state"], state)
@@ -314,7 +293,7 @@ def set_integration_mode(
 
     connection["mode"] = selected_mode
     connection["write_directive"] = directive or None
-    connection["updated_at"] = _utc_now()
+    connection["updated_at"] = _utils.utc_now_iso()
     state["connections"][service_id] = connection
     _save_state(runtime.paths["integrations_state"], state)
     return {"service_id": service_id, "connection": connection}

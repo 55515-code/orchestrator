@@ -1,0 +1,23 @@
+name: 1pointo-content
+description: Ship new 1pointo posts and moderated community content through the local substrate. Queue → validate → approve → build → verify.
+defaults:
+  provider: local
+  models:
+    local: roo-router
+context_files:
+  - ahrondarnell-site/src/site.config.ts
+  - ahrondarnell-site/src/content.config.ts
+  - ahrondarnell-site/src/content/blog/welcome-to-1pointo.md
+  - ahrondarnell-site/src/layouts/BaseLayout.astro
+  - ahrondarnell-site/src/components/JsonLd.astro
+  - docs/caching.md
+  - docs/dashboard-orchestration.md
+steps:
+  - id: scope
+    prompt: prompts/1pointo/01_scope.md
+  - id: draft
+    prompt: prompts/1pointo/02_draft.md
+  - id: validate
+    prompt: prompts/1pointo/03_validate.md
+  - id: review
+    prompt: prompts/1pointo/04_review.md

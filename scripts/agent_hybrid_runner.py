@@ -121,8 +121,7 @@ def deterministic_commands_for_mode(mode: str) -> list[list[str]]:
                 "httpx",
                 "pytest",
                 "-q",
-                "tests/studio/test_connection.py",
-                "tests/studio/test_api.py",
+                "tests/test_decentralized_governance.py",
             ]
         )
     return commands

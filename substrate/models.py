@@ -7,6 +7,9 @@ from typing import Literal
 
 RunMode = Literal["observe", "mutate"]
 RunType = Literal["chain", "task"]
+OPENCLAW_ALLOWED_DATA_CLASSES = frozenset({"synthetic", "redacted"})
+OPENCLAW_ALLOWED_STAGES = frozenset({"local", "hosted_dev"})
+OPENCLAW_ALLOWED_PASSES = frozenset({"research"})
 
 
 def utc_now_iso() -> str:
@@ -38,6 +41,7 @@ class TaskConfig:
     command: list[str] | dict[str, list[str]]
     workdir: str = "."
     mode: RunMode = "observe"
+    encryption: str | None = None
 
     def command_for_platform(self, platform_key: str) -> list[str]:
         if isinstance(self.command, list):
@@ -95,6 +99,7 @@ class PolicyConfig:
     rc1_watchdog_stuck_confirmation_seconds: float = 2.0
     rc1_watchdog_poll_interval_seconds: float = 0.5
     rc1_watchdog_terminate_grace_seconds: float = 1.0
+    restricted_terms: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -116,3 +121,4 @@ class WorkspaceConfig:
     auto_discovery_roots: list[Path] = field(default_factory=list)
     auto_discovery_max_depth: int = 2
     ignored_paths: list[str] = field(default_factory=list)
+    gateway: dict[str, Any] = field(default_factory=dict)

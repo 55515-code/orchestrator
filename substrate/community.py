@@ -13,6 +13,8 @@ from random import Random
 from typing import Any
 
 from .learning import record_execution
+from .providers import DEFAULT_PROVIDER_MODELS as PROVIDER_DEFAULT_MODELS
+from .providers import build_model as build_provider_model
 from .registry import SubstrateRuntime
 
 DEVELOPER_COHORTS: list[tuple[str, int]] = [
@@ -64,10 +66,8 @@ OPERATING_CADENCE_PHASES = [
 ]
 
 DEFAULT_PROVIDER_MODELS = {
+    **PROVIDER_DEFAULT_MODELS,
     "mock": "mock-codex-persona",
-    "local": "roo-router",
-    "anthropic": "claude-sonnet-4-20250514",
-    "ollama": "llama3.2:latest",
     "codex": "default",
 }
 
@@ -192,23 +192,9 @@ FEEDBACK_QUALITY = ["high_signal", "mixed", "noisy"]
 
 
 def _build_model(provider: str, model: str):
-    if provider == "local":
-        pass  # using local router
-
-        return None  # delegated to local roo-router
-    if provider == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-
-        return ChatAnthropic(model=model, temperature=0)
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama
-
-        return ChatOllama(model=model, temperature=0)
-    if provider == "mock":
+    if provider in {"mock", "codex"}:
         return None
-    if provider == "codex":
-        return None
-    raise ValueError(f"Unsupported provider: {provider}")
+    return build_provider_model(provider, model)
 
 
 def _iso_now() -> str:

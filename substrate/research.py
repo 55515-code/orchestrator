@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import importlib
 import json
+import logging
 import re
 import urllib.error
 import urllib.request
@@ -12,7 +13,15 @@ from typing import Any, Callable
 
 import yaml
 
+from . import _utils
+from .models import (
+    OPENCLAW_ALLOWED_DATA_CLASSES,
+    OPENCLAW_ALLOWED_PASSES,
+    OPENCLAW_ALLOWED_STAGES,
+)
 from .registry import SubstrateRuntime
+
+logger = logging.getLogger(__name__)
 
 GITHUB_REPO_PATTERN = re.compile(
     r"^https?://github\.com/(?P<owner>[^/]+)/(?P<repo>[^/#?]+)(?:[/?#].*)?$"
@@ -44,10 +53,6 @@ class OpenClawUnavailableError(RuntimeError):
     """Raised when OpenClaw integration hooks are not available."""
 
 
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def _normalize_data_class(raw: str | None) -> str:
     value = (raw or "").strip().lower()
     return value or _OPENCLAW_DATA_CLASS_DEFAULT
@@ -60,8 +65,7 @@ def _openclaw_run_dir(runtime: SubstrateRuntime, run_id: str) -> Path:
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    _utils.write_json(path, payload)
 
 
 def _best_effort_openclaw_invoke(
@@ -80,6 +84,7 @@ def _resolve_openclaw_invoker() -> tuple[Callable[..., Any] | None, str]:
     try:
         module = importlib.import_module("openclaw")
     except Exception as exc:  # noqa: BLE001
+        logger.warning("OpenClaw module unavailable: %s", exc)
         return None, f"module_unavailable:{type(exc).__name__}"
 
     for candidate in ("run_research_assist", "research_assist", "run"):
@@ -92,6 +97,7 @@ def _resolve_openclaw_invoker() -> tuple[Callable[..., Any] | None, str]:
         try:
             client = client_cls()
         except Exception as exc:  # noqa: BLE001
+            logger.warning("OpenClaw client initialization failed: %s", exc)
             return None, f"client_init_failed:{type(exc).__name__}"
         for candidate in ("run_research_assist", "research_assist", "run"):
             fn = getattr(client, candidate, None)
@@ -114,7 +120,7 @@ def _invoke_openclaw_untrusted_output(
         raw_text = json.dumps(payload, indent=2, ensure_ascii=False)
     return raw_text, {
         "adapter": adapter_id,
-        "collected_at": _utc_now_iso(),
+        "collected_at": _utils.utc_now_iso(),
     }
 
 
@@ -338,6 +344,7 @@ def run_openclaw_research_assist(
             context=context,
         )
     except OpenClawUnavailableError as exc:
+        logger.info("OpenClaw unavailable for research assist: %s", exc)
         return {
             "status": "degraded_unavailable",
             "reason": str(exc),
@@ -346,6 +353,7 @@ def run_openclaw_research_assist(
             "imported_insights": [],
         }
     except Exception as exc:  # noqa: BLE001
+        logger.error("OpenClaw invocation failed: %s", exc)
         return {
             "status": "degraded_unavailable",
             "reason": f"invocation_failed:{type(exc).__name__}",
@@ -359,7 +367,7 @@ def run_openclaw_research_assist(
     provenance_hash = hashlib.sha256(raw_output.encode("utf-8")).hexdigest()
     raw_payload = {
         "artifact_class": "openclaw_raw_quarantine",
-        "recorded_at": _utc_now_iso(),
+        "recorded_at": _utils.utc_now_iso(),
         "run_id": run_id,
         "stage": stage,
         "pass_name": normalized_pass,
@@ -384,7 +392,7 @@ def run_openclaw_research_assist(
         vetting_report_path,
         {
             "artifact_class": "openclaw_vetting_report",
-            "recorded_at": _utc_now_iso(),
+            "recorded_at": _utils.utc_now_iso(),
             "run_id": run_id,
             "stage": stage,
             "pass_name": normalized_pass,
@@ -402,7 +410,7 @@ def run_openclaw_research_assist(
             rejected_path,
             {
                 "artifact_class": "openclaw_rejected_artifact",
-                "recorded_at": _utc_now_iso(),
+                "recorded_at": _utils.utc_now_iso(),
                 "run_id": run_id,
                 "stage": stage,
                 "pass_name": normalized_pass,
@@ -430,7 +438,7 @@ def run_openclaw_research_assist(
         vetted_path,
         {
             "artifact_class": "vetted_research_artifact",
-            "recorded_at": _utc_now_iso(),
+            "recorded_at": _utils.utc_now_iso(),
             "run_id": run_id,
             "stage": stage,
             "pass_name": normalized_pass,
@@ -551,6 +559,24 @@ def refresh_upstreams(runtime: SubstrateRuntime) -> list[dict[str, Any]]:
         json.dumps(refreshed, indent=2, ensure_ascii=False), encoding="utf-8"
     )
     return refreshed
+
+
+def diagnose_openclaw() -> dict[str, Any]:
+    """Diagnose OpenClaw integration status."""
+    invoker, adapter_id = _resolve_openclaw_invoker()
+    status = "available" if invoker else "unavailable"
+    reason = None if invoker else adapter_id
+    return {
+        "status": status,
+        "adapter": adapter_id,
+        "module_available": invoker is not None,
+        "reason": reason,
+        "policy": {
+            "allowed_data_classes": sorted(OPENCLAW_ALLOWED_DATA_CLASSES),
+            "allowed_passes": sorted(OPENCLAW_ALLOWED_PASSES),
+            "allowed_stages": sorted(OPENCLAW_ALLOWED_STAGES),
+        },
+    }
 
 
 def source_facts_ready(runtime: SubstrateRuntime) -> bool:

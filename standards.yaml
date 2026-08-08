@@ -156,3 +156,123 @@ tracks:
         repo_url: https://github.com/OWASP/owasp-mastg
         maintained_by: OWASP Mobile Security Project
         notes: Align test evidence and reporting with MASVS/MASTG control language.
+
+  - id: ai_agent_orchestration
+    name: AI Agent Orchestration
+    description: Open-source agent frameworks and multi-agent collaboration patterns for composable, auditable automation.
+    tags: [agents, ai, orchestration, multi-agent, huggingface]
+    standards:
+      - id: smolagents
+        name: Hugging Face smolagents
+        format: Code-first agent framework with CodeAgent, ToolCallingAgent, and managed multi-agent hierarchies.
+        source_url: https://huggingface.co/docs/smolagents
+        repo_url: https://github.com/huggingface/smolagents
+        maintained_by: Hugging Face
+        notes: Prefer code-agent loops and tool-agnostic design over custom agent parsers; execute generated code in sandboxed environments.
+      - id: agent_collabs
+        name: Hugging Face agent-collabs
+        format: Multi-agent collaboration challenge template with FastAPI backend, message board, taskforces, and leaderboard.
+        source_url: https://huggingface.co/learn/agents-course
+        repo_url: https://github.com/huggingface/agent-collabs
+        maintained_by: Hugging Face
+        notes: Reuse the message-board / taskforce / verification pattern when coordinating multiple specialized agents.
+
+  - id: llm_serving
+    name: LLM Serving
+    description: Production-grade open-source inference engines for local and hosted LLM deployments.
+    tags: [llm, inference, serving, vllm, sglang]
+    standards:
+      - id: vllm
+        name: vLLM
+        format: OpenAI-compatible LLM serving engine with PagedAttention, continuous batching, and broad hardware support.
+        source_url: https://docs.vllm.ai/
+        repo_url: https://github.com/vllm-project/vllm
+        maintained_by: vLLM Project / Linux Foundation
+        notes: Default production serving choice recommended by Hugging Face after TGI maintenance-mode transition.
+      - id: sglang
+        name: SGLang
+        format: Structured generation and LLM serving runtime with RadixAttention for shared-prefix workloads.
+        source_url: https://docs.sglang.ai/
+        repo_url: https://github.com/sgl-project/sglang
+        maintained_by: SGLang Team / LMSYS
+        notes: Prefer for agentic, multi-turn, and RAG workloads with heavy prefix reuse.
+
+  - id: local_automation_optimization
+    name: Local Automation Optimization
+    description: Caching, memoization, and task-decomposition patterns that reduce redundant AI calls and repeated computation in local automation workflows.
+    tags: [cache, memoization, optimization, local, automation]
+    standards:
+      - id: substrate_local_cache_workflow
+        name: Substrate Local Cache Workflow
+        format: SQLite + filesystem cache keyed by deterministic SHA-256 hashes of (kind, inputs), with summaries, TTL, tags, and pruning.
+        source_url: https://github.com/55515-code/orchestrator/blob/main/docs/caching.md
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: Cache AI calls, subtask results, and plans; decompose large objectives into smaller cacheable units; prefer cache hits over repeated LLM calls.
+      - id: diskcache
+        name: diskcache
+        format: Disk and file-backed Python cache with SQLite metadata, tag-based eviction, and memoization recipes.
+        source_url: https://diskcache.readthedocs.io/
+        repo_url: https://github.com/grantjenks/python-diskcache
+        maintained_by: Grant Jenks / community
+        notes: Consider for larger persistent caches or drop-in memoization when the substrate cache needs richer eviction policies.
+      - id: cachetools
+        name: cachetools
+        format: Lightweight in-memory Python caching with TTL, LRU, and LFU policies.
+        source_url: https://cachetools.readthedocs.io/
+        repo_url: https://github.com/tkem/cachetools
+        maintained_by: Thomas Kemmer / community
+        notes: Use for short-lived, in-process memoization of deterministic helper functions.
+      - id: joblib_memory
+        name: Joblib Memory
+        format: Disk-based memoization of Python functions optimized for NumPy/scikit-learn workloads.
+        source_url: https://joblib.readthedocs.io/
+        repo_url: https://github.com/joblib/joblib
+        maintained_by: scikit-learn / Joblib maintainers
+        notes: Use for deterministic heavy computations and data pipelines where function source-code hashing is acceptable.
+
+  - id: decentralized_governance_networks
+    name: Decentralized Governance Networks
+    description: Commons-based, non-hierarchical organizational models rooted in socialist, anarchist, cooperative, Indigenous, and federated governance traditions. Embeds decentralization, collective awareness, consensus-driven data, non-Westernized perspectives, and transparent value systems into substrate operations.
+    tags: [commons, cooperative, anarchist, indigenous, federated, dignity, liberation, consensus, mutualism]
+    standards:
+      - id: dignity_stack_layers
+        name: Dignity Stack Six-Layer Governance
+        format: Governance overlay mapping technological oversight, data sovereignty, contextual integrity, fiduciary limits, participatory governance, and economic justice to commons-based organizational protocols.
+        source_url: https://arxiv.org/abs/2606.06083
+        notes: Enforce capital-governance decoupling; verify inter-layer dependencies; resist formal and structural capture through polycentric, substitutable supply.
+      - id: liberation_stack_layers
+        name: Liberation Stack Layered Architecture
+        format: Directed acyclic dependency graph of energy, manufacturing, food, communication, knowledge, and governance commons with explicit gate conditions and threat models.
+        source_url: https://arxiv.org/abs/2602.13154
+        notes: Each layer has function, dependencies, gate condition, threat model, and governance hooks. No layer deploys sustainably without lower layers.
+      - id: consensuscode_horizontal_collective
+        name: Consensus Code Horizontal Agent Collective
+        format: True consensus decision-making with temporary/revocable coordination roles, 50% teaching / 50% doing commitment, anti-hierarchy safeguards, and transparent reasoning documentation.
+        source_url: https://github.com/notque/consensuscode
+        notes: All coordination roles temporary; no permanent authority; collective accountability for all agents including facilitators.
+      - id: coop_kernel_democratic_core
+        name: coop-kernel Democratic Software Cooperative Core
+        format: 1 person = 1 vote governance; algorithmic fairness via formula-based earnings (Time × Complexity = Share); lazy consensus with 48-hour approval window; right to fork guarantee.
+        source_url: https://github.com/abdozkaya/coop-kernel
+        notes: Capital provides no extra governance rights; labor governs; revenue sharing transparent and non-negotiable.
+      - id: intercooperative_network_constraint_engine
+        name: InterCooperative Network Constraint Enforcement
+        format: P2P constraint engine with strict Meaning Firewall (kernel enforces constraints blindly; apps translate governance into generic ConstraintSet via PolicyOracle); Cooperative Contract Language (CCL) non-Turing-complete; mutual credit ledger.
+        source_url: https://intercooperative.network/
+        notes: Kernel never sees domain semantics; apps translate meaning; federation preserves autonomy via bilateral agreements.
+      - id: indigenous_data_sovereignty_care
+        name: Indigenous Data Sovereignty (CARE Principles)
+        format: Collective Benefit, Authority to Control, Responsibility, Ethics applied to all data lifecycle stages; data governed as extension of collective identity, memory, kinship, territory.
+        source_url: https://www.un.org/digital-emerging-technologies/sites/www.un.org.techenvoy/files/GDC-submission_WAMPUM_Lab_and_the_Collaboratory_for_Indigenous.pdf
+        notes: Data is not resource/commodity; requires community permission, restrictions, oversight; ex-situ repositories under hybrid agreements; intergenerational responsibility.
+      - id: fediverse_covenantal_federalism
+        name: Fediverse Covenantal Federalism
+        format: Decentralized governance through shared-value covenants (not contracts); instance sovereignty with federated diplomacy; defederation as only cross-instance governance lever; local norms dominate over network dynamics.
+        source_url: https://doi.org/10.1080/1369118x.2022.2147400
+        notes: Governance priorities converge across scales (harassment, hate speech, illegal content); local autonomy preserved; federation requires overlapping shared norms.
+      - id: liberation_stack_universal_desired_resources
+        name: Universal Desired Resources (UDR)
+        format: Post-monetary allocation principle for zero-marginal-cost goods distributed by need (not price) subject to ecological feasibility constraint; mutual credit surplus distribution democratically governed.
+        source_url: https://arxiv.org/abs/2602.13154
+        notes: Conditional on strong automation; eliminates material basis of structural inequality; requires democratic surplus rules, not wealth-weighted claims.

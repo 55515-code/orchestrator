@@ -115,7 +115,7 @@ Required deliverable sections in your final report:
 ## Strategic Focus: AI Security Swiss-Army UX
 
 Future development is intentionally focused on an education-first, transparency-first
-security operations toolkit powered by the orchestrator core and Studio UX:
+security operations toolkit powered by the orchestrator core and ops panel UX:
 
 - Build a "Swiss army knife" job platform for authorized security validation and pentest labs.
 - Keep every workflow explicit, reproducible, and reviewable for learning and community sharing.
@@ -163,6 +163,9 @@ uv run python scripts/substrate_cli.py scan
 
 # run professional style/readability polish once
 bash scripts/developer_polish.sh
+
+# audit markdown files and tool metadata for AI-local review
+uv run python scripts/ai_review_docs.py
 
 # run the same polish flow through the orchestrator ledger
 uv run python scripts/substrate_cli.py run-task \

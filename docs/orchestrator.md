@@ -40,12 +40,19 @@ uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
 uv run python scripts/substrate_cli.py standards
 uv run python scripts/substrate_cli.py deps-status
 
+# Local AI-call cache status and maintenance
+uv run python scripts/substrate_cli.py cache-status
+uv run python scripts/substrate_cli.py cache-prune --max-age-days 30
+
 # Integration state and learning index
 curl -fsS http://127.0.0.1:8090/api/integrations
 uv run python scripts/substrate_cli.py learning
 
 # Assemble optional Android toolchain only when needed
 uv run python scripts/substrate_cli.py deps-ensure --profile android_lab --apply
+
+# Assemble optional AI agent / inference tooling only when needed
+uv run python scripts/substrate_cli.py deps-ensure --profile ai_agent_frameworks --apply
 
 # Run a ducky-style payload workflow
 uv run python scripts/substrate_cli.py run-payload \

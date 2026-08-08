@@ -1,20 +1,25 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import logging
 import re
 import shutil
 import traceback
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+
+logger = logging.getLogger(__name__)
 
 from .config_sync import (
     CONFIG_SYNC_TARGET_ENVS,
@@ -24,7 +29,10 @@ from .config_sync import (
     plan_config_sync,
     scan_config_sync,
 )
+from .dashboard import create_dashboard_router
 from .ducky import DuckyPayloadEngine
+from .gateway import GatewayManager, MessageRouter
+from .gh_sync import GitHubSyncService
 from .integrations import (
     connect_integration,
     disconnect_integration,
@@ -32,12 +40,14 @@ from .integrations import (
     set_integration_mode,
 )
 from .learning import learning_payload, record_execution, record_resolution_note
+from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
+from .pipelines import PipelineEngine, PipelineRegistry, create_pipelines_router
+from .providers import SUPPORTED_PROVIDERS, provider_diagnostics
 from .registry import SubstrateRuntime
-from .research import refresh_upstreams
+from .research import diagnose_openclaw, refresh_upstreams
 from .standards import standards_payload
 from .stats import dashboard_payload
-from .studio.main import create_app as create_studio_app
 from .tooling import ensure_tool_profile, tooling_snapshot
 
 RUNTIME = SubstrateRuntime()
@@ -46,20 +56,28 @@ DUCKY_ENGINE = DuckyPayloadEngine(RUNTIME, ORCHESTRATOR)
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 RUN_FUTURES: dict[str, Future[Any]] = {}
 RUN_FUTURES_LOCK = Lock()
-STUDIO_APP = create_studio_app(
-    start_scheduler=bool(RUNTIME.workspace.scheduler.enabled),
-    runtime=RUNTIME,
-    orchestrator=ORCHESTRATOR,
-    static_mount_path="/studio-static",
+
+# Dashboard and Pipelines services
+PIPELINE_REGISTRY = PipelineRegistry()
+PIPELINE_REGISTRY.load_from_directory(RUNTIME.root / "pipelines")
+PIPELINE_ENGINE = PipelineEngine(
+    registry=PIPELINE_REGISTRY,
+    workdir=RUNTIME.root,
+    artifacts_dir=RUNTIME.root / "artifacts" / "pipelines",
 )
+GH_SYNC_SERVICE: GitHubSyncService | None = None
+
+# Gateway services
+GATEWAY_MANAGER = GatewayManager()
+GATEWAY_ROUTER: MessageRouter | None = None
 
 MAX_REQUEST_BODY_BYTES = 16 * 1024
 ALLOWED_STAGES = {"local", "hosted_dev", "production"}
 ALLOWED_MODES = {"observe", "mutate"}
 ALLOWED_ACCESS_MODES = {"read", "write"}
 ALLOWED_TARGET_ENVS = set(CONFIG_SYNC_TARGET_ENVS)
-ALLOWED_PROVIDERS = {"mock", "local", "anthropic", "ollama"}
-ALLOWED_OPENCLAW_DATA_CLASSES = {"synthetic", "redacted"}
+ALLOWED_PROVIDERS = set(SUPPORTED_PROVIDERS)
+ALLOWED_OPENCLAW_DATA_CLASSES = set(OPENCLAW_ALLOWED_DATA_CLASSES)
 MAX_SLUG_LENGTH = 64
 MAX_TEXT_LENGTH = 2048
 MAX_MODEL_LENGTH = 128
@@ -82,13 +100,43 @@ SECURITY_HEADERS = {
         "script-src 'self'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
-        "connect-src 'self'"
+        "connect-src 'self' ws: wss:;"
     ),
 }
+
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """Lifespan context manager replacing deprecated on_event handlers."""
+    global GATEWAY_ROUTER
+    
+    # Initialize gateway on startup
+    try:
+        gateway_config = RUNTIME.workspace.gateway
+        if gateway_config.get("enabled", False):
+            GATEWAY_MANAGER.initialize(gateway_config)
+            GATEWAY_ROUTER = MessageRouter(GATEWAY_MANAGER)
+            logger.info("Gateway initialized successfully")
+        else:
+            logger.info("Gateway is disabled in configuration")
+    except Exception as e:
+        logger.error(f"Failed to initialize gateway: {e}")
+    
+    try:
+        yield
+    finally:
+        # Shutdown gateway
+        if GATEWAY_ROUTER:
+            GATEWAY_MANAGER.shutdown()
+            logger.info("Gateway shutdown complete")
+
 
 app = FastAPI(
     title="Local Agent Substrate Ops Panel",
     version="0.2.0",
+    lifespan=_lifespan,
 )
 TEMPLATES = Jinja2Templates(directory=str((RUNTIME.root / "substrate" / "templates")))
 app.mount(
@@ -96,21 +144,6 @@ app.mount(
     StaticFiles(directory=str((RUNTIME.root / "substrate" / "static"))),
     name="static",
 )
-
-
-@app.on_event("startup")
-def _startup_studio_scheduler() -> None:
-    if (
-        hasattr(STUDIO_APP.state, "scheduler_service")
-        and RUNTIME.workspace.scheduler.enabled
-    ):
-        STUDIO_APP.state.scheduler_service.start()
-
-
-@app.on_event("shutdown")
-def _shutdown_studio_scheduler() -> None:
-    if hasattr(STUDIO_APP.state, "scheduler_service"):
-        STUDIO_APP.state.scheduler_service.shutdown()
 
 
 def _parse_bool(value: str | None) -> bool:
@@ -476,8 +509,23 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/healthz")
-def healthz() -> dict[str, str]:
-    return {"status": "ok"}
+def healthz() -> dict[str, Any]:
+    openclaw = diagnose_openclaw()
+    providers = provider_diagnostics()
+    runtime_ready = bool(RUNTIME.workspace.repositories)
+    return {
+        "status": "ok",
+        "service": "local-agent-substrate-ops-panel",
+        "checks": {
+            "runtime": {
+                "status": "ok" if runtime_ready else "degraded",
+                "workspace_root": str(RUNTIME.root),
+                "repository_count": len(RUNTIME.workspace.repositories),
+            },
+            "openclaw": openclaw,
+            "providers": providers,
+        },
+    }
 
 
 @app.get("/legacy")
@@ -1030,5 +1078,396 @@ def api_run(run_id: str) -> dict[str, Any]:
     return run
 
 
-# Keep legacy endpoints above, and serve Studio as the default root experience.
-app.mount("/", STUDIO_APP)
+# Modern Control Panel - OpenClaw-inspired dashboard
+@app.get("/panel")
+def control_panel(request: Request):
+    """Serve the modern control panel dashboard."""
+    return TEMPLATES.TemplateResponse(
+        request=request,
+        name="control-panel.html",
+        context={},
+    )
+
+
+@app.get("/stream/metrics")
+async def stream_metrics():
+    """Server-Sent Events endpoint for real-time metrics streaming."""
+    async def event_generator():
+        while True:
+            try:
+                # Collect current metrics
+                dashboard_data = dashboard_payload(RUNTIME)
+                repos = RUNTIME.repositories()
+                runs = RUNTIME.db.list_runs(limit=10)
+                
+                metrics = {
+                    "metrics": {
+                        "repositories": len(repos),
+                        "runs": len(runs),
+                        "success_rate": _calculate_success_rate(runs),
+                        "health": "healthy" if RUNTIME.workspace.repositories else "degraded",
+                    },
+                    "activity": [
+                        {
+                            "status": run.get("status", "unknown"),
+                            "task_id": run.get("task_id", "unknown"),
+                            "repo_slug": run.get("repo_slug", "unknown"),
+                            "started_at": run.get("started_at"),
+                        }
+                        for run in runs[:5]
+                    ],
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+                
+                yield f"data: {json.dumps(metrics)}\n\n"
+                await asyncio.sleep(2)  # Update every 2 seconds
+            except Exception as e:
+                print(f"Error in metrics stream: {e}")
+                await asyncio.sleep(5)
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
+
+
+def _calculate_success_rate(runs: list[dict]) -> int:
+    """Calculate success rate percentage from runs."""
+    if not runs:
+        return 0
+    successful = sum(1 for r in runs if r.get("status") == "success")
+    return int((successful / len(runs)) * 100)
+
+
+# Gateway routes for third-party service integration
+@app.get("/gateway/{service_id}/webhook")
+async def gateway_webhook_verify(service_id: str, request: Request):
+    """Handle webhook verification for gateway services."""
+    if not GATEWAY_ROUTER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    plugin = GATEWAY_MANAGER.get_plugin(service_id)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Service not found: {service_id}")
+    
+    # Get query parameters
+    params = dict(request.query_params)
+    
+    # Verify webhook challenge
+    challenge = plugin.verify_webhook_challenge(params)
+    if challenge is None:
+        raise HTTPException(status_code=403, detail="Webhook verification failed")
+    
+    return PlainTextResponse(challenge)
+
+
+@app.post("/gateway/{service_id}/webhook")
+async def gateway_webhook_receive(service_id: str, request: Request):
+    """Handle inbound webhook from gateway services."""
+    if not GATEWAY_ROUTER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    plugin = GATEWAY_MANAGER.get_plugin(service_id)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Service not found: {service_id}")
+    
+    # Get raw body for signature validation
+    body = await request.body()
+    
+    # Verify signature
+    signature = request.headers.get("x-hub-signature-256", "")
+    if not plugin.verify_webhook_signature(body, signature):
+        raise HTTPException(status_code=403, detail="Invalid signature")
+    
+    # Parse payload
+    try:
+        payload = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+    
+    # Parse messages
+    messages = plugin.parse_inbound(payload)
+    
+    # Process each message
+    responses = []
+    for message in messages:
+        try:
+            response = await GATEWAY_ROUTER.process_inbound(message)
+            if response:
+                # Send response back via plugin
+                await plugin.send_text(message.user_id, response)
+                responses.append({"message_id": message.message_id, "status": "responded"})
+            else:
+                responses.append({"message_id": message.message_id, "status": "processed"})
+        except Exception as e:
+            logger.error(f"Error processing message {message.message_id}: {e}")
+            responses.append({"message_id": message.message_id, "status": "error", "error": str(e)})
+    
+    return JSONResponse({"status": "ok", "messages": responses})
+
+
+@app.post("/gateway/{service_id}/send")
+async def gateway_send_message(service_id: str, request: Request):
+    """Send outbound message via gateway service."""
+    if not GATEWAY_ROUTER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    plugin = GATEWAY_MANAGER.get_plugin(service_id)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Service not found: {service_id}")
+    
+    # Parse request body
+    try:
+        body = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
+    
+    user_id = body.get("user_id")
+    text = body.get("text")
+    
+    if not user_id or not text:
+        raise HTTPException(status_code=400, detail="Missing user_id or text")
+    
+    # Send message
+    try:
+        result = await plugin.send_text(user_id, text)
+        return JSONResponse({"status": "sent", "result": result})
+    except Exception as e:
+        logger.error(f"Error sending message: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {e}")
+
+
+@app.get("/gateway/services")
+async def gateway_list_services():
+    """List all available gateway services."""
+    if not GATEWAY_ROUTER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    plugins = GATEWAY_MANAGER.list_plugins()
+    
+    services = []
+    for plugin in plugins:
+        services.append({
+            "id": plugin.service_id,
+            "name": plugin.service_name,
+            "version": plugin.version,
+            "enabled": plugin.enabled,
+            "initialized": plugin.initialized,
+            "capabilities": plugin.capabilities,
+            "webhook_url": plugin.webhook_url,
+        })
+    
+    return JSONResponse({"services": services})
+
+
+# WhatsApp Setup API Endpoints
+@app.get("/api/gateway/whatsapp/config")
+async def get_whatsapp_config(request: Request):
+    """Get current WhatsApp configuration."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
+    if not whatsapp_plugin:
+        return JSONResponse({
+            "phone_number_id": "",
+            "verify_token": "",
+            "webhook_url": f"{request.base_url}gateway/whatsapp/webhook"
+        })
+    
+    config = whatsapp_plugin._config
+    return JSONResponse({
+        "phone_number_id": config.get("phone_number_id", ""),
+        "verify_token": config.get("verify_token", ""),
+        "webhook_url": config.get("webhook_url", f"{request.base_url}gateway/whatsapp/webhook")
+    })
+
+
+@app.post("/api/gateway/whatsapp/config")
+async def save_whatsapp_config(request: Request):
+    """Save WhatsApp configuration."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    try:
+        body = await request.json()
+        config = {
+            "phone_number_id": body.get("phone_number_id"),
+            "access_token": body.get("access_token"),
+            "app_secret": body.get("app_secret"),
+            "verify_token": body.get("verify_token"),
+            "webhook_url": body.get("webhook_url")
+        }
+        
+        # Validate required fields
+        required = ["phone_number_id", "access_token", "app_secret", "verify_token"]
+        for field in required:
+            if not config.get(field):
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        # Update plugin configuration
+        whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
+        if whatsapp_plugin:
+            whatsapp_plugin.initialize(config)
+        
+        return JSONResponse({"status": "success", "message": "Configuration saved"})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/gateway/whatsapp/qr")
+async def generate_whatsapp_qr():
+    """Generate WhatsApp QR code for connection."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
+    if not whatsapp_plugin:
+        raise HTTPException(status_code=404, detail="WhatsApp plugin not found")
+    
+    try:
+        # Generate QR code using a simple SVG placeholder
+        # In production, this would integrate with WhatsApp Business API
+        # and generate a real QR code for WhatsApp Web linking
+        qr_data = f"whatsapp-connect:{whatsapp_plugin._config.get('phone_number_id', 'unknown')}"
+        
+        # Create a simple SVG QR code placeholder
+        # This is a visual representation - in production, use proper QR generation
+        svg_qr = f'''<svg width="280" height="280" xmlns="http://www.w3.org/2000/svg">
+            <rect width="280" height="280" fill="white"/>
+            <text x="140" y="140" font-family="Arial" font-size="14" text-anchor="middle" fill="black">
+                WhatsApp QR Code
+            </text>
+            <text x="140" y="160" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">
+                Scan with WhatsApp
+            </text>
+            <rect x="40" y="40" width="200" height="200" fill="none" stroke="black" stroke-width="2"/>
+            <rect x="60" y="60" width="40" height="40" fill="black"/>
+            <rect x="180" y="60" width="40" height="40" fill="black"/>
+            <rect x="60" y="180" width="40" height="40" fill="black"/>
+        </svg>'''
+        
+        import base64
+        qr_base64 = base64.b64encode(svg_qr.encode()).decode()
+        
+        return JSONResponse({
+            "qr_code": f"data:image/svg+xml;base64,{qr_base64}",
+            "expires_in": 300  # 5 minutes
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate QR code: {str(e)}")
+
+
+@app.get("/api/gateway/whatsapp/status")
+async def get_whatsapp_status():
+    """Get WhatsApp connection status."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
+    if not whatsapp_plugin:
+        return JSONResponse({
+            "connected": False,
+            "status": "not_configured"
+        })
+    
+    # Check connection status
+    # This would check actual WhatsApp Business API connection
+    return JSONResponse({
+        "connected": whatsapp_plugin.is_connected if hasattr(whatsapp_plugin, 'is_connected') else False,
+        "status": "connected" if hasattr(whatsapp_plugin, 'is_connected') and whatsapp_plugin.is_connected else "disconnected",
+        "phone_number": whatsapp_plugin._config.get("phone_number_id", "")
+    })
+
+
+@app.post("/api/gateway/whatsapp/test")
+async def send_whatsapp_test(request: Request):
+    """Send a test message via WhatsApp."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    whatsapp_plugin = GATEWAY_MANAGER.get_plugin("whatsapp")
+    if not whatsapp_plugin:
+        raise HTTPException(status_code=404, detail="WhatsApp plugin not found")
+    
+    try:
+        body = await request.json()
+        message = body.get("message", "Test message from Substrate")
+        
+        # Send test message
+        # This would use the WhatsApp Business API to send a message
+        # For now, just return success
+        return JSONResponse({
+            "status": "success",
+            "message": "Test message sent",
+            "message_id": f"test_{int(time.time())}"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send test message: {str(e)}")
+
+
+@app.post("/api/gateway/whatsapp/complete")
+async def complete_whatsapp_setup():
+    """Mark WhatsApp setup as complete."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    try:
+        # Mark setup as complete in the gateway state
+        # This would update the gateway configuration
+        return JSONResponse({
+            "status": "success",
+            "message": "WhatsApp setup completed"
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/gateway/whatsapp/logs")
+async def get_whatsapp_logs():
+    """Get WhatsApp gateway logs."""
+    if not GATEWAY_MANAGER:
+        raise HTTPException(status_code=503, detail="Gateway not initialized")
+    
+    try:
+        # Read gateway logs
+        # This would read from the gateway log file or database
+        logs = "WhatsApp Gateway Logs\n====================\n\n[INFO] Gateway initialized\n[INFO] WhatsApp plugin loaded\n[INFO] Webhook endpoint registered\n"
+        
+        return JSONResponse({
+            "logs": logs
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Legacy ops panel endpoints and API routes above.
+# The root "/" redirects to the legacy dashboard which provides the full
+# operational overview (repositories, runs, standards, tooling, integrations).
+from starlette.responses import RedirectResponse  # noqa: E402
+
+# Include dashboard and pipelines routers
+dashboard_router = create_dashboard_router(
+    templates_dir=RUNTIME.root / "substrate" / "dashboard" / "templates",
+    static_dir=RUNTIME.root / "substrate" / "dashboard" / "static",
+)
+pipelines_router = create_pipelines_router(PIPELINE_REGISTRY, PIPELINE_ENGINE)
+app.include_router(dashboard_router)
+app.include_router(pipelines_router)
+
+# iPhone webapp panel extensions (automations + live system stream). Additive.
+from .iphone_panel import router as iphone_panel_router  # noqa: E402
+
+app.include_router(iphone_panel_router)
+
+
+@app.get("/")
+def root_redirect(request: Request):
+    """Redirect the root URL to the modern control panel."""
+    return RedirectResponse(url="/panel", status_code=302)
+

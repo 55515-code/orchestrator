@@ -7,9 +7,10 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, Protocol, TypeVar
+
+from . import _utils
 
 FailureKind = Literal["transient", "terminal"]
 CheckpointScope = Literal["run", "step", "recovery"]
@@ -59,10 +60,6 @@ _TERMINAL_HINTS = (
     "policy violation",
     "safety",
 )
-
-
-def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 @dataclass(slots=True, frozen=True)
@@ -268,7 +265,7 @@ class CheckpointRecord:
                 if raw.get("idempotency_key") is not None
                 else None
             ),
-            created_at=str(raw.get("created_at") or _utc_now_iso()),
+            created_at=str(raw.get("created_at") or _utils.utc_now_iso()),
             payload=parsed_payload,
         )
 
@@ -307,7 +304,7 @@ class CheckpointStore:
             stage=stage,
             step_id=step_id,
             idempotency_key=idempotency_key,
-            created_at=_utc_now_iso(),
+            created_at=_utils.utc_now_iso(),
             payload=payload or {},
         )
         return self.write_checkpoint(record)
@@ -363,8 +360,8 @@ class IdempotencyRecord:
         return cls(
             key=str(raw["key"]),
             status=str(raw.get("status", "in_progress")),  # type: ignore[arg-type]
-            created_at=str(raw.get("created_at") or _utc_now_iso()),
-            updated_at=str(raw.get("updated_at") or _utc_now_iso()),
+            created_at=str(raw.get("created_at") or _utils.utc_now_iso()),
+            updated_at=str(raw.get("updated_at") or _utils.utc_now_iso()),
             payload=parsed_payload,
         )
 
@@ -412,7 +409,7 @@ class IdempotencyStore:
             existing = data.get(key)
             if existing is not None:
                 return IdempotencyRecord.from_dict(existing)
-            now = _utc_now_iso()
+            now = _utils.utc_now_iso()
             record = IdempotencyRecord(
                 key=key,
                 status="in_progress",
@@ -434,7 +431,7 @@ class IdempotencyStore:
         with self._lock:
             data = self._load(run_id)
             existing = data.get(key)
-            now = _utc_now_iso()
+            now = _utils.utc_now_iso()
             created_at = (
                 str(existing.get("created_at")) if isinstance(existing, dict) else now
             )
@@ -507,6 +504,21 @@ class ProviderFailoverHook:
         self.fallback_order = tuple(ordered)
         self.provider_models = dict(provider_models)
         self.allow_terminal_failover = allow_terminal_failover
+        self.provider_health: dict[str, bool] = {provider: True for provider in self.provider_models}  # Assume healthy initially
+
+    def mark_provider_unhealthy(self, provider: str) -> None:
+        """Mark a provider as unhealthy."""
+        if provider in self.provider_health:
+            self.provider_health[provider] = False
+
+    def mark_provider_healthy(self, provider: str) -> None:
+        """Mark a provider as healthy."""
+        if provider in self.provider_health:
+            self.provider_health[provider] = True
+
+    def is_provider_healthy(self, provider: str) -> bool:
+        """Check if a provider is healthy."""
+        return self.provider_health.get(provider, False)
 
     def next_target(
         self,
@@ -531,6 +543,8 @@ class ProviderFailoverHook:
         except ValueError:
             index = -1
         for provider in unique_order[index + 1 :]:
+            if not self.is_provider_healthy(provider):
+                continue  # Skip unhealthy providers
             model = self.provider_models.get(provider)
             if not model:
                 continue

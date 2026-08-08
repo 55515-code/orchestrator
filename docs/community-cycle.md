@@ -47,6 +47,15 @@ uv run python scripts/substrate_cli.py community-cycle \
   --concurrency-limit 20 \
   --agent-provider openai \
   --agent-model gpt-4.1-mini
+
+# Hugging Face Inference API (set HF_TOKEN)
+uv run python scripts/substrate_cli.py community-cycle \
+  --cycle 0 \
+  --repo substrate-core \
+  --stage local \
+  --concurrency-limit 10 \
+  --agent-provider huggingface \
+  --agent-model meta-llama/Llama-3.1-8B-Instruct
 ```
 
 ## Generated Artifacts

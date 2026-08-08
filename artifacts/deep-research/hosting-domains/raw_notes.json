@@ -1,0 +1,704 @@
+{
+  "research_metadata": {
+    "project": "Ahron Darnell Personal Brand Website",
+    "date": "2026-08-07",
+    "researcher": "Kilo",
+    "topics": [
+      "free_hosting_tiers",
+      "low_cost_paid_hosting",
+      "domain_registrars_tlds",
+      "cdn_edge_services",
+      "security_considerations",
+      "website_builders"
+    ]
+  },
+  "free_hosting_tiers": {
+    "cloudflare_pages": {
+      "source": "https://pages.cloudflare.com/ and https://developers.cloudflare.com/pages/platform/limits/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free plan: 1 build at a time, 500 builds/month, 100 custom domains per project",
+        "Unlimited sites, unlimited static requests, unlimited bandwidth",
+        "20,000 files per site on Free plan (100,000 on paid with env var)",
+        "25MB max file size",
+        "Custom domains with SSL included",
+        "Edge CDN via Cloudflare global network",
+        "Build timeout: 20 minutes",
+        "Pro: $20/mo (annual) or $25/mo (monthly) - 5 concurrent builds, 5,000 builds/month, 250 custom domains",
+        "Business: $200/mo (annual) or $250/mo (monthly) - 20 concurrent builds, 20,000 builds/month, 500 custom domains",
+        "Workers Free tier: 100k requests/day, 10ms CPU per request, 1GB KV storage",
+        "No credit card required for free tier"
+      ],
+      "relevance": "high"
+    },
+    "vercel_free_tier": {
+      "source": "https://vercel.com/pricing and https://vercel.com/docs/limits",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Hobby (Free) plan: 100 GB bandwidth/month, 1M edge requests, 1M function invocations",
+        "4 hours active CPU/month, 360 GB-hr provisioned memory",
+        "1 GB blob storage, 5,000 image transformations/month",
+        "100K speed insight events, 50K web analytics events/month",
+        "Build timeout: 45 minutes max",
+        "1 concurrent build, 100 deployments/day, 200 projects max",
+        "50 domains per project",
+        "Function timeout: 60 seconds on Hobby, 300s on Pro",
+        "COMMERCIAL USE PROHIBITED on Hobby plan - must upgrade to Pro ($20/seat/month) for business sites",
+        "Pro includes $20 credit/month, 1TB data transfer, 10M edge requests, 5min function timeout",
+        "No hard bandwidth cap on Free - new deployments pause when exceeded"
+      ],
+      "relevance": "high"
+    },
+    "netlify_free_tier": {
+      "source": "https://www.netlify.com/pricing/ and https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Credit-based pricing for new accounts (after Sep 4, 2025): 300 credits/month on Free",
+        "Bandwidth: 20 credits/GB (~15GB max), Production deploys: 15 credits each, Web requests: 2 credits/10k",
+        "When credits exhausted, sites PAUSE until next cycle (hard limit, no auto-recharge on Free)",
+        "1 concurrent build on Free",
+        "Legacy accounts (before Sep 4, 2025) keep old model: 100GB bandwidth, 300 build minutes",
+        "Personal plan: $9/month for 1,000 credits with auto-recharge option",
+        "Pro plan: $20/month for 3,000 credits, unlimited team seats, 3+ concurrent builds",
+        "Form submissions now FREE and unlimited on all credit plans (as of April 2026)",
+        "Custom domains with SSL included",
+        "Global CDN, deploy previews, serverless functions included"
+      ],
+      "relevance": "high"
+    },
+    "github_pages": {
+      "source": "https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "NOT intended for business/commercial use per GitHub Terms of Service",
+        "Soft bandwidth limit: 100 GB/month",
+        "Site size limit: 1 GB (recommended)",
+        "Build timeout: 10 minutes",
+        "Soft limit: 10 builds/hour (doesn't apply to custom GitHub Actions workflows)",
+        "Custom domains free with automatic SSL via Let's Encrypt",
+        "HTTPS enforcement available",
+        "Apex domains require A records (not CNAME), can be less resilient",
+        "Rate limiting may apply"
+      ],
+      "relevance": "medium"
+    },
+    "firebase_hosting": {
+      "source": "https://firebase.google.com/pricing and https://firebase.google.com/docs/hosting/usage-quotas-pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Spark (Free) plan: 10 GB storage, 10 GB/month data transfer",
+        "360 MB/day soft cap on data transfer",
+        "Custom domain & SSL included",
+        "Multiple sites per project",
+        "Global CDN included",
+        "Sites disabled if free limits exceeded (must upgrade to Blaze)",
+        "Blaze plan: $0.15/GB overage for transfer, $0.026/GB for storage",
+        "No credit card required for Spark plan"
+      ],
+      "relevance": "medium"
+    },
+    "render_free_tier": {
+      "source": "https://render.com/docs/free and https://render.com/docs/static-sites",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Hobby (Free): Unlimited projects, 2 environments per project, up to 25 services",
+        "5 GB outbound bandwidth included, 500 build pipeline minutes/month",
+        "750 free instance hours per workspace per month",
+        "Free web services SPIN DOWN after 15 minutes of inactivity",
+        "Static sites do NOT spin down",
+        "If bandwidth exhausted and no payment method: services suspended for remainder of month",
+        "2 custom domains on Free ($0.25/month each additional)",
+        "Automatic HTTPS via Let's Encrypt",
+        "DDoS protection included",
+        "Free Postgres databases expire after 30 days"
+      ],
+      "relevance": "medium"
+    },
+    "fly_io": {
+      "source": "https://fly.io/docs/about/free-trial/ and https://fly.io/docs/about/cost-management/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "NO free tier for new users as of 2025-2026",
+        "Free trial: 2 VM hours OR 7 days (whichever comes first)",
+        "Trial includes: 10 machines max, 20GB volume storage, up to 2 vCPUs, up to 4GB RAM",
+        "Machines auto-stop after 5 minutes during trial",
+        "Legacy free allowances deprecated Oct 2024",
+        "Paid compute: ~$1.94/month per shared-1x 256MB machine (scaled to zero)",
+        "~$5.70/month per always-on shared-1x 256MB machine",
+        "Egress: $0.02/GB in NA/EU",
+        "Volumes: $0.15/GB/month (billed even when machine stopped)",
+        "Dedicated IPv4: $2/month per app",
+        "No billing alerts supported"
+      ],
+      "relevance": "low"
+    },
+    "neocities": {
+      "source": "https://en.wikipedia.org/wiki/Neocities and https://freetier.co/directory/products/neocities",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free plan: 1 GB storage, 200 GB bandwidth/month",
+        "Free .neocities.org subdomain",
+        "Global Anycast CDN included",
+        "No server-side scripting on free or paid",
+        "File types restricted on free (HTML, CSS, JS, images, fonts)",
+        "Supporter plan: $5/month for 50GB storage, 3TB bandwidth, custom domains",
+        "Soft bandwidth limit - temporary surges OK",
+        "No advertising on member sites"
+      ],
+      "relevance": "low"
+    },
+    "glitch": {
+      "source": "https://blog.glitch.com/post/changes-are-coming-to-glitch",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "WEB HOSTING SHUT DOWN on July 8, 2025",
+        "Dashboard available through end of 2025 for code downloads",
+        "Project subdomain redirects available through at least end of 2026",
+        "No longer a viable hosting option for production sites"
+      ],
+      "relevance": "low"
+    },
+    "surge_sh": {
+      "source": "https://surge.sh/pricing and https://freetier.co/directory/products/surge",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free tier: Unlimited publishing, custom domain support, basic SSL",
+        "CLI-based deployment workflow",
+        "Single-page app routing with pushState",
+        "Custom 404 pages, CORS support",
+        "Surge Professional: $30/month for unlimited projects, custom SSL, force HTTPS, password protection"
+      ],
+      "relevance": "low"
+    }
+  },
+  "low_cost_paid_hosting": {
+    "vercel_pro": {
+      "source": "https://vercel.com/pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "$20/user/month (minimum 1 seat)",
+        "$20 included usage credit per month",
+        "1 TB Fast Data Transfer, 10M edge requests, 1M function invocations",
+        "300s function timeout (5 minutes)",
+        "Unlimited projects, 6,000 deployments/day",
+        "Team collaboration, viewer seats free",
+        "Blob storage: 50 GB included",
+        "Image optimization: 50,000 transformations included",
+        "Bandwidth overages: $0.15/GB after 1TB",
+        "Function invocations: $0.60 per 1M after included"
+      ],
+      "relevance": "high"
+    },
+    "netlify_pro": {
+      "source": "https://www.netlify.com/pricing/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Starts at $20/month for 3,000 credits",
+        "Tiers up to 20,000 credits/month ($126/month)",
+        "Unlimited team seats on Pro",
+        "3+ concurrent builds",
+        "30-day analytics/RUM retention (vs 1 day on Free)",
+        "Audit logs, password protection, secret detection",
+        "Auto-recharge: 1,500 credits for $10",
+        "Credit rollover on higher tiers (5,000+ credits)"
+      ],
+      "relevance": "high"
+    },
+    "cloudflare_pages_paid": {
+      "source": "https://pages.cloudflare.com/ and https://developers.cloudflare.com/pages/platform/limits/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Pro: $20/mo (annual) or $25/mo (monthly) - 5 concurrent builds, 5,000 builds/month, 250 custom domains",
+        "Business: $200/mo (annual) or $250/mo (monthly) - 20 concurrent builds, 20,000 builds/month, 500 custom domains",
+        "Unlimited bandwidth on all plans",
+        "Enhanced WAF, Smart Shield + Argo, Load Balancing on Pro",
+        "Full API Shield, enterprise bot mitigation on Business",
+        "Workers Paid: $5/month minimum, 10M requests included, $0.30 per additional million"
+      ],
+      "relevance": "high"
+    },
+    "digitalocean_app_platform": {
+      "source": "https://www.digitalocean.com/pricing/app-platform",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free tier: 3 static sites, 1GB transfer per app, auto HTTPS, custom domains, global CDN",
+        "Paid from $5/month (512MB RAM, 1 vCPU, 50GB transfer)",
+        "$10/month: 1GB RAM, 1 vCPU, 100GB transfer",
+        "Additional apps with static sites: $3/month each",
+        "Bandwidth overages: $0.02/GB",
+        "No hidden build fees or image storage fees",
+        "Static sites free forever on free tier"
+      ],
+      "relevance": "high"
+    },
+    "linode_akamai": {
+      "source": "https://www.akamai.com/cloud/pricing and https://comparedge.com/tools/linode/cost-guide",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "No perpetual free tier",
+        "Nanode 1GB: $5/month with 1TB bundled transfer",
+        "Shared 2GB: $12/month, 4GB: $24/month, 8GB: $48/month",
+        "Egress overage: $0.005/GB",
+        "Object storage: $5/month minimum",
+        "Kubernetes HA control plane: $60/cluster",
+        "$100 signup credit for new accounts",
+        "Billing is flat-rate and capped monthly"
+      ],
+      "relevance": "medium"
+    },
+    "fly_io_paid": {
+      "source": "https://fly.io/docs/about/pricing/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "No free tier - pay-as-you-go from day one",
+        "Shared-cpu-1x 256MB: ~$1.94/month (scaled to zero), ~$5.70/month always-on",
+        "Egress: $0.02/GB in NA/EU",
+        "Volumes: $0.15/GB/month (billed even when stopped)",
+        "Dedicated IPv4: $2/month per app",
+        "No billing alerts",
+        "Potential developer plan tier mentioned for Q3 2026"
+      ],
+      "relevance": "low"
+    },
+    "render_paid": {
+      "source": "https://render.com/docs/new-workspace-plans.md",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Pro (formerly Professional): $25/month flat, unlimited team members",
+        "25 GB included bandwidth, $0.15/GB overage",
+        "15 custom domains, $0.25/month each additional",
+        "1,000 build pipeline minutes/month, $5 per additional 1,000",
+        "SOC 2 and ISO 27001 reports included",
+        "Workspace audit logs included",
+        "Scale plan: $499/month flat, 1TB bandwidth, 25 custom domains, 5,000 build minutes"
+      ],
+      "relevance": "medium"
+    },
+    "cloudflare_r2_workers": {
+      "source": "https://developers.cloudflare.com/r2/pricing/ and https://developers.cloudflare.com/workers/platform/pricing/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "R2 Free: 10 GB-month storage, 1M Class A ops/month, 10M Class B ops/month",
+        "R2 Standard: $0.015/GB-month storage, $4.50/M Class A ops, $0.36/M Class B ops",
+        "R2 Infrequent Access: $0.01/GB-month, $9.00/M Class A ops, $0.90/M Class B ops",
+        "NO EGRESS CHARGES on R2 (unlike S3)",
+        "Workers Free: 100k requests/day shared across all scripts",
+        "Workers Paid: $5/month minimum, 10M requests included, $0.30 per additional million",
+        "30M CPU ms included on Paid, $0.02 per additional million",
+        "KV: 1GB storage free, $0.50/GB-month overage"
+      ],
+      "relevance": "high"
+    },
+    "supabase": {
+      "source": "https://supabase.com/pricing and https://omidsaffari.com/blog/supabase-pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free: 2 active projects, 50K MAU, 500MB DB/project, 1GB storage, 5GB egress",
+        "Pro: $25/month per organization (not per project)",
+        "100K MAU, 8GB disk/project, 100GB storage, 250GB egress included",
+        "2M edge function invocations included",
+        "Projects pause after 1 inactive week on Free",
+        "Self-hosted option available but requires infrastructure management",
+        "Not primarily a static site host - better for backend/data"
+      ],
+      "relevance": "medium"
+    },
+    "deno_deploy": {
+      "source": "https://deno.com/deploy/pricing/ and https://docs.deno.com/deploy/index.md",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free: 1M requests/month, 20GB egress, 15 CPU hours, 350 GB-h memory",
+        "20 active apps, 50 custom domains/org, 1GB volume, 1GB KV",
+        "Pro: $20/month - 5M requests, 200GB egress, 40 CPU hours, 1,000 GB-h memory",
+        "Pro overages: ~$2/M requests, ~$0.50/GB egress, ~$0.05/CPU hour",
+        "Builder: $200/month - 20M requests, 300GB egress, up to 100,000 apps",
+        "Deploy Classic sunsetting July 20, 2026",
+        "Static sites now first-class on new platform"
+      ],
+      "relevance": "medium"
+    }
+  },
+  "domain_registrars_tlds": {
+    "registrars": {
+      "cloudflare_registrar": {
+        "source": "https://instantdomainsearch.com/learn/guides/best-domain-registrars-2026 and https://dev.to/devtoolpicks/namecheap-vs-porkbun-vs-cloudflare-registrar-vs-godaddy-for-indie-hackers-in-2026-35cd",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "At-cost pricing with ZERO markup - cheapest long-term option",
+          ".com: $10.44/year (includes ICANN fee)",
+          "Free WHOIS redaction, free DNSSEC, free SSL",
+          "423 TLDs supported",
+          "API available for programmatic management",
+          "2FA required, security keys supported",
+          "Tight integration with Cloudflare DNS/CDN/Workers/R2"
+        ],
+        "relevance": "high"
+      },
+      "porkbun": {
+        "source": "https://instantdomainsearch.com/learn/guides/best-domain-registrars-2026",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com: $11.08/year (registration = renewal = transfer)",
+          "Free WHOIS privacy, free SSL, free URL forwarding, free email forwarding",
+          "Broad TLD support including .app, .dev, .io, .ai",
+          "Clean checkout with no upsells",
+          "ICANN-accredited since 2010, 2M+ domains under management"
+        ],
+        "relevance": "high"
+      },
+      "namecheap": {
+        "source": "https://instantdomainsearch.com/learn/guides/best-domain-registrars-2026",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com first year: $5.98, renewal: $13.98",
+          "Free WhoisGuard WHOIS privacy",
+          "560+ TLDs supported",
+          "Beast Mode bulk search tool",
+          "17M+ domains managed",
+          "Renewal hike catches first-time buyers off guard"
+        ],
+        "relevance": "medium"
+      },
+      "name_silo": {
+        "source": "https://instantdomainsearch.com/learn/guides/best-domain-registrars-2026",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com: ~$11.05 with Discount Program ($50+ account balance)",
+          "Free WHOIS privacy forever",
+          "6M+ domains managed",
+          "Discount Program reduces prices for larger portfolios",
+          "Most consistent flat pricing for long-term holders"
+        ],
+        "relevance": "medium"
+      },
+      "google_domains": {
+        "source": "https://blog.spacelama.com/domains/what-happened-to-google-domains/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "NO LONGER OPERATING as of 2024 - migrated to Squarespace",
+          "Formerly: flat pricing, free WHOIS privacy, DNSSEC",
+          "Squarespace now manages former Google Domains customers"
+        ],
+        "relevance": "low"
+      },
+      "gandi": {
+        "source": "https://tld-list.com/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com renewal: ~$39.98/year",
+          "Known for ethical stance and transparency",
+          "Higher pricing than budget registrars"
+        ],
+        "relevance": "low"
+      },
+      "ovh": {
+        "source": "https://tld-list.com/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com: ~$11.75 registration, $13.99 renewal",
+          "European-based registrar",
+          "Competitive pricing for EU customers"
+        ],
+        "relevance": "low"
+      },
+      "hover": {
+        "source": "https://tld-list.com/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          ".com: ~$20.17/year",
+          "Free WHOIS privacy, free email forwarding",
+          "Higher pricing, simpler feature set"
+        ],
+        "relevance": "low"
+      }
+    },
+    "tld_pricing": {
+      "source": "https://cfdomainpricing.com/ and https://tldfyi.com/guides/new-gtld/new-gtld-pricing-guide/ and https://tld-list.com/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": {
+        ".com": "$10.44/year at Cloudflare, $11.08 at Porkbun, $5.98 first year at Namecheap ($13.98 renewal)",
+        ".net": "~$12-15/year at most registrars",
+        ".org": "~$10-13/year",
+        ".io": "~$30-50/year (premium ccTLD pricing)",
+        ".dev": "$12.20/year at Cloudflare, requires HTTPS",
+        ".xyz": "$10.18/year at Cloudflare, $0.98 first year at Spaceship",
+        ".art": "~$13-25/year",
+        ".tech": "$49.20/year at Cloudflare, ~$25-50 registration, $40-60 renewal",
+        ".site": "$27.70/year at Cloudflare, ~$4-10 registration",
+        ".consulting": "$42.20/year at Cloudflare, ~$25/year typical",
+        ".healthcare": "$68.20/year at Cloudflare, ~$64/year at some registrars",
+        ".finance": "$50.20/year at Cloudflare, ~$33-64/year",
+        ".security": "PREMIUM TLD - ~$2,000-3,800/year (very expensive)"
+      },
+      "relevance": "high"
+    }
+  },
+  "cdn_edge_services": {
+    "cloudflare": {
+      "source": "https://www.cloudflare.com/plans/ and https://developers.cloudflare.com/images/pricing/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free tier: Unlimited bandwidth, 330+ PoPs, free Universal SSL, basic WAF, DDoS mitigation",
+        "Free tier limits: 5 page rules, no Cache Analytics",
+        "Pro: $20/month per zone - Polish image optimization, 20 page rules, Cache Analytics",
+        "Business: $200/month per zone - custom SSL, Argo Smart Routing, 50 page rules",
+        "Cloudflare Images Free: 5,000 unique transformations/month",
+        "Cloudflare Images Paid: $0.50/1K transformations, $5/100K stored, $1/100K delivered",
+        "Mirage deprecated in late 2025 - no mobile-specific image optimization on Free",
+        "Turnstile Free: up to 20 widgets, unlimited challenges, 10 hostnames per widget",
+        "Cloudflare Web Analytics: FREE, cookie-free, server-side option available"
+      ],
+      "relevance": "high"
+    },
+    "fastly": {
+      "source": "General knowledge from research context",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Enterprise-grade CDN, not typically used for small static sites",
+        "Higher cost, aimed at high-traffic applications",
+        "Not cost-effective for small personal brand sites"
+      ],
+      "relevance": "low"
+    },
+    "bunny_cdn": {
+      "source": "https://bunny.net/pricing/ and https://costbench.com/software/cdn-edge/bunny-cdn/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Standard Network: $1/month minimum, $0.01/GB (Europe/NA), $0.03/GB (Asia/Oceania)",
+        "Volume Network: $1/month minimum, $0.005/GB (first 500TB), drops to $0.002/GB at 1PB+",
+        "Bunny Optimizer: $9.50/website/month for unlimited image optimization",
+        "119 PoPs on Standard network",
+        "All features included at every tier (no feature gating)",
+        "$1/month minimum even with zero usage",
+        "Auto WebP/AVIF conversion, lazy loading, responsive images"
+      ],
+      "relevance": "high"
+    },
+    "netlify_edge": {
+      "source": "https://www.netlify.com/platform/core/edge/ and https://docs.netlify.com/image-cdn/overview/",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Netlify Edge Functions: global edge runtime integrated with deploy workflow",
+        "Netlify Image CDN: on-demand image transformation without build-time processing",
+        "Supports AVIF, WebP, BlurHash, format auto-negotiation",
+        "Remote images require allowlist configuration",
+        "Atomic deploys with automatic cache invalidation",
+        "Fine-grained caching primitives for Next.js Full Route Cache"
+      ],
+      "relevance": "high"
+    },
+    "vercel_edge": {
+      "source": "https://vercel.com/pricing and https://vercel.com/docs/image-optimization/limits-and-pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Vercel Edge Network: 100+ edge locations",
+        "Image Optimization Free: 5K transformations/month, 300K cache reads, 100K cache writes",
+        "Pro image pricing: $0.05-0.0812/1K transformations, $0.40-0.64/1M cache reads",
+        "Next.js next/image component integrates with Vercel Image Optimization",
+        "Automatic format negotiation (AVIF/WebP)"
+      ],
+      "relevance": "high"
+    },
+    "form_handling": {
+      "netlify_forms": {
+        "source": "https://www.netlify.com/changelog/2026-04-14-pricing-updates-april-2026/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "UNLIMITED form submissions FREE on all credit plans (as of April 2026)",
+          "Spam protection included",
+          "No form submission costs on any plan"
+        ],
+        "relevance": "high"
+      },
+      "vercel_forms": {
+        "source": "https://github.com/vercel/vercel/discussions/5945",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "No native form handling service like Netlify Forms",
+          "Users rely on Server Actions, API routes, or third-party services (Formspree, etc.)"
+        ],
+        "relevance": "medium"
+      },
+      "formspree": {
+        "source": "https://vercel.com/marketplace/formspree",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "Form backend that sends submissions via email",
+          "Multi-layered spam protection",
+          "Integrates with Google Sheets, MailChimp, Slack",
+          "File upload support, automatic responses",
+          "Free tier available, paid plans for higher volume"
+        ],
+        "relevance": "medium"
+      },
+      "cloudflare_turnstile": {
+        "source": "https://developers.cloudflare.com/turnstile/plans/",
+        "date_accessed": "2026-08-07",
+        "key_takeaways": [
+          "Free: up to 20 widgets, unlimited challenges, 10 hostnames per widget",
+          "Enterprise: unlimited widgets, 200 hostnames/widget, 30-day analytics",
+          "WCAG 2.2 AAA compliant",
+          "Privacy-focused alternative to reCAPTCHA"
+        ],
+        "relevance": "medium"
+      }
+    }
+  },
+  "security_considerations": {
+    "https_enforcement": {
+      "source": "https://siteguardian.io/security-report and https://edgedns.dev/guides/score-security",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "TLS 1.3 is current standard - required by GDPR Art. 32, NIS2 Art. 21, PCI DSS 4.0",
+        "HSTS preload provides strongest HTTPS enforcement",
+        "All major static hosts provide free SSL (Let's Encrypt or similar)"
+      ],
+      "relevance": "high"
+    },
+    "security_headers": {
+      "source": "https://edgedns.dev/guides/score-security and https://siteguardian.io/security-report",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Critical headers: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CSP",
+        "CSP prevents XSS and data injection attacks",
+        "HSTS forces HTTPS, prevents downgrade attacks",
+        "Cookie flags: Secure, HttpOnly, SameSite"
+      ],
+      "relevance": "high"
+    },
+    "dnssec": {
+      "source": "https://edgedns.dev/guides/score-security",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "DNSSEC protects against cache poisoning and domain hijacking",
+        "Recommended by ENISA, required under NIS2 for essential entities",
+        "CAA records prevent unauthorized certificate issuance",
+        "Free with Cloudflare Registrar and most modern registrars"
+      ],
+      "relevance": "high"
+    },
+    "ddos_protection": {
+      "source": "Multiple hosting provider docs",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Cloudflare: Free DDoS mitigation on all plans",
+        "Netlify: Free DDoS protection on all sites",
+        "Vercel: DDoS Mitigation on Hobby and above",
+        "Render: Free DDoS protection on static sites and web services"
+      ],
+      "relevance": "high"
+    },
+    "compliance_brand": {
+      "source": "https://nonasec.com/resources/consulting-client-data-protection and https://www.business-accounting.co.uk/blog/do-consultants-need-to-comply-with-gdpr",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Compliance consultants must practice what they preach - site security signals competence",
+        "SOC 2 Type II increasingly demanded by enterprise clients",
+        "GDPR compliance mandatory for handling EU/UK personal data",
+        "Encryption (AES-256 at rest, TLS 1.2+ in transit)",
+        "MFA for all access to client data",
+        "Audit logging of data access"
+      ],
+      "relevance": "high"
+    },
+    "privacy_analytics": {
+      "source": "https://apiscout.dev/guides/plausible-vs-umami-vs-fathom-analytics-2026 and https://propicked.com/blog/best-privacy-first-analytics-2026",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Plausible: $9/month (10K pageviews), AGPL, self-hostable, EU-hosted, <1KB script",
+        "Umami: FREE self-hosted (MIT), $9/month cloud (100K events), simplest self-host option",
+        "Fathom: $15/month (100K pageviews), cloud-only, polished UX, no self-host",
+        "Cloudflare Web Analytics: FREE, bundled with Cloudflare, cookie-free, built-in CWV",
+        "All are cookieless - no cookie consent banner required in most jurisdictions",
+        "GoatCounter: genuinely free for low-traffic (<100K hits/month)"
+      ],
+      "relevance": "high"
+    }
+  },
+  "website_builders": {
+    "webflow": {
+      "source": "https://help.webflow.com/hc/en-us/articles/51059955082387-Updated-pricing-and-simplified-plans-for-May-2026 and https://comparetiers.com/blog/webflow-vs-squarespace-pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Basic: $14/month (annual) - 150 static pages, 10GB bandwidth",
+        "CMS: $23/month (annual) - 150 pages, 2,000 CMS items, 3 editors",
+        "Business: $39/month (annual) - 300 pages, 10,000 CMS items, 10 editors",
+        "Premium Site (new May 2026): $25/month (annual) - 300 pages, 20,000 CMS items",
+        "Bandwidth overages expensive: +50GB starts at $20/month",
+        "Free tier: 2 pages, 1GB transfer, Webflow subdomain",
+        "HTML/CSS/JS export on paid plans (dynamic content excluded)",
+        "Forms stop working after export",
+        "Premium templates: $29-$129"
+      ],
+      "relevance": "medium"
+    },
+    "squarespace": {
+      "source": "https://comparetiers.com/blog/webflow-vs-squarespace-pricing",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Personal: $16/month (annual) - no ecommerce",
+        "Business: $23/month (annual) - ecommerce with 3% transaction fee",
+        "Commerce Basic: $27/month (annual) - no transaction fee",
+        "Commerce Advanced: $49/month (annual)",
+        "All plans: unlimited storage, unlimited bandwidth, free custom domain first year",
+        "NO export option - migration is content rebuild",
+        "Premium templates included"
+      ],
+      "relevance": "medium"
+    },
+    "carrd": {
+      "source": "https://unil.ink/blog/carrd-pricing-2026",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Free: 3 sites, Carrd branding, no forms, no custom domain",
+        "Pro Lite: $9/year - 3 sites, custom domain, forms, no branding",
+        "Pro Standard: $19/year - 10 sites, embeds, premium templates",
+        "Pro Plus: $49/year - 25 sites, advanced forms, password protection, file downloads",
+        "Annual billing only",
+        "One-page sites only - not suitable for multi-page content sites"
+      ],
+      "relevance": "low"
+    },
+    "gumroad": {
+      "source": "https://checkoutpage.com/blog/gumroad-fees",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "No monthly fee - pay-per-sale only",
+        "Direct sale: 10% + $0.50 + payment processing (~2.9% + $0.30)",
+        "Discover marketplace: flat 30% fee",
+        "No volume discounts",
+        "Merchant of Record - handles global tax/VAT/GST",
+        "Payouts weekly on Fridays",
+        "Not a website builder - used for digital product sales"
+      ],
+      "relevance": "low"
+    },
+    "shopify_lite": {
+      "source": "General knowledge from research context",
+      "date_accessed": "2026-08-07",
+      "key_takeaways": [
+        "Shopify Lite: $9/month - basic ecommerce, buy button",
+        "Not suitable for content-heavy marketing sites",
+        "Better for ecommerce than Webflow/Squarespace at comparable price points"
+      ],
+      "relevance": "low"
+    }
+  },
+  "ai_crawler_optimization": {
+    "source": "https://seoprocheck.com/research/ai-search/ssr-vs-csr-ai-crawlers/ and https://ziptie.dev/blog/technical-seo-for-ai-crawlability/",
+    "date_accessed": "2026-08-07",
+    "key_takeaways": [
+      "69% of AI crawlers CAN'T run JavaScript (Vercel analysis)",
+      "GPTBot and ClaudeBot are mostly non-rendering - need SSR/SSG",
+      "PerplexityBot supports full JavaScript rendering",
+      "Static Site Generation (SSG) is ideal for AI crawlability",
+      "Content must be in initial HTML payload, not injected via JS",
+      "llms.txt: AI-specific content guide at root domain (low effort, low risk)",
+      "Schema.org JSON-LD: Organization, Article, Product, FAQPage, BreadcrumbList",
+      "H1→H2→H3 heading hierarchy, modular 200-400 word sections",
+      "XML sitemap required, reference in robots.txt",
+      "Allow AI crawlers in robots.txt (GPTBot, ClaudeBot, PerplexityBot, Google-Extended)"
+    ],
+    "relevance": "high"
+  }
+}

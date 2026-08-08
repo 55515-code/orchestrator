@@ -44,6 +44,20 @@ cp .env.example .env
 
 Fill provider credentials only for providers you will use.
 
+Supported providers include local OpenAI-compatible endpoints, Ollama,
+Hugging Face Inference API, Google (Gemini/Vertex), Groq, Cerebras, Together,
+OpenRouter, Anthropic, and OpenAI.
+
+Example environment variables:
+
+```bash
+# Hugging Face Inference API (free tier available)
+export HF_TOKEN=hf_...
+
+# OpenAI-compatible local router / Roo Code router
+export SUBSTRATE_LOCAL_OPENAI_BASE_URL=http://127.0.0.1:9000/v1
+```
+
 ## Sync dependencies
 
 ```bash

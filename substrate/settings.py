@@ -7,6 +7,9 @@ from typing import Any
 import yaml
 
 from .models import (
+    OPENCLAW_ALLOWED_DATA_CLASSES,
+    OPENCLAW_ALLOWED_PASSES,
+    OPENCLAW_ALLOWED_STAGES,
     PolicyConfig,
     RepositoryConfig,
     SchedulerConfig,
@@ -150,12 +153,16 @@ def _parse_tasks(raw_tasks: Any) -> dict[str, TaskConfig]:
             raise ValueError(f"Task '{task_id}' mode must be observe|mutate.")
         command = _as_command(payload.get("command"), task_id)
         workdir = str(payload.get("workdir", "."))
+        encryption = payload.get("encryption")
+        if encryption is not None:
+            encryption = str(encryption)
         tasks[task_id] = TaskConfig(
             id=task_id,
             description=description,
             command=command,
             workdir=workdir,
             mode=mode,  # type: ignore[arg-type]
+            encryption=encryption,
         )
     return tasks
 
@@ -245,6 +252,11 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
     rc1_watchdog_terminate_grace_seconds = float(
         raw_policy.get("rc1_watchdog_terminate_grace_seconds", 1.0)
     )
+    restricted_terms = [
+        str(term).strip()
+        for term in (raw_policy.get("restricted_terms") or [])
+        if str(term).strip()
+    ]
 
     policy = PolicyConfig(
         default_mode=str(raw_policy.get("default_mode", "observe")),  # type: ignore[arg-type]
@@ -283,6 +295,7 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
         rc1_watchdog_stuck_confirmation_seconds=rc1_watchdog_stuck_confirmation_seconds,
         rc1_watchdog_poll_interval_seconds=rc1_watchdog_poll_interval_seconds,
         rc1_watchdog_terminate_grace_seconds=rc1_watchdog_terminate_grace_seconds,
+        restricted_terms=restricted_terms,
     )
     if policy.default_mode not in {"observe", "mutate"}:
         raise ValueError("policy.default_mode must be observe|mutate.")
@@ -317,9 +330,9 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
     openclaw_allowed_stages = set(policy.rc1_openclaw_allowed_stages)
     openclaw_allowed_passes = set(policy.rc1_openclaw_allowed_passes)
     openclaw_allowed_data_classes = set(policy.rc1_openclaw_allowed_data_classes)
-    approved_openclaw_stages = {"local", "hosted_dev"}
-    approved_openclaw_passes = {"research"}
-    approved_openclaw_data_classes = {"synthetic", "redacted"}
+    approved_openclaw_stages = OPENCLAW_ALLOWED_STAGES
+    approved_openclaw_passes = OPENCLAW_ALLOWED_PASSES
+    approved_openclaw_data_classes = OPENCLAW_ALLOWED_DATA_CLASSES
 
     if "production" in openclaw_allowed_stages:
         raise ValueError(
@@ -401,6 +414,10 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
     if not all(isinstance(item, str) for item in ignored_paths):
         raise ValueError("ignored_paths must be a list of strings.")
 
+    raw_gateway = payload.get("gateway", {})
+    if raw_gateway and not isinstance(raw_gateway, dict):
+        raise ValueError("workspace.yaml gateway must be a mapping.")
+
     return WorkspaceConfig(
         root=root,
         repositories=repositories,
@@ -410,4 +427,5 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
         auto_discovery_roots=auto_discovery_roots,
         auto_discovery_max_depth=auto_discovery_max_depth,
         ignored_paths=ignored_paths,
+        gateway=raw_gateway,
     )

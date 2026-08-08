@@ -14,6 +14,7 @@ from substrate.reliability import (
     execute_with_retry,
     make_idempotency_key,
 )
+from substrate.research import diagnose_openclaw
 
 
 class ReliabilityPrimitivesTest(unittest.TestCase):
@@ -109,11 +110,14 @@ class ReliabilityPrimitivesTest(unittest.TestCase):
 
     def test_failover_hook_selects_next_provider(self) -> None:
         hook = ProviderFailoverHook(
-            fallback_order=["anthropic", "ollama"],
+            fallback_order=["roo-router", "ollama", "gcloud", "groq", "cerebras"],
             provider_models={
                 "local": "roo-router",
-                "anthropic": "claude-sonnet",
+                "roo-router": "roo-router-model",
                 "ollama": "llama3.2",
+                "gcloud": "gemini-1.5-flash",
+                "groq": "llama3-8b-8192",
+                "cerebras": "llama3.1-8b",
             },
         )
 
@@ -130,8 +134,36 @@ class ReliabilityPrimitivesTest(unittest.TestCase):
         )
         self.assertIsNotNone(next_target)
         assert next_target is not None
-        self.assertEqual("anthropic", next_target.provider)
-        self.assertEqual("claude-sonnet", next_target.model)
+        self.assertEqual("roo-router", next_target.provider)
+        self.assertEqual("roo-router-model", next_target.model)
+
+    def test_failover_hook_skips_unhealthy_provider(self) -> None:
+        hook = ProviderFailoverHook(
+            fallback_order=["roo-router", "ollama", "gcloud"],
+            provider_models={
+                "local": "roo-router",
+                "roo-router": "roo-router-model",
+                "ollama": "llama3.2",
+                "gcloud": "gemini-1.5-flash",
+            },
+        )
+        hook.mark_provider_unhealthy("roo-router")
+
+        next_target = hook.next_target(
+            run_id="run-1",
+            step_id="scope",
+            attempt=1,
+            current=ExecutionTarget(provider="local", model="roo-router"),
+            failure=FailureClassification(
+                kind="transient",
+                reason="network_or_timeout",
+            ),
+            error=TimeoutError("timeout"),
+        )
+
+        self.assertIsNotNone(next_target)
+        assert next_target is not None
+        self.assertEqual("ollama", next_target.provider)
 
     def test_failover_hook_skips_terminal_failure_by_default(self) -> None:
         hook = ProviderFailoverHook(
@@ -190,6 +222,16 @@ class ReliabilityPrimitivesTest(unittest.TestCase):
         self.assertEqual("respawn_pending", decision.next_state)
         self.assertEqual("retry", decision.action)
         self.assertEqual("retry_budget_available", decision.reason)
+
+    def test_openclaw_diagnosis(self) -> None:
+        diagnosis = diagnose_openclaw()
+        self.assertIn("status", diagnosis)
+        self.assertIn("adapter", diagnosis)
+        self.assertIn("module_available", diagnosis)
+        self.assertIn("reason", diagnosis)
+        self.assertIn("policy", diagnosis)
+        # OpenClaw may be unavailable due to import issues, but diagnosis works
+        self.assertIn(diagnosis["status"], ["available", "unavailable"])
 
 
 if __name__ == "__main__":
