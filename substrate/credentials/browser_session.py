@@ -13,13 +13,9 @@ Security invariants:
 
 from __future__ import annotations
 
-import json
-import os
 import shutil
 from pathlib import Path
-from typing import Any
 
-from .. import _utils
 from ..security.audit_trail import AuditTrail
 
 AUTOMATION_PROFILE = Path.home() / ".config" / "substrate" / "automation-profile"
@@ -58,7 +54,6 @@ class BrowserSession:
 
     def launch_context(self, pw, service: str, *, headless: bool = True):
         """Launch a persistent browser context with saved session if available."""
-        from playwright.sync_api import sync_playwright
 
         self.ensure_profile()
         storage_state = self.load_storage_state(service)

@@ -11,9 +11,7 @@ Run: uv run --with playwright python scripts/crypto/create_cf_dns_token.py
 
 from __future__ import annotations
 
-import json
 import os
-import sys
 import time
 from pathlib import Path
 

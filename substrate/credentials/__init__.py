@@ -14,11 +14,8 @@ Security invariants:
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
-from typing import Any
 
-from .. import _utils
 from ..security.audit_trail import AuditTrail
 
 KEYRING_SERVICE = "substrate-credentials"

@@ -249,7 +249,7 @@ def code_section(state: dict) -> list[str]:
                 for s in scan.splitlines()[:6]:
                     lines.append(f"    {s[:160]}")
             else:
-                lines.append(f"  secret scan: clean")
+                lines.append("  secret scan: clean")
         # new-commit delta scan
         last = state.get(name, {}).get("last_checked")
         if last and last != head:

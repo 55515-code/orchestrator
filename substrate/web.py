@@ -5,6 +5,7 @@ import json
 import logging
 import re
 import shutil
+import time
 import traceback
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -1385,7 +1386,7 @@ async def generate_whatsapp_qr():
         
         # Create a simple SVG QR code placeholder
         # This is a visual representation - in production, use proper QR generation
-        svg_qr = f'''<svg width="280" height="280" xmlns="http://www.w3.org/2000/svg">
+        svg_qr = '''<svg width="280" height="280" xmlns="http://www.w3.org/2000/svg">
             <rect width="280" height="280" fill="white"/>
             <text x="140" y="140" font-family="Arial" font-size="14" text-anchor="middle" fill="black">
                 WhatsApp QR Code

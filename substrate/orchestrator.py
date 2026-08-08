@@ -22,8 +22,6 @@ from .models import TaskConfig
 from .encrypted_chain import (
     EncryptedChainContext,
     EncryptedChainRegistry,
-    DecryptionError,
-    EncryptionError,
 )
 from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model, models_for_hardware
 from .reliability import (

@@ -21,11 +21,9 @@ rules (Tier 2 actions always require an explicit human directive).
 
 from __future__ import annotations
 
-import json
-import os
 import shutil
 import subprocess
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any

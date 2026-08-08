@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import time
-from pathlib import Path
 from typing import Any
 
 from . import _utils
@@ -12,9 +11,7 @@ from .cache_store import CacheStore
 from .registry import SubstrateRuntime
 from .render_engines.base import (
     EngineSpec,
-    RenderEngine,
     RenderRequest,
-    RenderResult,
     RenderUnavailable,
     detect_gpu,
     ensure_scratch_env,

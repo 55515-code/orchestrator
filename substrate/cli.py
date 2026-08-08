@@ -1555,7 +1555,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             repo_slug=None,
             stage="local",
             command=(
-                f"storage-maintenance --apply"
+                "storage-maintenance --apply"
                 if args.apply
                 else "storage-maintenance (dry-run)"
             ),

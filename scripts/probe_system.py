@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
 import os
 import platform
-import re
 import shutil
 import socket
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
 _COMMAND_TIMEOUT_SECONDS = 8

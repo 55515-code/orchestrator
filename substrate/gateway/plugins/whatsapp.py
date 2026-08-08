@@ -11,11 +11,10 @@ import hashlib
 import hmac
 import logging
 from typing import Any
-from urllib.parse import urlencode
 
 import httpx
 
-from ..models import GatewayPlugin, InboundMessage, OutboundMessage
+from ..models import InboundMessage, OutboundMessage
 
 logger = logging.getLogger(__name__)
 

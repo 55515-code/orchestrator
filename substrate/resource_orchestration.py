@@ -85,9 +85,6 @@ class HardwareProfile:
             return "small"
         return "tiny"
 
-    def has_apple_silicon(self) -> bool:
-        return self.is_apple_silicon or any(a.startswith("apple-silicon:") for a in self.accelerators)
-
     def available_local_capabilities(self) -> tuple[str, ...]:
         caps: list[str] = ["cpu"]
         if self.has_gpu():
@@ -195,46 +192,6 @@ class ResourcePoolState:
             "safety_reserved": self.safety_reserved,
             "utilization": round(self.utilization(), 3),
         }
-
-
-def default_resource_pools(
-    *,
-    keep_reliability_reserve: bool = True,
-) -> list[ResourcePoolState]:
-    local_reserve = 1 if keep_reliability_reserve else 0
-    return [
-        ResourcePoolState(
-            name="local_cpu_pool",
-            location="local",
-            capability="cpu",
-            max_workers=2,
-            safety_reserved=local_reserve,
-        ),
-        ResourcePoolState(
-            name="local_gpu_pool",
-            location="local",
-            capability="gpu",
-            max_workers=1,
-        ),
-        ResourcePoolState(
-            name="cloud_cpu_pool",
-            location="cloud",
-            capability="cpu",
-            max_workers=4,
-        ),
-        ResourcePoolState(
-            name="cloud_gpu_pool",
-            location="cloud",
-            capability="gpu",
-            max_workers=2,
-        ),
-        ResourcePoolState(
-            name="api_model_pool",
-            location="cloud",
-            capability="api",
-            max_workers=8,
-        ),
-    ]
 
 
 @dataclass(slots=True, frozen=True)
