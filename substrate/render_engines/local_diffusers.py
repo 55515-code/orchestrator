@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from .base import (
-    LocalDiffusersEngine as _BaseLocalDiffusersEngine,
     RenderEngine,
     RenderRequest,
     RenderResult,
@@ -24,7 +23,7 @@ from .base import (
 )
 
 
-class LocalDiffusersEngine(_BaseLocalDiffusersEngine):
+class LocalDiffusersEngine(RenderEngine):
     """Concrete base shared by all local diffusers engines."""
 
     model_id: str = ""

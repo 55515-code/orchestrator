@@ -50,6 +50,12 @@ from .swarm_control import (
 )
 from .registry import SubstrateRuntime
 from .research import refresh_upstreams
+from .render import (
+    render_catalog_payload,
+    render_dispatch,
+    render_telemetry_payload,
+)
+from .render_engines.base import RenderRequest, RenderUnavailable
 from .standards import standards_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
 
@@ -929,6 +935,31 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Show swarm-control state (simulations, triage, work items, deployments).",
     )
 
+    render_catalog = subparsers.add_parser(
+        "render-catalog",
+        help="Show render engine catalog (local + hosted) with capability and health status.",
+    )
+    render_catalog.add_argument("--engine", help="Optional engine id filter.")
+
+    render_run = subparsers.add_parser(
+        "render-run",
+        help="Dispatch a render job through the capability router with fallback.",
+    )
+    render_run.add_argument("--prompt", required=True)
+    render_run.add_argument("--negative", default="")
+    render_run.add_argument("--width", type=int, default=1024)
+    render_run.add_argument("--height", type=int, default=1024)
+    render_run.add_argument("--engine", help="Force a specific engine id; otherwise router selects.")
+    render_run.add_argument("--optimize-for", choices=["quality", "speed", "cost"], default="quality")
+    render_run.add_argument("--output", help="Output path (workspace-relative or absolute).")
+    render_run.add_argument("--no-cache", action="store_true")
+    render_run.add_argument("--dry-run", action="store_true")
+
+    subparsers.add_parser(
+        "render-telemetry",
+        help="Show per-engine render telemetry (latency, cost, quality score, success rate).",
+    )
+
     return parser
 
 
@@ -1568,6 +1599,47 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:  # status
             result = swarm_status()
         print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "render-catalog":
+        print(
+            json.dumps(
+                render_catalog_payload(runtime, engine_id=args.engine),
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0
+
+    if args.command == "render-run":
+        try:
+            result = render_dispatch(
+                runtime,
+                RenderRequest(
+                    prompt=args.prompt,
+                    negative=args.negative,
+                    width=args.width,
+                    height=args.height,
+                    output=Path(args.output) if args.output else None,
+                ),
+                optimize_for=args.optimize_for,
+                forced_engine=args.engine,
+                use_cache=not args.no_cache,
+                dry_run=args.dry_run,
+            )
+        except (ValueError, RenderUnavailable) as exc:
+            parser.error(str(exc))
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "render-telemetry":
+        print(
+            json.dumps(
+                render_telemetry_payload(runtime),
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
         return 0
 
     parser.print_help(sys.stderr)

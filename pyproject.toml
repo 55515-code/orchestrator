@@ -45,6 +45,20 @@ crypto = [
   "mnemonic>=0.21",
   "eth-account>=0.13",
 ]
+render = [
+  "torch>=2.13.0",
+  "diffusers>=0.39.0",
+  "transformers>=4.46.0",
+  "accelerate>=0.34.0",
+  "safetensors>=0.4.0",
+  "sentencepiece>=0.2.0",
+  "protobuf>=5.0.0",
+  "huggingface-hub[hf_transfer]>=0.25.0",
+  "pillow>=12.3.0",
+  "bitsandbytes>=0.43.0; platform_machine=='x86_64'",
+  "optimum-quanto>=0.2.0",
+  "torchao>=0.6.0",
+]
 
 [tool.uv]
 package = false

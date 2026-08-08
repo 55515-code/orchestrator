@@ -24,6 +24,22 @@ from .base import (
     tier_rank,
     write_images,
 )
+from .hosted import (
+    BFLFlux2Engine,
+    GeminiImageEngine,
+    HostedAPIEngine,
+    OpenAIGPTImageEngine,
+    OpenRouterImageEngine,
+    ReveEngine,
+)
+from .local_diffusers import (
+    Flux1DevGGUFEngine,
+    Flux2KleinEngine,
+    LocalDiffusersEngine,
+    NoobAIXLEngine,
+    SDXLEngine,
+    ZImageTurboEngine,
+)
 
 __all__ = [
     "CAPABILITIES",
@@ -46,4 +62,16 @@ __all__ = [
     "select_memory_strategy",
     "tier_rank",
     "write_images",
+    "BFLFlux2Engine",
+    "GeminiImageEngine",
+    "HostedAPIEngine",
+    "OpenAIGPTImageEngine",
+    "OpenRouterImageEngine",
+    "ReveEngine",
+    "Flux1DevGGUFEngine",
+    "Flux2KleinEngine",
+    "LocalDiffusersEngine",
+    "NoobAIXLEngine",
+    "SDXLEngine",
+    "ZImageTurboEngine",
 ]

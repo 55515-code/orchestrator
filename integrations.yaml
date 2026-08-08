@@ -310,3 +310,85 @@ services:
         - "firmware modification and flash"
         - "device firmware extraction"
       guidance: Active transmission, cloning, and firmware modification require explicit directive and compliance with local radio regulations.
+
+  - id: openai_images
+    name: OpenAI Images API
+    category: image_generation
+    api_status: active
+    auth:
+      methods: [bearer_token]
+      login_url: https://platform.openai.com/api-keys
+      docs_url: https://developers.openai.com/api/docs/guides/image-generation
+    cli_tools: []
+    read_profile:
+      default_scopes:
+        - "image generation read/metadata"
+      guidance: Read-only access to generation metadata. Actual generation is a write-equivalent spend operation.
+    write_profile:
+      scopes:
+        - "image generation write"
+      guidance: Image generation costs money and requires write mode + directive.
+
+  - id: google_gemini_image
+    name: Google Gemini Image (Nano Banana)
+    category: image_generation
+    api_status: active
+    auth:
+      methods: [api_key]
+      login_url: https://aistudio.google.com/apikey
+      docs_url: https://ai.google.dev/gemini-api/docs/image-generation
+    cli_tools: []
+    read_profile:
+      default_scopes: []
+      guidance: No free read surface; generation is the primary interaction.
+    write_profile:
+      scopes: []
+      guidance: Image generation costs money and requires write mode + directive.
+
+  - id: bfl
+    name: Black Forest Labs FLUX API
+    category: image_generation
+    api_status: active
+    auth:
+      methods: [api_key]
+      login_url: https://bfl.ai/account
+      docs_url: https://docs.bfl.ai/quick_start/introduction
+    cli_tools: []
+    read_profile:
+      default_scopes: []
+      guidance: No free read surface.
+    write_profile:
+      scopes: []
+      guidance: Image generation costs money and requires write mode + directive.
+
+  - id: reveal
+    name: Reve Image API
+    category: image_generation
+    api_status: active
+    auth:
+      methods: [bearer_token]
+      login_url: https://api.reve.com/console
+      docs_url: https://help.reve.com/hc/en-us/articles/46837930295316-Reve-API
+    cli_tools: []
+    read_profile:
+      default_scopes: []
+      guidance: No free read surface.
+    write_profile:
+      scopes: []
+      guidance: Image generation costs money and requires write mode + directive.
+
+  - id: openrouter
+    name: OpenRouter Image Router
+    category: image_generation
+    api_status: active
+    auth:
+      methods: [bearer_token]
+      login_url: https://openrouter.ai/keys
+      docs_url: https://openrouter.ai/docs/features/multimodal/image-generation
+    cli_tools: []
+    read_profile:
+      default_scopes: []
+      guidance: No free read surface.
+    write_profile:
+      scopes: []
+      guidance: Image generation costs money and requires write mode + directive.

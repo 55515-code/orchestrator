@@ -45,6 +45,12 @@ from .orchestrator import Orchestrator
 from .pipelines import PipelineEngine, PipelineRegistry, create_pipelines_router
 from .providers import SUPPORTED_PROVIDERS, provider_diagnostics
 from .registry import SubstrateRuntime
+from .render import (
+    render_catalog_payload,
+    render_dispatch,
+    render_telemetry_payload,
+)
+from .render_engines.base import RenderRequest, RenderUnavailable
 from .research import diagnose_openclaw, refresh_upstreams
 from .standards import standards_payload
 from .stats import dashboard_payload
@@ -825,6 +831,47 @@ def api_config_sync_deploy(
         note="Backup and sync deployment",
     )
     return {"ok": True, **result}
+
+
+@app.get("/api/render/catalog")
+def api_render_catalog(engine_id: str | None = None) -> dict[str, Any]:
+    return render_catalog_payload(RUNTIME, engine_id=engine_id)
+
+
+@app.post("/api/render/run")
+def api_render_run(request: Request) -> dict[str, Any]:
+    body = request.json() or {}
+    try:
+        req = RenderRequest(
+            prompt=body.get("prompt", ""),
+            negative=body.get("negative", ""),
+            width=int(body.get("width", 1024)),
+            height=int(body.get("height", 1024)),
+            steps=body.get("steps"),
+            guidance=body.get("guidance"),
+            seed=body.get("seed"),
+            num_images=int(body.get("num_images", 1)),
+            mode=body.get("mode", "text_to_image"),
+            source_image=Path(body["source_image"]) if body.get("source_image") else None,
+            style_refs=[Path(p) for p in body.get("style_refs", [])],
+            output=Path(body["output"]) if body.get("output") else None,
+            extra=body.get("extra", {}),
+        )
+        return render_dispatch(
+            RUNTIME,
+            req,
+            optimize_for=body.get("optimize_for", "quality"),
+            forced_engine=body.get("engine"),
+            use_cache=not body.get("no_cache", False),
+            dry_run=body.get("dry_run", False),
+        )
+    except (ValueError, RenderUnavailable) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/render/telemetry")
+def api_render_telemetry() -> dict[str, Any]:
+    return render_telemetry_payload(RUNTIME)
 
 
 # Legacy dotfiles endpoints retained as aliases.
