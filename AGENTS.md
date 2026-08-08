@@ -27,6 +27,36 @@ Use the substrate CLI via `uv run python -m substrate.cli` or `uv run python scr
 - `/record-test` — Record a test result in the learning index
 - `/probe` — Generate a cross-platform system profile
 
+### Desktop Chatbot
+
+A desktop chatbot (`substrate/chatbot/`) gives the user a chat interface that
+runs autonomous Kilo tasks for desktop and internet automation. It reuses the
+existing Kilo CLI (`kilo run --auto --format json`) and inherits the user's
+existing Kilo permission configuration.
+
+**Run it:**
+- `uv run python scripts/chatbot.py tray` — tray icon (panel) + HTTP server + chat UI
+- `uv run python scripts/chatbot.py serve` — headless HTTP server only
+- `uv run python scripts/chatbot.py open` — start server if needed, open chat UI in browser
+- `uv run python scripts/chatbot.py status` — server status JSON
+- `bash scripts/install_chatbot.sh` — app launcher, autostart, icon, optional systemd service
+
+**How it works:**
+- `POST /api/chat` enqueues a task; the worker runs
+  `kilo run --auto --format json --dir <workspace> [--session <id>] <message>`.
+- JSON events stream back over SSE (`/api/stream/<task_id>`): text, tool calls,
+  model info, done. Multi-turn conversation continues via the captured Kilo
+  session id.
+- Sessions persist as JSONL under `state/chatbot/sessions/`.
+- Autonomy is bounded by the user's Kilo permission config (deny rules still
+  block dangerous actions even with `--auto`).
+- Config: `~/.config/kilo/chatbot.json` — fields: `host`, `port`, `workspace`,
+  `kilo_binary`, `agent`, `model`, `kilo_config`, `task_timeout_seconds`.
+
+**Future extension points:** additional services hook in via the same task
+queue; voice input can be added in the chat UI or tray without changing the
+agent runner.
+
 ### Workflow Enforcement
 
 The substrate enforces a 3x3 lifecycle:

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import threading
 import time
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -36,13 +35,14 @@ class ChatbotApp:
         self,
         config: ChatbotConfig | None = None,
         store: ChatStore | None = None,
+        agent: KiloAgent | None = None,
     ) -> None:
         self.config = config or ChatbotConfig.load()
         self.store = store or ChatStore()
         self._tasks: dict[str, Any] = {}
         self._assistant_buffers: dict[str, str] = {}
         self._lock = threading.Lock()
-        self.agent = KiloAgent(self.config, on_message=self._on_message)
+        self.agent = agent or KiloAgent(self.config, on_message=self._on_message)
         self.app = self._build_app()
 
     # -- callbacks ------------------------------------------------------
@@ -176,6 +176,8 @@ def _utc_iso() -> str:
 
 
 def create_app(
-    config: ChatbotConfig | None = None, store: ChatStore | None = None
+    config: ChatbotConfig | None = None,
+    store: ChatStore | None = None,
+    agent: KiloAgent | None = None,
 ) -> FastAPI:
-    return ChatbotApp(config=config, store=store).app
+    return ChatbotApp(config=config, store=store, agent=agent).app

@@ -323,13 +323,18 @@ async function newChat() {
 }
 
 async function init() {
-  const res = await fetch("/api/sessions");
-  const data = await res.json();
-  const sessions = data.sessions || [];
-  if (sessions.length) {
-    await loadSession(sessions[0].id);
+  const requested = new URLSearchParams(window.location.search).get("session");
+  if (requested && (await fetch("/api/sessions/" + requested)).ok) {
+    await loadSession(requested);
   } else {
-    await newChat();
+    const res = await fetch("/api/sessions");
+    const data = await res.json();
+    const sessions = data.sessions || [];
+    if (sessions.length) {
+      await loadSession(sessions[0].id);
+    } else {
+      await newChat();
+    }
   }
   const status = await (await fetch("/api/status")).json();
   $("subtitle").textContent = status.workspace + (status.model ? " · " + status.model : "");

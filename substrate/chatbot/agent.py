@@ -12,7 +12,6 @@ import queue
 import shlex
 import subprocess
 import threading
-import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -169,7 +168,7 @@ class KiloAgent:
                     task.session_id_out = str(normalized["session_id"])
             process.wait()
             task.exit_code = process.returncode
-        except FileNotFoundError as exc:
+        except FileNotFoundError:
             task.error = (
                 f"Kilo binary '{self.config.kilo_binary}' not found on PATH. "
                 "Install with `npm install -g @kilocode/cli`."

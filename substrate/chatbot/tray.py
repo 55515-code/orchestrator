@@ -7,13 +7,17 @@ agent status, open the ops panel, and quit.
 
 from __future__ import annotations
 
-import io
 import logging
+import os
 import threading
 import webbrowser
 from typing import Any
 
 from .config import ChatbotConfig
+
+# Prefer the appindicator backend on Linux: it works on GNOME, COSMIC, and
+# other SNI-capable desktops where the legacy XEmbed systray is unavailable.
+os.environ.setdefault("PYSTRAY_BACKEND", "appindicator")
 
 logger = logging.getLogger(__name__)
 
