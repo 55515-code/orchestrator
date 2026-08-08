@@ -721,7 +721,8 @@ def run_maintenance(
             duperemove,
             "-r",
             "-h",
-            "--dedupe-options=hash",
+            "-d",  # actually submit dedupes (btrfs/xfs only; guarded above)
+            "-B",  # batched dedupe for large trees (ISOs, model weights)
             f"--hashfile={hashfile_path}",
             str(root_path / "artifacts"),
         ]

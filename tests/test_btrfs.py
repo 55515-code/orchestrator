@@ -394,6 +394,10 @@ def test_run_maintenance_dry_run_plans_commands(tmp_path: Path, monkeypatch) -> 
     steps = {step["step"]: step for step in result["steps"]}
     assert steps["dedup"]["status"] == "planned"
     assert "duperemove" in steps["dedup"]["command"][0]
+    # Regression guard: -d must be present (submits dedupes) and no invalid
+    # --dedupe-options flag may leak in.
+    assert "-d" in steps["dedup"]["command"]
+    assert not any(arg.startswith("--dedupe-options") for arg in steps["dedup"]["command"])
     assert steps["defrag"]["status"] == "planned"
     assert len(steps["defrag"]["commands"]) == 3
     # Dry-run must never execute.

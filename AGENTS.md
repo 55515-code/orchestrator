@@ -26,6 +26,11 @@ Use the substrate CLI via `uv run python -m substrate.cli` or `uv run python scr
 - `/chain` — Execute a chain of tasks
 - `/record-test` — Record a test result in the learning index
 - `/probe` — Generate a cross-platform system profile
+- `/storage-status` — Report filesystem facts and the recommended Btrfs plan
+- `/storage-validate` — Validate Btrfs recommendations against the tooling stack
+- `/storage-maintenance` — Run Btrfs dedup/defrag maintenance (dry-run; `--apply` to execute)
+
+See `docs/btrfs-optimization.md` for the storage-layer tradeoffs and runbook.
 
 ### Desktop Chatbot
 

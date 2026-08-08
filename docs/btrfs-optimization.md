@@ -111,14 +111,18 @@ What the maintenance run does:
    CoW-enabled trees only: `artifacts/`, `resources/`, `docs/`. It **never**
    touches `state/` or `memory/` (CoW-disabled volatile trees), and it never
    touches live SQLite databases.
-2. **Offline dedup** (`duperemove -r -h --dedupe-options=hash`) against
+2. **Offline dedup** (`duperemove -r -h -d -B --hashfile=...`) against
    `artifacts/` — generated binaries, images, and downloaded tooling are the
-   best dedup targets. The hashfile lives at `state/btrfs-dedup-hashes.db` so
-   incremental runs are cheap.
+   best dedup targets. `-d` submits dedupes (btrfs/xfs only), `-B` batches the
+   dedupe phase for large trees, and the hashfile lives at
+   `state/btrfs-dedup-hashes.db` so incremental runs only hash changed files.
 
-**Required dependency:** `duperemove` (separate package on Debian/Ubuntu; part
-of `btrfs-progs` on Arch/Fedora). `storage-validate` reports it as informational
-when absent; `dedup` exits with an error until installed.
+**Required dependency:** `duperemove` from `github.com/markfasheh/duperemove`
+(GPL-2.0, actively maintained; packaged for apt/dnf/pacman/brew). Register it
+via `tool_profiles.yaml` (profile `storage_dedup`) and install with
+`uv run python scripts/substrate_cli.py deps-ensure --profile storage_dedup`.
+`storage-validate` reports it as informational when absent; `dedup` exits with
+an error until installed.
 
 **Tradeoffs:**
 - `duperemove` reads the whole target tree — schedule during low I/O windows.

@@ -61,12 +61,12 @@ case "${COMMAND}" in
     [ -d "${TARGET}" ] || { echo "{\"error\": \"${TARGET} missing\"}"; exit 1; }
     if [ "${APPLY}" -eq 0 ]; then
       echo "--- dry-run: would run ---"
-      echo "  duperemove -r -h --dedupe-options=hash --hashfile=${HASHFILE} ${TARGET}"
+      echo "  duperemove -r -h -d -B --hashfile=${HASHFILE} ${TARGET}"
       echo "Re-run with --apply to execute (schedule during low I/O windows)."
       exit 0
     fi
     echo "→ duperemove ${TARGET} (this can take a long time)"
-    duperemove -r -h --dedupe-options=hash "--hashfile=${HASHFILE}" "${TARGET}"
+    duperemove -r -h -d -B "--hashfile=${HASHFILE}" "${TARGET}"
     ;;
   snapshot)
     SNAP_ROOT="${SNAPSHOT_ROOT:-${WORKSPACE}/.snapshots}"

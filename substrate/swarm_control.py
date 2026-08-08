@@ -396,6 +396,20 @@ def _count_pattern(text: str, pattern: str) -> int:
     return len(re.findall(pattern, text, flags=re.IGNORECASE))
 
 
+def _visible_text(html: str) -> str:
+    """Extract human-readable text from panel HTML, ignoring markup/CSS/JS.
+
+    Block-level element boundaries become newlines so distinct UI text blocks
+    are assessed individually instead of being concatenated into one run-on.
+    """
+    stripped = re.sub(r"<(script|style)[^>]*>.*?</\\1>", " ", html, flags=re.S | re.I)
+    stripped = re.sub(r"<(br|/p|/li|/div|/h[1-6]|/section|/header|/footer|/aside|/button|/span)[^>]*>", "\n", stripped)
+    stripped = re.sub(r"<[^>]+>", " ", stripped)
+    stripped = re.sub(r"&[a-zA-Z#0-9]+;", " ", stripped)
+    lines = [re.sub(r"\s+", " ", line).strip() for line in stripped.split("\n")]
+    return "\n".join(line for line in lines if line)
+
+
 def _persona_qualitative_checks(persona_id: str, panel_html: str) -> list[dict[str, Any]]:
     """Run qualitative UI checks specific to each persona segment."""
     checks: list[dict[str, Any]] = []
@@ -447,13 +461,17 @@ def _persona_qualitative_checks(persona_id: str, panel_html: str) -> list[dict[s
             checks.append({"id": "literacy-jargon", "ok": True})
 
     if persona_id == "non_native":
-        long_sentences = len(re.findall(r"[^.!?]{140,}[.!?]", panel_html))
+        visible = _visible_text(panel_html)
+        long_sentences = 0
+        for line in visible.split("\n"):
+            for sentence in re.findall(r"[^.!?]{140,}[.!?]", line):
+                long_sentences += 1
         if long_sentences > 3:
             checks.append({"id": "i18n-sentences", "ok": False,
-                           "note": f"{long_sentences} very long sentences (>140 chars)"})
+                           "note": f"{long_sentences} very long sentences (>140 chars) in visible copy"})
         else:
             checks.append({"id": "i18n-sentences", "ok": True})
-        abbrevs = _count_pattern(panel_html, r"\b(SSE|API|URL|HTML|CSS|JSON|CLI)\b")
+        abbrevs = _count_pattern(visible, r"\b(SSE|API|URL|HTML|CSS|JSON|CLI)\b")
         if abbrevs > 8:
             checks.append({"id": "i18n-abbrevs", "ok": False,
                            "note": f"high unexplained abbreviation count ({abbrevs})"})

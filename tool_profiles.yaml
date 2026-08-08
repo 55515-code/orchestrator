@@ -337,3 +337,24 @@ profiles:
         install:
           manual:
             - Use O.MG Cable web interface or command-line tooling for payload deployment and configuration.
+
+  - id: storage_dedup
+    name: Btrfs Storage Deduplication
+    description: Offline deduplication tooling for Btrfs-backed substrate storage (see docs/btrfs-optimization.md).
+    tools:
+      - id: duperemove
+        name: duperemove
+        binary: duperemove
+        source_url: https://github.com/markfasheh/duperemove
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y duperemove
+          dnf:
+            - sudo dnf install -y duperemove
+          pacman:
+            - sudo pacman -S --noconfirm duperemove
+          brew:
+            - brew install duperemove
+          manual:
+            - Build duperemove from the upstream GitHub releases; requires glib2, sqlite3, libxxhash >= 0.8, util-linux, and libbsd.
