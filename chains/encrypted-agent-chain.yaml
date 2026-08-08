@@ -1,0 +1,27 @@
+name: encrypted-agent-chain
+description: Chain with encrypted step execution using per-chain ephemeral keys.
+
+defaults:
+  provider: ollama
+  models:
+    ollama: llama3.1:8b
+
+context_files:
+  - docs/setup.md
+  - docs/system-probe.md
+
+steps:
+  - id: scope
+    prompt: prompts/01_scope.md
+    capability: cpu
+  - id: research
+    prompt: prompts/02_research.md
+    capability: encrypted
+    encryption: aes
+  - id: execute
+    prompt: prompts/03_execute.md
+    capability: cpu
+  - id: review
+    prompt: prompts/04_review.md
+    capability: encrypted
+    encryption: aes

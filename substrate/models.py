@@ -41,6 +41,7 @@ class TaskConfig:
     command: list[str] | dict[str, list[str]]
     workdir: str = "."
     mode: RunMode = "observe"
+    encryption: str | None = None
 
     def command_for_platform(self, platform_key: str) -> list[str]:
         if isinstance(self.command, list):

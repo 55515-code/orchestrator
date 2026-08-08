@@ -153,12 +153,16 @@ def _parse_tasks(raw_tasks: Any) -> dict[str, TaskConfig]:
             raise ValueError(f"Task '{task_id}' mode must be observe|mutate.")
         command = _as_command(payload.get("command"), task_id)
         workdir = str(payload.get("workdir", "."))
+        encryption = payload.get("encryption")
+        if encryption is not None:
+            encryption = str(encryption)
         tasks[task_id] = TaskConfig(
             id=task_id,
             description=description,
             command=command,
             workdir=workdir,
             mode=mode,  # type: ignore[arg-type]
+            encryption=encryption,
         )
     return tasks
 

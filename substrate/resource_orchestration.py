@@ -8,8 +8,8 @@ from typing import Any, Literal, Protocol
 from .providers import FREE_FIRST_PROVIDERS
 from .reliability import ExecutionTarget
 
-CapabilityClass = Literal["cpu", "gpu", "model", "api"]
-ResolvedCapabilityClass = Literal["cpu", "gpu", "api"]
+CapabilityClass = Literal["cpu", "gpu", "model", "api", "encrypted"]
+ResolvedCapabilityClass = Literal["cpu", "gpu", "api", "encrypted"]
 PoolLocation = Literal["local", "cloud"]
 SafetyTier = Literal["standard", "strict"]
 PressureLevel = Literal["normal", "high"]
@@ -45,6 +45,8 @@ def _normalize_capability(value: str | CapabilityClass | None) -> ResolvedCapabi
         return "gpu"
     if token == "cpu":
         return "cpu"
+    if token == "encrypted":
+        return "encrypted"
     return "api"
 
 
@@ -148,6 +150,8 @@ def provider_capabilities(provider: str) -> tuple[ResolvedCapabilityClass, ...]:
         return ("cpu",)
     if normalized == "ollama":
         return ("cpu", "gpu")
+    if normalized in {"encrypted", "fhe", "mpc"}:
+        return ("encrypted",)
     if normalized in FREE_FIRST_PROVIDERS:
         return ("api",)
     return ("api",)
@@ -401,6 +405,7 @@ def default_resource_pools(
     cloud_cpu = max(2, local_cpu)
     cloud_gpu = 1 if profile.has_gpu() else 0
     api_workers = max(4, local_cpu * 2)
+    encrypted_workers = max(1, local_cpu)
     return [
         ResourcePoolState(
             name="local_cpu_pool",
@@ -432,6 +437,12 @@ def default_resource_pools(
             location="cloud",
             capability="api",
             max_workers=api_workers,
+        ),
+        ResourcePoolState(
+            name="encrypted_pool",
+            location="local",
+            capability="encrypted",
+            max_workers=encrypted_workers,
         ),
     ]
 
@@ -641,6 +652,8 @@ class ResourceScheduler:
         capability: ResolvedCapabilityClass,
     ) -> tuple[ResolvedCapabilityClass, ...]:
         if capability == "gpu":
+            return ("cpu", "api")
+        if capability == "encrypted":
             return ("cpu", "api")
         if capability == "cpu":
             return ("api",)

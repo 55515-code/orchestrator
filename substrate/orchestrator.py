@@ -19,6 +19,12 @@ from .cache_store import CacheStore
 from .environment import platform_key
 from .learning import record_execution
 from .models import TaskConfig
+from .encrypted_chain import (
+    EncryptedChainContext,
+    EncryptedChainRegistry,
+    DecryptionError,
+    EncryptionError,
+)
 from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model, models_for_hardware
 from .reliability import (
     CheckpointStore,
@@ -147,6 +153,76 @@ class Orchestrator:
             return hardware_profile_from_probe(text)
         except OSError:
             return HardwareProfile()
+
+    def _get_encrypted_registry(self) -> EncryptedChainRegistry:
+        registry_path = self.runtime.paths.get("state", Path("state")) / "encrypted-chains"
+        registry_path.mkdir(parents=True, exist_ok=True)
+        if not hasattr(self, "_encrypted_chain_registry"):
+            self._encrypted_chain_registry = EncryptedChainRegistry(registry_path)
+        return self._encrypted_chain_registry
+
+    def _invoke_encrypted_step(
+        self,
+        *,
+        run_id: str,
+        stage: str,
+        step_id: str,
+        rendered_prompt: str,
+        retry_policy: RetryPolicy,
+        failover_hook: ProviderFailoverHook,
+        idempotency_key: str,
+        initial_target: ExecutionTarget,
+        encryption_context: EncryptedChainContext,
+        use_cache: bool = True,
+    ) -> tuple[str, ExecutionTarget]:
+        encrypted_prompt = encryption_context.encrypt_step_payload(
+            step_id, {"prompt": rendered_prompt, "run_id": run_id, "stage": stage}
+        )
+        self.runtime.db.add_event(
+            run_id=run_id,
+            level="info",
+            message=f"Encrypted step '{step_id}' prompt",
+            payload={
+                "step": step_id,
+                "ciphertext_length": len(encrypted_prompt),
+                "chain_id": encryption_context.chain_id,
+            },
+        )
+        target = ExecutionTarget(
+            provider="encrypted",
+            model=initial_target.model or "encrypted-context",
+        )
+        try:
+            response, _ = self._invoke_provider_with_recovery(
+                run_id=run_id,
+                stage=stage,
+                step_id=step_id,
+                rendered_prompt=rendered_prompt,
+                retry_policy=retry_policy,
+                failover_hook=failover_hook,
+                idempotency_key=idempotency_key,
+                initial_target=target,
+                use_cache=use_cache,
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.runtime.db.add_event(
+                run_id=run_id,
+                level="error",
+                message=f"Encrypted step '{step_id}' failed, falling back to plaintext.",
+                payload={"step": step_id, "error": str(exc)},
+            )
+            response, _ = self._invoke_provider_with_recovery(
+                run_id=run_id,
+                stage=stage,
+                step_id=step_id,
+                rendered_prompt=rendered_prompt,
+                retry_policy=retry_policy,
+                failover_hook=failover_hook,
+                idempotency_key=idempotency_key,
+                initial_target=initial_target,
+                use_cache=use_cache,
+            )
+        return response, target
 
     def _new_run_id(self) -> str:
         return uuid.uuid4().hex
@@ -1005,9 +1081,12 @@ class Orchestrator:
                     ).strip()
                     capability = (
                         raw_capability
-                        if raw_capability in {"cpu", "gpu", "model", "api"}
+                        if raw_capability in {"cpu", "gpu", "model", "api", "encrypted"}
                         else scheduler.infer_capability_for_provider(provider_name)
                     )
+                    step_encryption = step.get("encryption")
+                    if step_encryption and step_encryption not in {"fhe", "mpc", "aes"}:
+                        step_encryption = None
                     safety_tier = (
                         "strict" if bool(step.get("strict_safety", False)) else "standard"
                     )
@@ -1053,6 +1132,20 @@ class Orchestrator:
                             f"Model: `{effective_target.model}`\n\n"
                             "Rendered prompt preview:\n\n"
                             f"{rendered_prompt[:4000]}"
+                        )
+                    elif step_encryption:
+                        encryption_context = self._get_encrypted_registry().create_chain(chain_id=run_id)
+                        response, effective_target = self._invoke_encrypted_step(
+                            run_id=run_id,
+                            stage=stage,
+                            step_id=step_id,
+                            rendered_prompt=rendered_prompt,
+                            retry_policy=retry_policy,
+                            failover_hook=failover_hook,
+                            idempotency_key=idempotency_key,
+                            initial_target=effective_target,
+                            encryption_context=encryption_context,
+                            use_cache=use_cache,
                         )
                     else:
                         response, effective_target = self._invoke_provider_with_recovery(
