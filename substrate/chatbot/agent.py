@@ -71,7 +71,7 @@ class KiloAgent:
     def __init__(
         self,
         config: ChatbotConfig,
-        on_message: Callable[[str, str], None] | None = None,
+        on_message: Callable[[str, str, str], None] | None = None,
     ) -> None:
         self.config = config
         self.on_message = on_message
@@ -154,6 +154,11 @@ class KiloAgent:
                     continue
                 if self._cancelled(task):
                     break
+                raw_event = self._try_parse_json(line.strip())
+                if raw_event is not None:
+                    session_id = raw_event.get("sessionID")
+                    if session_id and task.session_id_out is None:
+                        task.session_id_out = str(session_id)
                 normalized = self._parse_line(line.strip())
                 if normalized is None:
                     continue
@@ -237,12 +242,16 @@ class KiloAgent:
 
     # -- parsing --------------------------------------------------------
 
-    def _parse_line(self, line: str) -> dict[str, Any] | None:
+    def _try_parse_json(self, line: str) -> dict[str, Any] | None:
         try:
             event = json.loads(line)
         except json.JSONDecodeError:
             return None
-        if not isinstance(event, dict):
+        return event if isinstance(event, dict) else None
+
+    def _parse_line(self, line: str) -> dict[str, Any] | None:
+        event = self._try_parse_json(line)
+        if event is None:
             return None
         event_type = _event_type(event)
         part = event.get("part") or {}
@@ -293,7 +302,7 @@ class KiloAgent:
     def _emit_message(self, task: AgentTask, text: str) -> None:
         if self.on_message is not None:
             try:
-                self.on_message(task.session_id, text)
+                self.on_message(task.task_id, task.session_id, text)
             except Exception:  # noqa: BLE001
                 pass
 

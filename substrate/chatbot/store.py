@@ -104,16 +104,23 @@ class ChatStore:
         with self._lock, path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(message.to_dict(), ensure_ascii=False) + "\n")
 
-    def update_last_message(
-        self, session_id: str, content: str
+    def update_assistant_message(
+        self, session_id: str, task_id: str, content: str
     ) -> None:
+        """Replace the assistant message for a task, appending if not present."""
         messages = self.read_session(session_id)
-        if messages:
-            messages[-1].content = content
-            messages[-1].ts = _utc_iso()
-        else:
+        updated = False
+        for message in reversed(messages):
+            if message.role == "assistant" and message.task_id == task_id:
+                message.content = content
+                message.ts = _utc_iso()
+                updated = True
+                break
+        if not updated:
             messages.append(
-                ChatMessage(role="assistant", content=content, ts=_utc_iso())
+                ChatMessage(
+                    role="assistant", content=content, task_id=task_id, ts=_utc_iso()
+                )
             )
         path = self._session_path(session_id)
         with self._lock, path.open("w", encoding="utf-8") as handle:

@@ -47,17 +47,12 @@ class ChatbotApp:
 
     # -- callbacks ------------------------------------------------------
 
-    def _on_message(self, session_id: str, text: str) -> None:
+    def _on_message(self, task_id: str, session_id: str, text: str) -> None:
         with self._lock:
-            previous = self._assistant_buffers.get(session_id, "")
-            if not previous:
-                self.store.append_message(
-                    session_id,
-                    ChatMessage(role="assistant", content=text, ts=_utc_iso()),
-                )
-            else:
-                self.store.update_last_message(session_id, previous + "\n" + text)
-            self._assistant_buffers[session_id] = previous + ("\n" if previous else "") + text
+            previous = self._assistant_buffers.get(task_id, "")
+            merged = previous + ("\n" if previous else "") + text
+            self.store.update_assistant_message(session_id, task_id, merged)
+            self._assistant_buffers[task_id] = merged
 
     def _task(self, task_id: str) -> Any:
         with self._lock:
@@ -118,11 +113,16 @@ class ChatbotApp:
             session_id = request.session_id or self.store.new_session()
             if not self.store.session_exists(session_id):
                 raise HTTPException(status_code=404, detail="Session not found")
+            task = self.agent.submit(session_id, request.message)
             self.store.append_message(
                 session_id,
-                ChatMessage(role="user", content=request.message, ts=_utc_iso()),
+                ChatMessage(
+                    role="user",
+                    content=request.message,
+                    task_id=task.task_id,
+                    ts=_utc_iso(),
+                ),
             )
-            task = self.agent.submit(session_id, request.message)
             with self._lock:
                 self._tasks[task.task_id] = task
             return {"task_id": task.task_id, "session_id": session_id, "status": task.status}
