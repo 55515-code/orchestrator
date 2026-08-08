@@ -121,7 +121,6 @@ def modern_artistic_grade(src: Image.Image) -> Image.Image:
     # 3) Edge-lit linework: blend bright edges with electric blue/magenta glow
     arr2 = np.asarray(img_base).astype(np.float64)
     lum2 = lum_of(arr2)
-    e2 = edges(lum2)
     # Create neon glow layer using the palette colors
     glow_mag = np.array([255, 0, 168], dtype=np.float64)  # neon magenta
     glow_cyan = np.array([0, 240, 255], dtype=np.float64)  # voltage cyan

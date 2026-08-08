@@ -930,7 +930,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     smoke.add_argument("--base-url", default=DEFAULT_BASE_URL)
 
-    status = swarm_control_sub.add_parser(
+    swarm_control_sub.add_parser(
         "status",
         help="Show swarm-control state (simulations, triage, work items, deployments).",
     )

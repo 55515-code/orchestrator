@@ -62,3 +62,16 @@ render = [
 
 [tool.uv]
 package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+# Standalone scripts bootstrap sys.path before importing the substrate package;
+# imports after that setup are intentional (E402).
+"scripts/serve_dashboard.py" = ["E402"]
+"scripts/serve_pipelines.py" = ["E402"]
+"scripts/crypto/backup_proton.py" = ["E402"]
+"scripts/crypto/wallet_gen.py" = ["E402"]
+"scripts/crypto/export_site_data.py" = ["E402"]

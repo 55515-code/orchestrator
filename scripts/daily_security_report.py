@@ -152,8 +152,8 @@ def system_section() -> list[str]:
                 continue
             exposed.append(line.strip())
     lines.append(f"- Exposed listeners (non-loopback): {len(exposed)}")
-    for l in exposed[:8]:
-        lines.append(f"  `{l}`")
+    for listener in exposed[:8]:
+        lines.append(f"  `{listener}`")
     if not exposed:
         lines.append("  none - all services loopback/tailnet only")
 
@@ -187,7 +187,7 @@ def system_section() -> list[str]:
         lines.append(f"- Tailscale: status unavailable ({mask(ts[:80])})")
 
     serve = run(["tailscale", "serve", "status"], timeout=6)
-    lines.append(f"- Tailscale serve entries: {len([l for l in serve.splitlines() if 'https://' in l])}")
+    lines.append(f"- Tailscale serve entries: {len([entry for entry in serve.splitlines() if 'https://' in entry])}")
 
     disk = run(["df", "-h", "/home"]).splitlines()
     if len(disk) > 1:

@@ -84,7 +84,6 @@ def select_engine(
 ) -> EngineSpec:
     source = _utils.load_yaml(runtime.paths["render_profiles"])
     defaults = source.get("defaults", {})
-    fallback_order: list[str] = list(defaults.get("fallback_order") or [])
     local_first: bool = bool(defaults.get("local_first", True))
     allow_hosted: bool = bool(defaults.get("allow_hosted", False))
     max_cost: float = float(defaults.get("max_cost_usd", 0.50))

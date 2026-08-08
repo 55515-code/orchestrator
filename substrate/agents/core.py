@@ -297,7 +297,11 @@ def run_command_bounded(
     """Run a command with bounded-validation semantics (bounded attempts + deadline)."""
     if max_attempts < 1:
         raise ValueError("max_attempts must be >= 1")
+    import os
     import time
+
+    if env is None:
+        env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
 
     deadline = time.monotonic() + deadline_seconds
     attempts = 0
@@ -315,6 +319,8 @@ def run_command_bounded(
                 "returncode": last_returncode,
                 "stdout": last_stdout,
                 "stderr": last_stderr or "bounded validation deadline exceeded",
+                "command": list(command),
+                "workdir": str(workdir),
             }
         timeout = min(attempt_timeout_seconds, remaining)
         try:
@@ -350,6 +356,8 @@ def run_command_bounded(
         "returncode": last_returncode,
         "stdout": last_stdout,
         "stderr": last_stderr,
+        "command": list(command),
+        "workdir": str(workdir),
     }
 
 

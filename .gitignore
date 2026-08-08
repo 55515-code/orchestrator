@@ -84,6 +84,10 @@ linkedin-*.png
 android-swarm/.gradle/
 android-swarm/build/
 android-swarm/app/build/
+
+# Cloudflare Wrangler machine-specific caches
+.wrangler/
+node_modules/
 id_rsa
 id_rsa.pub
 id_ed25519

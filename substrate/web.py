@@ -9,6 +9,7 @@ import time
 import traceback
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
@@ -19,8 +20,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-
-logger = logging.getLogger(__name__)
 
 from .config_sync import (
     CONFIG_SYNC_TARGET_ENVS,
@@ -56,6 +55,8 @@ from .research import diagnose_openclaw, refresh_upstreams
 from .standards import standards_payload
 from .stats import dashboard_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
+
+logger = logging.getLogger(__name__)
 
 RUNTIME = SubstrateRuntime()
 ORCHESTRATOR = Orchestrator(RUNTIME)
@@ -110,8 +111,6 @@ SECURITY_HEADERS = {
         "connect-src 'self' ws: wss:;"
     ),
 }
-
-from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -1144,7 +1143,6 @@ async def stream_metrics():
         while True:
             try:
                 # Collect current metrics
-                dashboard_data = dashboard_payload(RUNTIME)
                 repos = RUNTIME.repositories()
                 runs = RUNTIME.db.list_recent_runs(limit=10)
                 
@@ -1382,8 +1380,7 @@ async def generate_whatsapp_qr():
         # Generate QR code using a simple SVG placeholder
         # In production, this would integrate with WhatsApp Business API
         # and generate a real QR code for WhatsApp Web linking
-        qr_data = f"whatsapp-connect:{whatsapp_plugin._config.get('phone_number_id', 'unknown')}"
-        
+
         # Create a simple SVG QR code placeholder
         # This is a visual representation - in production, use proper QR generation
         svg_qr = '''<svg width="280" height="280" xmlns="http://www.w3.org/2000/svg">
@@ -1453,6 +1450,7 @@ async def send_whatsapp_test(request: Request):
         return JSONResponse({
             "status": "success",
             "message": "Test message sent",
+            "received": message,
             "message_id": f"test_{int(time.time())}"
         })
     except Exception as e:

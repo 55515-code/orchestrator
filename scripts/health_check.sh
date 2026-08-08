@@ -82,6 +82,22 @@ else
 fi
 echo ""
 
+echo "--- Agent Worktree Disk Usage ---"
+if [ -d "state/agent-worktrees" ]; then
+    WT_SIZE=$(du -sh state/agent-worktrees 2>/dev/null | cut -f1)
+    WT_COUNT=$(find state/agent-worktrees -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+    echo "agent-worktrees: ${WT_SIZE:-0} across ${WT_COUNT} worktree(s)"
+    WT_KB=$(du -sk state/agent-worktrees 2>/dev/null | cut -f1)
+    if [ "${WT_KB:-0}" -gt 1048576 ]; then
+        echo "⚠️  agent-worktrees exceeds 1GB (${WT_SIZE}) — consider cleaning stale worktrees"
+    else
+        echo "✅ agent-worktrees disk usage: OK"
+    fi
+else
+    echo "✅ agent-worktrees: not present"
+fi
+echo ""
+
 echo "=== Summary ==="
 if [[ $ERRORS -eq 0 ]]; then
     echo "✅ All checks passed"
