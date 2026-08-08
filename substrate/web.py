@@ -1098,7 +1098,7 @@ async def stream_metrics():
                 # Collect current metrics
                 dashboard_data = dashboard_payload(RUNTIME)
                 repos = RUNTIME.repositories()
-                runs = RUNTIME.db.list_runs(limit=10)
+                runs = RUNTIME.db.list_recent_runs(limit=10)
                 
                 metrics = {
                     "metrics": {

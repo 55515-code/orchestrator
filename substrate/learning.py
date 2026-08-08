@@ -218,14 +218,33 @@ def record_resolution_note(
     return entry
 
 
-def learning_payload(runtime: SubstrateRuntime) -> dict[str, Any]:
-    """Return the full learning index augmented with runtime metadata."""
+def _bounded_items(mapping: dict[str, Any], limit: int) -> dict[str, Any]:
+    """Return *mapping* truncated to at most ``limit`` entries.
+
+    Insertion order is preserved. A non-positive ``limit`` is treated as
+    unbounded so callers that opt out of bounding always receive the full
+    set; when ``limit`` already covers every entry the original mapping is
+    returned unchanged to keep the common (small-index) case lossless.
+    """
+    if limit <= 0 or limit >= len(mapping):
+        return mapping
+    return dict(list(mapping.items())[:limit])
+
+
+def learning_payload(runtime: SubstrateRuntime, limit: int = 30) -> dict[str, Any]:
+    """Return the full learning index augmented with runtime metadata.
+
+    ``limit`` bounds the number of entries returned for the potentially
+    unbounded ``known_good`` and ``errors`` collections so that API consumers
+    receive a bounded payload. The aggregate ``tests`` counters are always
+    reported in full. The default mirrors the historical API default.
+    """
     index = _load_index(runtime.paths["learning_index"])
     return {
         "learning_index_path": str(runtime.paths["learning_index"]),
         "learning_log_path": str(runtime.paths["learning_log"]),
         "updated_at": index.get("updated_at"),
-        "known_good": index.get("known_good", {}),
-        "errors": index.get("errors", {}),
+        "known_good": _bounded_items(index.get("known_good", {}), limit),
+        "errors": _bounded_items(index.get("errors", {}), limit),
         "tests": index.get("tests", {"total": 0, "passed": 0, "failed": 0}),
     }
