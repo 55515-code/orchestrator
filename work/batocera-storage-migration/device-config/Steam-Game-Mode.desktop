@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Steam Game Mode
+Comment=Open the Steam Deck controller interface
+Exec=/userdata/system/add-ons/desktop/helpers/desktop-steam-session.sh -gamepadui
+Icon=/userdata/system/add-ons/steam/extra/icon.png
+Terminal=false
+Categories=Game;
+StartupNotify=false

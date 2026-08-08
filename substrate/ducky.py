@@ -4,20 +4,16 @@ import shutil
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any, Literal
 
+from . import _utils
 from .orchestrator import Orchestrator
 from .registry import SubstrateRuntime
 from .research import refresh_upstreams
 
 StepKind = Literal["scan", "refresh_sources", "run_task", "run_chain", "pinch_report"]
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,7 +191,7 @@ class DuckyPayloadEngine:
             "repo_slug": repo_slug,
             "stage": stage,
             "status": "queued",
-            "created_at": _utc_now(),
+            "created_at": _utils.utc_now(),
             "started_at": None,
             "finished_at": None,
             "error": None,
@@ -256,7 +252,7 @@ class DuckyPayloadEngine:
         lines = [
             "# Ducky Pinch Report",
             "",
-            f"- Generated (UTC): {_utc_now()}",
+            f"- Generated (UTC): {_utils.utc_now()}",
             f"- Base URL: {base_url}",
             f"- Repository: {repo_slug or '(not set)'}",
             "",
@@ -324,7 +320,7 @@ class DuckyPayloadEngine:
         allow_stage_skip: bool,
         port: int,
     ) -> None:
-        self._set_job(job_id, status="running", started_at=_utc_now())
+        self._set_job(job_id, status="running", started_at=_utils.utc_now())
         try:
             for index, step in enumerate(payload.steps):
                 self._set_step(job_id, index, status="running", details=None)
@@ -433,4 +429,4 @@ class DuckyPayloadEngine:
                     break
         finally:
             artifact = self._write_job_artifact(job_id)
-            self._set_job(job_id, artifact_path=artifact, finished_at=_utc_now())
+            self._set_job(job_id, artifact_path=artifact, finished_at=_utils.utc_now())

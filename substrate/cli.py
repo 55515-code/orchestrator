@@ -18,6 +18,7 @@ from .config_sync import (
     plan_config_sync,
     scan_config_sync,
 )
+from .cache_store import CacheStore
 from .community import run_community_cycle
 from .ducky import DuckyPayloadEngine
 from .integrations import (
@@ -27,19 +28,19 @@ from .integrations import (
     set_integration_mode,
 )
 from .learning import learning_payload, record_execution, record_resolution_note
+from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
+from .providers import SUPPORTED_PROVIDERS
 from .registry import SubstrateRuntime
 from .research import refresh_upstreams
 from .standards import standards_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
 
-ALLOWED_CHAIN_PROVIDERS = {"mock", "local", "anthropic", "ollama"}
-ALLOWED_AGENT_PROVIDERS = {"mock", "local", "anthropic", "ollama", "codex"}
+ALLOWED_CHAIN_PROVIDERS = set(SUPPORTED_PROVIDERS)
+ALLOWED_AGENT_PROVIDERS = set(SUPPORTED_PROVIDERS) | {"codex"}
 ALLOWED_STAGES = {"local", "hosted_dev", "production"}
 ALLOWED_MODES = {"observe", "mutate"}
-ALLOWED_OPENCLAW_DATA_CLASSES = {"synthetic", "redacted"}
-
-
+ALLOWED_OPENCLAW_DATA_CLASSES = set(OPENCLAW_ALLOWED_DATA_CLASSES)
 def _port_value(raw: str) -> int:
     try:
         value = int(raw)
@@ -681,6 +682,11 @@ def _build_parser() -> argparse.ArgumentParser:
             "Only policy-allowed classes are accepted at runtime."
         ),
     )
+    run_chain.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable the local AI-call cache for this run.",
+    )
 
     discount_swarm = subparsers.add_parser(
         "discount-swarm",
@@ -744,6 +750,39 @@ def _build_parser() -> argparse.ArgumentParser:
         "--repo", help="Optional repository slug for repo-specific recovery hints."
     )
 
+    cache_status = subparsers.add_parser(
+        "cache-status", help="Show local AI-call and task-cache statistics."
+    )
+    cache_status.add_argument(
+        "--kind", help="Filter entries by cache kind (e.g., ai_call, subtask, plan)."
+    )
+    cache_status.add_argument(
+        "--limit", type=int, default=50, help="Maximum entries to list."
+    )
+
+    cache_clear = subparsers.add_parser(
+        "cache-clear", help="Clear local cache entries by kind or tags."
+    )
+    cache_clear.add_argument(
+        "--kind", help="Remove entries of this kind."
+    )
+    cache_clear.add_argument(
+        "--tag", action="append", default=[], help="Remove entries with this tag."
+    )
+    cache_clear.add_argument(
+        "--older-than-days", type=int, help="Remove entries older than N days."
+    )
+
+    cache_prune = subparsers.add_parser(
+        "cache-prune", help="Prune expired and old cache entries."
+    )
+    cache_prune.add_argument(
+        "--max-age-days", type=int, default=30, help="Remove entries older than N days."
+    )
+    cache_prune.add_argument(
+        "--max-size-mb", type=float, help="Cap total cache size in MiB."
+    )
+
     return parser
 
 
@@ -794,6 +833,41 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "learning":
         print(json.dumps(learning_payload(runtime), indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "cache-status":
+        cache_root = runtime.paths.get("state", Path("state")) / "cache"
+        store = CacheStore(cache_root)
+        stats = store.stats()
+        entries = store.list_entries(kind=args.kind, limit=args.limit)
+        print(
+            json.dumps(
+                {"stats": stats, "entries": entries},
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        return 0
+
+    if args.command == "cache-clear":
+        cache_root = runtime.paths.get("state", Path("state")) / "cache"
+        store = CacheStore(cache_root)
+        removed = store.invalidate(
+            kind=args.kind,
+            tags=set(args.tag) if args.tag else None,
+            older_than_days=args.older_than_days,
+        )
+        print(json.dumps({"removed": removed}, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "cache-prune":
+        cache_root = runtime.paths.get("state", Path("state")) / "cache"
+        store = CacheStore(cache_root)
+        result = store.prune(
+            max_age_days=args.max_age_days,
+            max_size_mb=args.max_size_mb,
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     if args.command in {"config-sync-scan", "dotfiles-scan"}:
@@ -1139,6 +1213,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             extra_context_files=context_files,
             openclaw_manual_trigger=args.openclaw_manual_trigger,
             openclaw_data_class=args.openclaw_data_class,
+            use_cache=not args.no_cache,
         )
         print(json.dumps({"run_id": run_id}, indent=2))
         return 0

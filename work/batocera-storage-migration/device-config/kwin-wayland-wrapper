@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Plasma starts this standard KWin supervisor itself.  Keep KWin nested under
+# Batocera's Labwc and make its single output fill the active host display.
+exec /usr/bin/kwin_wayland_wrapper "$@" \
+    --wayland-display /run/wayland-0 --fullscreen true --no-lockscreen

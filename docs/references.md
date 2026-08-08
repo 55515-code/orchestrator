@@ -7,6 +7,13 @@ Core tools used in this substrate:
 - direnv: https://direnv.net/
 - LangChain: https://python.langchain.com/
 - LangGraph: https://langchain-ai.github.io/langgraph/
+- Hugging Face smolagents: https://huggingface.co/docs/smolagents
+- Hugging Face agent-collabs: https://github.com/huggingface/agent-collabs
+- Hugging Face Transformers: https://huggingface.co/docs/transformers
+- Hugging Face Hub: https://huggingface.co/docs/huggingface_hub
+- vLLM: https://docs.vllm.ai/
+- SGLang: https://docs.sglang.ai/
+- Hugging Face Optimum: https://huggingface.co/docs/optimum
 - MkDocs Material: https://squidfunk.github.io/mkdocs-material/
 - FastAPI: https://fastapi.tiangolo.com/
 - Caddy: https://caddyserver.com/docs/
@@ -29,6 +36,11 @@ Core tools used in this substrate:
 - Proton VPN for Business support: https://proton.me/support/business/vpn
 - Proton VPN business setup guide: https://proton.me/support/setup-vpn-business
 - Proton VPN business product page: https://proton.me/business/vpn
+
+- Caching and memoization:
+  - diskcache: https://diskcache.readthedocs.io/
+  - cachetools: https://cachetools.readthedocs.io/
+  - Joblib Memory: https://joblib.readthedocs.io/
 
 Security/device and Android standards used by this project:
 

@@ -5,6 +5,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
 
+from .providers import FREE_FIRST_PROVIDERS
 from .reliability import ExecutionTarget
 
 CapabilityClass = Literal["cpu", "gpu", "model", "api"]
@@ -49,13 +50,17 @@ def _normalize_capability(value: str | CapabilityClass | None) -> ResolvedCapabi
 
 def provider_capabilities(provider: str) -> tuple[ResolvedCapabilityClass, ...]:
     normalized = provider.strip().lower()
+    if normalized in {"local", "roo-router"}:
+        return ("cpu",)
     if normalized == "ollama":
         return ("cpu", "gpu")
+    if normalized in FREE_FIRST_PROVIDERS:
+        return ("api",)
     return ("api",)
 
 
 def infer_capability_for_provider(provider: str) -> CapabilityClass:
-    if provider.strip().lower() == "ollama":
+    if provider.strip().lower() in {"local", "roo-router", "ollama"}:
         return "cpu"
     return "api"
 
@@ -740,4 +745,3 @@ def scheduler_from_chain_defaults(
         config=config,
         scale_hooks=scale_hooks,
     )
-

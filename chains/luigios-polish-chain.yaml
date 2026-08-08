@@ -1,0 +1,60 @@
+name: luigios-polish-chain
+description: Sequential chain for LuigiOS production polish through the substrate 3x3 lifecycle with dedicated development agents.
+
+defaults:
+  provider: local
+  models:
+    local: roo-router
+
+context_files:
+  - LuigiOS/docs/ROADMAP.md
+  - LuigiOS/docs/PRODUCT_PRINCIPLES.md
+  - LuigiOS/docs/AUTOMATION.md
+  - LuigiOS/docs/RECOVERY.md
+  - LuigiOS/docs/RELEASING.md
+  - LuigiOS/docs/TESTING.md
+  - LuigiOS/docs/SECURE_IMPLEMENTATION.md
+  - LuigiOS/docs/DISTRIBUTION.md
+  - LuigiOS/docs/BASE_OS_DECISION.md
+  - LuigiOS/docs/BRANDING.md
+  - LuigiOS/product/cachyos/product.json
+  - LuigiOS/product/cachyos/packages.x86_64
+  - LuigiOS/product/cachyos/services.json
+  - LuigiOS/branding/design-tokens-v1.json
+  - LuigiOS/branding/manifest-v2.json
+  - LuigiOS/branding/ART_DIRECTION.md
+  - LuigiOS/branding/MASCOT.md
+  - LuigiOS/branding/cosmic-rice/apply-user.sh
+  - LuigiOS/branding/cosmic-rice/luigios-dark.ron
+  - LuigiOS/branding/cosmic-rice/icon-theme/index.theme
+  - LuigiOS/branding/cosmic-rice/vscode-theme/settings.json
+  - LuigiOS/branding/cosmic-rice/vscode-theme/package.json
+  - LuigiOS/tests/test_product.py
+  - LuigiOS/tests/test_recovery.py
+  - LuigiOS/tools/ci-check
+  - LuigiOS/tools/beta-automation
+  - LuigiOS/tools/polish/asset-optimize
+  - LuigiOS/tools/polish/brand-consistency
+  - LuigiOS/tools/polish/design-tokens-validate
+  - LuigiOS/tools/qa/accessibility-check
+  - LuigiOS/tools/qa/release-readiness
+  - LuigiOS/tools/qa/functional-test
+  - LuigiOS/VERSION
+
+steps:
+  - id: diagnose
+    prompt: prompts/luigios/01_diagnose.md
+  - id: prioritize
+    prompt: prompts/luigios/02_prioritize.md
+  - id: refine_brand
+    prompt: prompts/luigios/03_refine_brand.md
+  - id: refine_desktop
+    prompt: prompts/luigios/04_refine_desktop.md
+  - id: refine_assets
+    prompt: prompts/luigios/05_refine_assets.md
+  - id: cleanup_legacy
+    prompt: prompts/luigios/06_cleanup_legacy.md
+  - id: validate
+    prompt: prompts/luigios/07_validate.md
+  - id: report
+    prompt: prompts/luigios/08_report.md

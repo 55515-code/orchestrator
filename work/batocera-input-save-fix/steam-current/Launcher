@@ -1,0 +1,140 @@
+#!/bin/bash
+export DISPLAY=:0.0
+export RIM_ALLOW_ROOT=1
+export HOME=/userdata/system/add-ons/steam
+
+# Auto-detect dedicated GPU on multi-GPU systems (no-op on single-GPU)
+# Only set DRI_PRIME if the non-boot GPU has more VRAM than the boot GPU.
+# This handles both laptop (iGPU=boot, dGPU=offload) and desktop (dGPU=boot,
+# iGPU=secondary) configurations correctly.
+GPU_COUNT=$(ls -d /sys/class/drm/card[0-9]* 2>/dev/null | wc -l)
+if [ "$GPU_COUNT" -gt 1 ]; then
+  boot_vram=0
+  for card in /sys/class/drm/card[0-9]*/; do
+    if [ "$(cat "${card}device/boot_vga" 2>/dev/null)" = "1" ]; then
+      boot_vram=$(cat "${card}device/mem_info_vram_total" 2>/dev/null || echo 0)
+      break
+    fi
+  done
+  for card in /sys/class/drm/card[0-9]*/; do
+    if [ "$(cat "${card}device/boot_vga" 2>/dev/null)" = "0" ]; then
+      card_vram=$(cat "${card}device/mem_info_vram_total" 2>/dev/null || echo 0)
+      if [ "$card_vram" -gt "$boot_vram" ]; then
+        pci_raw=$(grep PCI_SLOT_NAME "${card}device/uevent" 2>/dev/null | cut -d= -f2)
+        if [ -n "$pci_raw" ]; then
+          export DRI_PRIME="pci-$(echo "$pci_raw" | tr ':.' '__')"
+          break
+        fi
+      fi
+    fi
+  done
+fi
+
+# Nvidia driver file fix: Batocera uses arch-suffixed and production-suffixed names
+# but RunImage's get_nvidia_driver_image expects generic names when building the
+# .nv.drv driver cache. Some files are symlinks on Batocera (find -type f skips
+# them). Copy canonical-named regular files to /etc/ so find /etc/ picks them up.
+# /etc/ is tmpfs on Batocera — copies must run on every launch.
+# Flag .nvidia_icd_fixed_v2 forces one-time .nv.drv rebuild when fix is applied.
+_NV_ICD_SRC="/usr/share/vulkan/icd.d/nvidia_icd.x86_64.json"
+_NV_LAYERS_SRC="/usr/share/vulkan/implicit_layer.d/nvidia_production_layers.json"
+_NV_EGL_SRC="/usr/share/glvnd/egl_vendor.d/10_nvidia_production.json"
+_NV_DRV_DIR="${HOME}/.local/share/runimage_nvidia"
+if [ -f "$_NV_ICD_SRC" ]; then
+    cp -f "$_NV_ICD_SRC" /etc/nvidia_icd.json 2>/dev/null || true
+    [ -f "$_NV_LAYERS_SRC" ] && cp -f "$_NV_LAYERS_SRC" /etc/nvidia_layers.json 2>/dev/null || true
+    [ -f "$_NV_EGL_SRC" ] && cp -f "$_NV_EGL_SRC" /etc/10_nvidia.json 2>/dev/null || true
+    _NV_ICD_FLAG="$_NV_DRV_DIR/.nvidia_icd_fixed_v2"
+    if [ ! -f "$_NV_ICD_FLAG" ]; then
+        rm -f "$_NV_DRV_DIR"/*.nv.drv "$_NV_DRV_DIR"/.nvidia_icd_fixed 2>/dev/null
+        mkdir -p "$_NV_DRV_DIR" && touch "$_NV_ICD_FLAG"
+    fi
+fi
+unset _NV_ICD_SRC _NV_LAYERS_SRC _NV_EGL_SRC _NV_DRV_DIR _NV_ICD_FLAG
+
+# Check if Big Picture mode is requested
+BIG_PICTURE_MODE="$1"
+echo "Launcher called with parameter: '$BIG_PICTURE_MODE'"
+
+# Path to the steam launcher generator script
+LAUNCHER_SCRIPT="/userdata/system/add-ons/steam/create-steam-launchers.sh"
+LIB_FIX="/userdata/system/add-ons/steam/lbfix.sh"
+
+# Start the launcher generator in the background
+if [[ -f "$LAUNCHER_SCRIPT" ]]; then
+  echo "Starting Steam launcher generator..."
+  "$LAUNCHER_SCRIPT" &
+  LAUNCHER_PID=$!
+  echo "Launcher generator running with PID: $LAUNCHER_PID"
+fi
+
+# Start the libfix in the background
+if [[ -f "$LIB_FIX" ]]; then
+  echo "Starting Lib Fix..."
+  "$LIB_FIX" &
+  LIB_PID=$!
+  echo "Lib Fix running with PID: $LIB_PID"
+fi
+
+# Launch Steam in background
+ulimit -H -n 819200 && ulimit -S -n 819200 && sysctl -w fs.inotify.max_user_watches=8192000 vm.max_map_count=2147483642 fs.file-max=8192000 >/dev/null 2>&1
+
+if [[ "$BIG_PICTURE_MODE" == *"gamepadui"* ]] || [[ "$BIG_PICTURE_MODE" == "-gamepadui" ]]; then
+  echo "Launching Steam in Big Picture Mode..."
+  /userdata/system/add-ons/steam/steam -gamepadui &
+elif [[ "$BIG_PICTURE_MODE" == *"bigpicture"* ]] || [[ "$BIG_PICTURE_MODE" == "-bigpicture" ]]; then
+  echo "Launching Steam in Big Picture Mode..."
+  /userdata/system/add-ons/steam/steam -bigpicture &
+elif [[ "$BIG_PICTURE_MODE" == steam://* ]]; then
+  echo "Launching Steam target: $BIG_PICTURE_MODE"
+  /userdata/system/add-ons/steam/steam "$BIG_PICTURE_MODE" &
+elif [[ "$BIG_PICTURE_MODE" == "-silent" ]]; then
+  echo "Launching Steam silently for desktop Steam Input..."
+  /userdata/system/add-ons/steam/steam -silent &
+  exit 0
+else
+  echo "Launching Steam in normal mode..."
+  /userdata/system/add-ons/steam/steam &
+fi
+
+echo "Steam launched. Waiting for window to appear..."
+
+# Wait for Steam window to appear
+TIMEOUT=240
+ELAPSED=0
+STEAM_FOUND=0
+
+while [ $ELAPSED -lt $TIMEOUT ]; do
+  if wmctrl -l | grep -qi "Steam"; then
+    STEAM_FOUND=1
+    break
+  fi
+  sleep 1
+  ELAPSED=$((ELAPSED + 1))
+done
+
+if [ $STEAM_FOUND -eq 0 ]; then
+  echo "Steam window did not appear within $TIMEOUT seconds. Exiting..."
+  exit 1
+fi
+
+echo "Steam window detected. Monitoring until it closes..."
+
+# Monitor - wait until Steam window disappears
+while wmctrl -l | grep -qi "Steam"; do
+  sleep 2
+done
+
+echo "Steam window closed."
+
+# Kill the launcher generator first
+if [[ -n "$LAUNCHER_PID" ]]; then
+  echo "Stopping launcher generator (PID: $LAUNCHER_PID)..."
+  kill "$LAUNCHER_PID" 2>/dev/null
+  echo "Launcher generator stopped."
+fi
+
+# Request a clean shutdown from this Steam installation.
+echo "Requesting Steam shutdown..."
+/userdata/system/add-ons/steam/steam -shutdown >/dev/null 2>&1 || true
+curl http://127.0.0.1:1234/reloadgames

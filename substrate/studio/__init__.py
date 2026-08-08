@@ -1,2 +1,0 @@
-"""Codex Scheduler Studio package."""
-

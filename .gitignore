@@ -70,3 +70,12 @@ work/**/device-current/
 work/**/device-config/*.png
 work/**/device-config/*.new
 work/**/device-config/*.test
+
+# Kilo local config/agents (contains environment-specific agent configs)
+.kilo/
+
+# iPhone panel / LinkedIn screenshots (personal data)
+linkedin-*.png
+*.png
+*.jpg
+*.jpeg

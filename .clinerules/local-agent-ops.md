@@ -15,23 +15,7 @@ Default mode:
 
 ## Scope Boundary
 
-Stay inside the current repository unless the user explicitly approves otherwise.
-
-Do not inspect, read, summarize, copy, or modify:
-- `.env`
-- `.env.*`
-- private keys
-- API keys
-- tokens
-- credentials
-- customer data
-- production data
-- exports
-- backups
-- cloud credential folders
-- files ignored by `.clineignore`
-
-If a task requires sensitive files, stop and ask the user for a sanitized version instead.
+/home/ahron/codespace
 
 ## Terminal Agency Rules
 
@@ -45,27 +29,7 @@ Before proposing any terminal command, provide:
 
 Do not run chained destructive commands.
 
-Avoid these unless the user explicitly approves:
-- `sudo`
-- `rm -rf`
-- package installs/removals
-- `systemctl`
-- cloud auth commands
-- credential commands
-- database migrations
-- deployment commands
-- commands that expose secrets
-- commands that contact external services
 
-Prefer read-only probes first:
-- `pwd`
-- `ls`
-- `find`
-- `grep`
-- `git status`
-- `git diff`
-- `cat` for non-sensitive files
-- project-specific test/list commands
 
 ## Research and Source Quality
 

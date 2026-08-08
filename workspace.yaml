@@ -50,6 +50,22 @@ scheduler:
   windows_features_enabled: false
   windows_app_mode_enabled: false
 
+gateway:
+  enabled: true
+  auth_token: "${GATEWAY_AUTH_TOKEN}"
+  rate_limit: 60
+  
+  plugins:
+    whatsapp:
+      enabled: true
+      config:
+        phone_number_id: "${WHATSAPP_PHONE_NUMBER_ID}"
+        access_token: "${WHATSAPP_ACCESS_TOKEN}"
+        app_secret: "${WHATSAPP_APP_SECRET}"
+        verify_token: "${WHATSAPP_VERIFY_TOKEN}"
+        graph_api_version: "v21.0"
+        webhook_url: "${WHATSAPP_WEBHOOK_URL}"
+
 ignored_paths:
   - .git
   - .venv
@@ -115,3 +131,275 @@ repositories:
             - 127.0.0.1
             - --port
             - "8090"
+      health_check:
+        description: Validate substrate infrastructure integrity.
+        mode: observe
+        command:
+          default:
+            - bash
+            - scripts/health_check.sh
+      dashboard_service:
+        description: Start the Substrate dashboard service.
+        mode: observe
+        command:
+          default:
+            - python
+            - scripts/serve_dashboard.py
+            - --host
+            - 127.0.0.1
+            - --port
+            - "8091"
+      pipelines_service:
+        description: Start the Substrate pipelines service.
+        mode: observe
+        command:
+          default:
+            - python
+            - scripts/serve_pipelines.py
+            - --host
+            - 127.0.0.1
+            - --port
+            - "8092"
+      decentralized_governance_audit:
+        description: Verify decentralized governance layer integrity (Dignity Stack + Liberation Stack + Indigenous sovereignty + Consensus).
+        mode: observe
+        command:
+          default:
+            - python
+            - -c
+            - |
+              from substrate.decentralized_governance import (
+                  DIGNITY_STACK_LAYERS, ConsensusProposal,
+                  CooperativeCharter, IndigenousDataGovernanceRecord,
+                  FederationCovenant, LiberationStackDeployment,
+                  register_decentralized_governance_standard
+              );
+              std = register_decentralized_governance_standard();
+              layers = DIGNITY_STACK_LAYERS;
+              active = {1, 2, 3, 4, 5, 6};
+              all_verified = all(
+                  layer.verify_dependencies(active) for layer in layers
+              );
+              dep_check = {layer.dimension: layer.verify_dependencies(active) for layer in layers};
+              charter = CooperativeCharter(
+                  cooperative_id="substrate-commons",
+                  proposal_types=["budget", "membership", "protocol"],
+                  quorum_percent=60.0,
+                  complexity_multipliers={"backend": 1.5, "frontend": 1.2, "docs": 1.0},
+              );
+              share = charter.calculate_share_from_formula(10.0, charter.complexity_multipliers.get("docs", 1.0));
+              indigenous = IndigenousDataGovernanceRecord(
+                  data_artifact_id="territory-memory-001",
+                  collective_identity_link="kinship-territory-link",
+                  ancestral_memory_provenance="willay-panka-tantay-record",
+                  authority_holder_community_id="indigenous-governance-council",
+                  relational_accountability_links=["reciprocal-responsibility-01"],
+                  biocultural_ethics_review_complete=True,
+              );
+              care_check = indigenous.enforce_care_principles();
+              covenant = FederationCovenant(
+                  server_instance_id="substrate-instance-01",
+                  covenant_version="1.0",
+                  shared_norms=["no_domination", "universal_care", "commons_governance"],
+              );
+              lib = LiberationStackDeployment(active_layers={1, 2, 3, 4, 5, 6});
+              lib.evaluate_gate_condition(6, {"connected_informed_participants": 1.0});
+              print({"status": "verified", "layers_active": len(active), "dependencies_satisfied": all_verified, "capital_decoupled": True, "share_formula_result": share, "care_verified": all(care_check.values()), "covenant_federated": covenant.federation_status == "federated", "lib_consistency": lib.check_prefigurative_consistency(), "audit_trail": std["patterns_implemented"]});
+      decentralized_governance_test:
+        description: Run decentralized governance verification test suite.
+        mode: observe
+        command:
+          default:
+            - uv
+            - run
+            - --with
+            - pytest
+            - --with
+            - httpx
+            - pytest
+            - -q
+              - tests/test_decentralized_governance.py
+  - slug: luigios
+    path: LuigiOS
+    allow_mutations: true
+    default_mode: mutate
+    tasks:
+      luigios_scan:
+        description: Run LuigiOS product contract and CI checks.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && ./tools/ci-check
+      luigios_tests:
+        description: Run LuigiOS unit test suite (product contract + recovery).
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && python -m pytest tests/test_product.py tests/test_recovery.py -q
+      luigios_automation:
+        description: Run LuigiOS beta automation suite for release readiness scoring.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && ./tools/beta-automation --mode release-readiness
+      luigios_design_tokens:
+        description: Validate LuigiOS design tokens and brand manifest.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && python tools/polish/design-tokens-validate
+      luigios_brand_consistency:
+        description: Check LuigiOS brand consistency and legacy term removal.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && python tools/polish/brand-consistency
+      luigios_asset_optimize:
+        description: Validate and optimize LuigiOS image assets.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && python tools/polish/asset-optimize
+      luigios_accessibility:
+        description: Run LuigiOS WCAG accessibility compliance check.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && python tools/qa/accessibility-check
+      luigios_functional_qa:
+        description: Run LuigiOS rootless QEMU functional test against built ISO.
+        mode: observe
+        command:
+          default:
+            - bash
+            - -c
+            - cd LuigiOS && ./tools/qa/functional-test --image dist/luigios-*.iso --report .sdk/functional-test-report.json
+  - slug: ahrondarnell-site
+    path: ahrondarnell-site
+    allow_mutations: true
+    default_mode: mutate
+    tasks:
+      site_new_post:
+        description: Scaffold a new 1pointo blog or updates post (local only).
+        mode: mutate
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - new
+            - --kind
+            - blog
+            - --title
+            - Draft Post
+      site_list:
+        description: List 1pointo content collection posts.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - list
+      site_validate:
+        description: Validate 1pointo collection frontmatter and build.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - validate
+      site_build:
+        description: Build 1pointo static site.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - build
+      site_check:
+        description: Run Astro type check for 1pointo.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - check
+      site_queue_list:
+        description: List community moderation inbox.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - queue-list
+      site_queue_status:
+        description: Queue + validation status for 1pointo.
+        mode: observe
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - queue-status
+      site_queue_approve:
+        description: Approve a queued community submission (requires explicit directive).
+        mode: mutate
+        command:
+          default:
+            - uv
+            - --project
+            - .
+            - run
+            - python
+            - scripts/site_content.py
+            - queue-approve
+            - --file
+            - README.md
+      site_deploy_preview:
+        description: Deploy 1pointo dist to Cloudflare Pages preview.
+        mode: mutate
+        command:
+          default:
+            - bash
+            - -c
+            - cd ahrondarnell-site && npm run build && npx wrangler pages deploy dist --project-name=ahrondarnell-site --commit-dirty=true

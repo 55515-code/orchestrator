@@ -15,9 +15,11 @@ from typing import Any
 import yaml
 from langchain_core.prompts import ChatPromptTemplate
 
+from .cache_store import CacheStore
 from .environment import platform_key
 from .learning import record_execution
 from .models import TaskConfig
+from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model
 from .reliability import (
     CheckpointStore,
     ExecutionTarget,
@@ -38,6 +40,7 @@ from .resource_orchestration import (
     scheduler_from_chain_defaults,
 )
 from .research import run_openclaw_research_assist, source_facts_ready
+from .task_cache import TaskCache
 
 
 _BOUNDED_VALIDATION_HINTS = (
@@ -51,21 +54,7 @@ _BOUNDED_VALIDATION_HINTS = (
 
 
 def _build_model(provider: str, model: str):
-    if provider == "local":
-        pass  # using local router
-
-        return None  # delegated to local roo-router
-    if provider == "anthropic":
-        from langchain_anthropic import ChatAnthropic
-
-        return ChatAnthropic(model=model, temperature=0)
-    if provider == "ollama":
-        from langchain_ollama import ChatOllama
-
-        return ChatOllama(model=model, temperature=0)
-    if provider == "mock":
-        return None
-    raise ValueError(f"Unsupported provider: {provider}")
+    return build_model(provider, model)
 
 
 def _render_prompt(template_path: Path, state: dict[str, Any]) -> str:
@@ -134,12 +123,18 @@ class Orchestrator:
         runtime: SubstrateRuntime,
         *,
         scale_hooks: ElasticScaleHooks | None = None,
+        task_cache: TaskCache | None = None,
     ) -> None:
         self.runtime = runtime
         reliability_root = self.runtime.paths["memory"] / "reliability"
         self._checkpoint_store = CheckpointStore(reliability_root / "checkpoints")
         self._idempotency_store = IdempotencyStore(reliability_root / "idempotency")
         self._scale_hooks = scale_hooks or ElasticScaleHooks()
+        if task_cache is None:
+            cache_root = self.runtime.paths.get("state", Path("state")) / "cache"
+            self._task_cache = TaskCache(CacheStore(cache_root))
+        else:
+            self._task_cache = task_cache
 
     def _new_run_id(self) -> str:
         return uuid.uuid4().hex
@@ -204,7 +199,7 @@ class Orchestrator:
         if not fallback_order:
             fallback_order = [
                 provider
-                for provider in ["local", "anthropic", "ollama", "mock"]
+                for provider in FREE_FIRST_PROVIDER_ORDER
                 if provider != primary_provider
             ]
 
@@ -214,7 +209,9 @@ class Orchestrator:
             if isinstance(provider, str) and isinstance(model, str)
         }
         provider_models.setdefault(primary_provider, primary_model)
-        provider_models.setdefault("mock", "mock-model")
+        for provider, default_model in DEFAULT_PROVIDER_MODELS.items():
+            if provider != "openai":
+                provider_models.setdefault(provider, default_model)
 
         return ProviderFailoverHook(
             fallback_order=fallback_order,
@@ -314,11 +311,36 @@ class Orchestrator:
         failover_hook: ProviderFailoverHook,
         idempotency_key: str,
         initial_target: ExecutionTarget,
+        use_cache: bool = True,
     ) -> tuple[str, ExecutionTarget]:
         current_target = initial_target
         failover_attempt = 0
         while True:
             try:
+                cache_key: str | None = None
+                cached_response: str | None = None
+                if use_cache:
+                    cache_key = self._task_cache._call_key(
+                        current_target.provider,
+                        current_target.model,
+                        rendered_prompt,
+                        None,
+                    )
+                    cached_response = self._task_cache.store.get(cache_key)
+
+                if cached_response is not None:
+                    self.runtime.db.add_event(
+                        run_id=run_id,
+                        level="info",
+                        message=f"Cache hit for step '{step_id}'",
+                        payload={
+                            "step": step_id,
+                            "provider": current_target.provider,
+                            "model": current_target.model,
+                            "cache_key": cache_key,
+                        },
+                    )
+                    return cached_response, current_target
 
                 def _invoke() -> str:
                     llm = _build_model(current_target.provider, current_target.model)
@@ -353,6 +375,14 @@ class Orchestrator:
                         },
                     ),
                 )
+                if use_cache and cache_key is not None:
+                    self._task_cache.store.set(
+                        cache_key,
+                        response,
+                        kind="ai_call",
+                        summary=self._task_cache.summarize(response),
+                        tags={"ai_call", current_target.provider, current_target.model, step_id},
+                    )
                 return response, current_target
             except Exception as exc:  # noqa: BLE001
                 failure = classify_failure(exc)
@@ -387,6 +417,7 @@ class Orchestrator:
                         "error": str(exc),
                     },
                 )
+                failover_hook.mark_provider_unhealthy(current_target.provider)
                 next_target = failover_hook.next_target(
                     run_id=run_id,
                     step_id=step_id,
@@ -606,6 +637,7 @@ class Orchestrator:
         openclaw_manual_trigger: bool = False,
         openclaw_data_class: str = "synthetic",
         run_id: str | None = None,
+        use_cache: bool = True,
     ) -> str:
         repo = self.runtime.resolve_repo(repo_slug)
         self._assert_stage_policy(
@@ -1013,6 +1045,7 @@ class Orchestrator:
                             failover_hook=failover_hook,
                             idempotency_key=idempotency_key,
                             initial_target=effective_target,
+                            use_cache=use_cache,
                         )
 
                     output_path.write_text(response, encoding="utf-8")
@@ -1162,7 +1195,7 @@ class Orchestrator:
 
         repo = self.runtime.resolve_repo(spec.repo_slug)
         scheduled_run_id = spec.run_id or self._new_run_id()
-        temp_task_id = f"studio_scheduled_{uuid.uuid4().hex[:12]}"
+        temp_task_id = f"_scheduled_{uuid.uuid4().hex[:12]}"
         repo.tasks[temp_task_id] = TaskConfig(
             id=temp_task_id,
             description=spec.description,

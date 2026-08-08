@@ -10,8 +10,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-import yaml
 
+from . import _utils
 from .registry import SubstrateRuntime
 
 TargetEnv = Literal["linux", "mac", "windows"]
@@ -60,10 +60,6 @@ POWERSHELL_ENV_RE = re.compile(
     r"^\$env:([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$", re.IGNORECASE
 )
 TEMPLATE_TOKEN_RE = re.compile(r"\{\{([A-Z0-9_]+)\}\}")
-
-
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def _default_index() -> dict[str, Any]:
@@ -249,25 +245,8 @@ def _load_runtime_index(runtime: SubstrateRuntime) -> dict[str, Any]:
 
 def _save_index(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload["updated_at"] = _utc_now()
+    payload["updated_at"] = _utils.utc_now()
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    if not isinstance(payload, dict):
-        raise ValueError(f"{path.name} must be a YAML mapping.")
-    return payload
-
-
-def _ensure_list(payload: Any, field: str) -> list[Any]:
-    if payload is None:
-        return []
-    if not isinstance(payload, list):
-        raise ValueError(f"{field} must be a list.")
-    return payload
 
 
 def _dedupe_paths(paths: list[Path]) -> list[Path]:
@@ -316,12 +295,12 @@ def _normalize_path_templates(raw_paths: Any, *, field: str) -> list[str]:
 
 def _normalize_catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
     path = _profiles_path(runtime)
-    source = _load_yaml(path)
+    source = _utils.load_yaml(path)
     if not source:
         return _default_catalog()
 
     sources_payload: list[dict[str, str]] = []
-    for raw_source in _ensure_list(source.get("sources"), "sources"):
+    for raw_source in _utils.ensure_list(source.get("sources"), "sources"):
         if not isinstance(raw_source, dict):
             raise ValueError("sources items must be mappings.")
         source_id = str(raw_source.get("id") or "").strip()
@@ -338,14 +317,14 @@ def _normalize_catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
         )
 
     profiles_payload: list[dict[str, Any]] = []
-    for raw_profile in _ensure_list(source.get("profiles"), "profiles"):
+    for raw_profile in _utils.ensure_list(source.get("profiles"), "profiles"):
         if not isinstance(raw_profile, dict):
             raise ValueError("profiles items must be mappings.")
         profile_id = str(raw_profile.get("id") or "").strip()
         if not profile_id:
             raise ValueError("profiles[].id is required.")
         entries_payload: list[dict[str, Any]] = []
-        for raw_entry in _ensure_list(
+        for raw_entry in _utils.ensure_list(
             raw_profile.get("entries"), f"profiles[{profile_id}].entries"
         ):
             if not isinstance(raw_entry, dict):
@@ -374,7 +353,7 @@ def _normalize_catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
                     "path_templates": templates,
                     "target_envs": [
                         str(item)
-                        for item in _ensure_list(
+                        for item in _utils.ensure_list(
                             raw_entry.get("target_envs"), "target_envs"
                         )
                     ]
@@ -390,10 +369,10 @@ def _normalize_catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
                 "entries": entries_payload,
                 "sources": [
                     str(item)
-                    for item in _ensure_list(raw_profile.get("sources"), "sources")
+                    for item in _utils.ensure_list(raw_profile.get("sources"), "sources")
                 ],
                 "tags": [
-                    str(item) for item in _ensure_list(raw_profile.get("tags"), "tags")
+                    str(item) for item in _utils.ensure_list(raw_profile.get("tags"), "tags")
                 ],
             }
         )
@@ -620,7 +599,7 @@ def _entry_metadata(
         "last_backup_checksum": existing.get("last_backup_checksum")
         if existing
         else None,
-        "last_seen_at": _utc_now(),
+        "last_seen_at": _utils.utc_now(),
         "deployment_family": family,
         "profile_id": str(
             hint_payload.get("profile_id")
@@ -702,7 +681,7 @@ def _merge_entries(
             entries[source_path] = existing
 
     index["entries"] = entries
-    index["last_scan_at"] = _utc_now()
+    index["last_scan_at"] = _utils.utc_now()
     return index
 
 
@@ -1058,7 +1037,7 @@ def backup_config_sync(
         updated_entry["exists"] = True
         updated_entry["checksum"] = checksum
         updated_entry["backup_count"] = int(updated_entry.get("backup_count", 0)) + 1
-        updated_entry["last_backup_at"] = _utc_now()
+        updated_entry["last_backup_at"] = _utils.utc_now()
         updated_entry["last_backup_path"] = str(destination)
         updated_entry["last_backup_checksum"] = checksum
         index.setdefault("entries", {})[str(source)] = updated_entry
@@ -1073,7 +1052,7 @@ def backup_config_sync(
         )
 
     if results:
-        index["last_backup_at"] = _utc_now()
+        index["last_backup_at"] = _utils.utc_now()
         index.setdefault("history", []).append(
             {
                 "ts": index["last_backup_at"],
@@ -1086,7 +1065,7 @@ def backup_config_sync(
         _save_index(_index_path(runtime), index)
 
     manifest = {
-        "generated_at": _utc_now(),
+        "generated_at": _utils.utc_now(),
         "backup_root": str(backup_root),
         "entries": results,
         "profiles": profile_ids or [],
@@ -1315,7 +1294,7 @@ def deploy_config_sync(
         )
 
     manifest = {
-        "generated_at": _utc_now(),
+        "generated_at": _utils.utc_now(),
         "target_env": normalized_target,
         "directive": directive_text,
         "line_endings_mode": normalized_line_endings,

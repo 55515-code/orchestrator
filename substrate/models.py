@@ -7,6 +7,9 @@ from typing import Literal
 
 RunMode = Literal["observe", "mutate"]
 RunType = Literal["chain", "task"]
+OPENCLAW_ALLOWED_DATA_CLASSES = frozenset({"synthetic", "redacted"})
+OPENCLAW_ALLOWED_STAGES = frozenset({"local", "hosted_dev"})
+OPENCLAW_ALLOWED_PASSES = frozenset({"research"})
 
 
 def utc_now_iso() -> str:
@@ -116,3 +119,4 @@ class WorkspaceConfig:
     auto_discovery_roots: list[Path] = field(default_factory=list)
     auto_discovery_max_depth: int = 2
     ignored_paths: list[str] = field(default_factory=list)
+    gateway: dict[str, Any] = field(default_factory=dict)

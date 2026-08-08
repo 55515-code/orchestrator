@@ -3,23 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import yaml
-
+from . import _utils
 from .registry import SubstrateRuntime
 
 DEFAULT_STANDARDS_FILE = "standards.yaml"
 
 
-def _load_yaml(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    if not isinstance(payload, dict):
-        raise ValueError(f"{path.name} must be a YAML mapping.")
-    return payload
-
-
 def _ensure_mapping(payload: Any, field: str) -> dict[str, str]:
+    """Return *payload* as a string-to-string mapping or raise a descriptive error."""
     if payload is None:
         return {}
     if not isinstance(payload, dict):
@@ -28,14 +19,6 @@ def _ensure_mapping(payload: Any, field: str) -> dict[str, str]:
     for key, value in payload.items():
         normalized[str(key)] = str(value)
     return normalized
-
-
-def _ensure_list(payload: Any, field: str) -> list[Any]:
-    if payload is None:
-        return []
-    if not isinstance(payload, list):
-        raise ValueError(f"{field} must be a list.")
-    return payload
 
 
 def _normalize_standard(raw: dict[str, Any], *, track_id: str) -> dict[str, Any]:
@@ -88,7 +71,7 @@ def _catalog_payload(
     pass_sequence: list[str],
     track_id: str | None = None,
 ) -> dict[str, Any]:
-    source = _load_yaml(root / DEFAULT_STANDARDS_FILE)
+    source = _utils.load_yaml(root / DEFAULT_STANDARDS_FILE)
     defaults = (
         source.get("defaults") if isinstance(source.get("defaults"), dict) else {}
     )
@@ -102,7 +85,7 @@ def _catalog_payload(
     )
 
     principles: list[dict[str, str]] = []
-    for raw_principle in _ensure_list(source.get("principles"), "principles"):
+    for raw_principle in _utils.ensure_list(source.get("principles"), "principles"):
         if not isinstance(raw_principle, dict):
             raise ValueError("principles items must be mappings.")
         principles.append(
@@ -114,7 +97,7 @@ def _catalog_payload(
 
     tracks_payload: list[dict[str, Any]] = []
     standards_total = 0
-    for raw_track in _ensure_list(source.get("tracks"), "tracks"):
+    for raw_track in _utils.ensure_list(source.get("tracks"), "tracks"):
         if not isinstance(raw_track, dict):
             raise ValueError("tracks items must be mappings.")
         current_track_id = str(raw_track.get("id") or "").strip()
@@ -137,7 +120,7 @@ def _catalog_payload(
         }
 
         standards: list[dict[str, Any]] = []
-        for raw_standard in _ensure_list(
+        for raw_standard in _utils.ensure_list(
             raw_track.get("standards"), f"tracks[{current_track_id}].standards"
         ):
             if not isinstance(raw_standard, dict):
@@ -166,7 +149,7 @@ def _catalog_payload(
                 "description": str(raw_track.get("description") or ""),
                 "tags": [
                     str(item)
-                    for item in _ensure_list(
+                    for item in _utils.ensure_list(
                         raw_track.get("tags"), f"tracks[{current_track_id}].tags"
                     )
                 ],

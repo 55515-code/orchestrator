@@ -140,6 +140,44 @@ profiles:
           manual:
             - Install Docker and run the official MobSF container workflow.
 
+  - id: ai_agent_frameworks
+    name: AI Agent Frameworks and Inference
+    description: Hugging Face agent frameworks and open-source LLM serving engines for local and hosted inference.
+    tools:
+      - id: smolagents
+        name: smolagents
+        binary: smolagent
+        source_url: https://huggingface.co/docs/smolagents
+        install:
+          uv_tool:
+            - uv tool install smolagents
+          pipx:
+            - pipx install smolagents
+          manual:
+            - Install smolagents from PyPI; the package provides the smolagent and webagent CLI commands.
+      - id: vllm
+        name: vLLM
+        binary: vllm
+        source_url: https://docs.vllm.ai/
+        install:
+          uv_tool:
+            - uv tool install vllm
+          pipx:
+            - pipx install vllm
+          manual:
+            - Install vLLM from PyPI or follow the official installation guide for your CUDA/hardware version.
+      - id: sglang
+        name: SGLang
+        binary: sglang
+        source_url: https://docs.sglang.ai/
+        install:
+          uv_tool:
+            - uv tool install sglang
+          pipx:
+            - pipx install sglang
+          manual:
+            - Install SGLang from PyPI or follow the official installation guide for your CUDA/hardware version.
+
   - id: detection_content
     name: Detection and Template Content
     description: Maintained template/rule ecosystems for reusable detection and testing content.

@@ -35,7 +35,18 @@ The dashboard and API expose this as execution guidance so implementation stays 
   - JADX
   - MobSF
   - Frida
-  - OWASP MASVS/MASTG alignment
+  - OWASP MASVS/MASTG
+- AI agent orchestration:
+  - Hugging Face smolagents (code-first agents, multi-agent hierarchies)
+  - Hugging Face agent-collabs (multi-agent collaboration template)
+- LLM serving:
+  - vLLM (default production serving recommendation)
+  - SGLang (shared-prefix / agentic workloads)
+- Local automation optimization:
+  - Substrate local cache workflow (AI-call, subtask, and plan caching)
+  - diskcache (disk-backed persistent memoization)
+  - cachetools (in-process TTL/LRU/LFU caching)
+  - Joblib Memory (deterministic computation memoization)
 
 ## CLI Usage
 

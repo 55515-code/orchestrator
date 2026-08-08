@@ -1,12 +1,18 @@
+"""Execution learning index for the Local Agent Substrate.
+
+This module records run outcomes to a local log and JSON index so that the
+orchestrator can recognize known-good commands and recurring error signatures.
+"""
+
 from __future__ import annotations
 
 import hashlib
 import json
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from . import _utils
 from .registry import SubstrateRuntime
 
 MAX_SNIPPET = 1200
@@ -16,50 +22,46 @@ UUID_TOKEN_RE = re.compile(
 )
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def _truncate(value: str | None, size: int = MAX_SNIPPET) -> str:
+    """Return *value* trimmed to *size* characters, or an empty string."""
     if not value:
         return ""
     return value.strip()[:size]
 
 
 def _command_key(command: str | list[str]) -> str:
+    """Normalize a command into a single string for indexing."""
     if isinstance(command, list):
         return " ".join(command).strip()
     return command.strip()
 
 
 def _error_signature(command_key: str, error_text: str) -> str:
+    """Create a stable, de-identified signature for an error text.
+
+    UUIDs and numeric tokens are replaced before hashing so that functionally
+    identical errors do not create duplicate index entries. SHA-256 is used
+    for collision resistance even though the stored digest is truncated.
+    """
     normalized = error_text.lower()
     normalized = UUID_TOKEN_RE.sub("<uuid>", normalized)
     normalized = NUMERIC_TOKEN_RE.sub("<n>", normalized)
-    digest = hashlib.sha1(
+    digest = hashlib.sha256(
         f"{command_key}|{normalized[:800]}".encode("utf-8")
     ).hexdigest()
     return digest[:16]
 
 
 def _load_index(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {
-            "version": 1,
-            "updated_at": None,
-            "known_good": {},
-            "errors": {},
-            "tests": {"total": 0, "passed": 0, "failed": 0},
-        }
-    payload = json.loads(path.read_text(encoding="utf-8") or "{}")
-    if not isinstance(payload, dict):
-        return {
-            "version": 1,
-            "updated_at": None,
-            "known_good": {},
-            "errors": {},
-            "tests": {"total": 0, "passed": 0, "failed": 0},
-        }
+    """Load the learning index, returning an empty default if missing/invalid."""
+    default = {
+        "version": 1,
+        "updated_at": None,
+        "known_good": {},
+        "errors": {},
+        "tests": {"total": 0, "passed": 0, "failed": 0},
+    }
+    payload = _utils.load_json(path, default=default)
     payload.setdefault("known_good", {})
     payload.setdefault("errors", {})
     payload.setdefault("tests", {"total": 0, "passed": 0, "failed": 0})
@@ -67,12 +69,13 @@ def _load_index(path: Path) -> dict[str, Any]:
 
 
 def _save_index(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload["updated_at"] = _utc_now()
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    """Persist the learning index to *path*."""
+    payload["updated_at"] = _utils.utc_now()
+    _utils.write_json(path, payload)
 
 
 def _append_log(path: Path, event: dict[str, Any]) -> None:
+    """Append a single JSON line to the learning log at *path*."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, ensure_ascii=False) + "\n")
@@ -81,6 +84,7 @@ def _append_log(path: Path, event: dict[str, Any]) -> None:
 def _repo_change_snapshot(
     runtime: SubstrateRuntime, repo_slug: str | None
 ) -> dict[str, Any] | None:
+    """Capture a minimal repository snapshot for the learning log."""
     if not repo_slug:
         return None
     try:
@@ -113,9 +117,29 @@ def record_execution(
     note: str | None = None,
     classify_as_test: bool = False,
 ) -> dict[str, Any]:
+    """Record a single execution outcome to the learning log and index.
+
+    Args:
+        runtime: The substrate runtime used to resolve repo metadata.
+        run_type: Category of run (e.g. ``task``, ``chain``).
+        run_id: Optional run identifier.
+        repo_slug: Optional repository slug.
+        stage: Lifecycle stage (``local``, ``hosted_dev``, ``production``).
+        command: Command string or argument list.
+        status: Outcome string such as ``success`` or ``error``.
+        exit_code: Shell exit code if applicable.
+        stdout: Optional captured standard output.
+        stderr: Optional captured standard error.
+        artifact: Optional artifact path or identifier.
+        note: Optional free-form note.
+        classify_as_test: Whether to increment the test ledger counters.
+
+    Returns:
+        A payload describing the updated learning index entry.
+    """
     command_line = _command_key(command)
     event = {
-        "ts": _utc_now(),
+        "ts": _utils.utc_now(),
         "run_type": run_type,
         "run_id": run_id,
         "repo_slug": repo_slug,
@@ -147,28 +171,29 @@ def record_execution(
         entry["stage"] = stage
         entry["last_success_at"] = event["ts"]
         entry["success_count"] = int(entry.get("success_count", 0)) + 1
-        entry["last_run_id"] = run_id
-        entry["artifact"] = artifact
-        entry["stdout_snippet"] = event["stdout_snippet"]
-        entry["change_snapshot"] = event["change_snapshot"]
+        if stdout:
+            entry["last_stdout_snippet"] = event["stdout_snippet"]
+        if stderr:
+            entry["last_stderr_snippet"] = event["stderr_snippet"]
+        if artifact:
+            entry["last_artifact"] = artifact
         known_good[command_line] = entry
         if classify_as_test:
             tests["passed"] = int(tests.get("passed", 0)) + 1
-    else:
-        error_text = _truncate(stderr or note or "unknown error", 2400)
-        signature = _error_signature(command_line, error_text)
+    elif status == "error" and stderr:
+        signature = _error_signature(command_line, stderr)
         entry = errors.get(signature, {})
         entry["signature"] = signature
         entry["command"] = command_line
+        entry["run_type"] = run_type
         entry["repo_slug"] = repo_slug
         entry["stage"] = stage
-        entry["first_seen"] = entry.get("first_seen") or event["ts"]
-        entry["last_seen"] = event["ts"]
+        entry["last_seen_at"] = event["ts"]
         entry["count"] = int(entry.get("count", 0)) + 1
-        entry["last_run_id"] = run_id
-        entry["artifact"] = artifact
-        entry["error_snippet"] = error_text
-        entry["change_snapshot"] = event["change_snapshot"]
+        entry["stderr_snippet"] = event["stderr_snippet"]
+        entry["exit_codes"] = list(
+            set(entry.get("exit_codes", [])) | ({exit_code} if exit_code is not None else set())
+        )
         errors[signature] = entry
         if classify_as_test:
             tests["failed"] = int(tests.get("failed", 0)) + 1
@@ -180,49 +205,27 @@ def record_execution(
 def record_resolution_note(
     runtime: SubstrateRuntime,
     *,
-    signature: str,
-    resolution: str,
-    path_reference: str | None = None,
+    command: str | list[str],
+    note: str,
 ) -> dict[str, Any]:
+    """Attach a free-form resolution note to a known-good command entry."""
     index = _load_index(runtime.paths["learning_index"])
-    errors = index["errors"]
-    if signature not in errors:
-        raise KeyError(f"Unknown error signature: {signature}")
-    notes = errors[signature].get("resolution_notes")
-    if not isinstance(notes, list):
-        notes = []
-    note = {
-        "ts": _utc_now(),
-        "resolution": resolution.strip(),
-        "path_reference": path_reference,
-    }
-    notes.append(note)
-    errors[signature]["resolution_notes"] = notes
+    command_line = _command_key(command)
+    entry = index["known_good"].setdefault(command_line, {"command": command_line})
+    notes = entry.setdefault("resolution_notes", [])
+    notes.append({"ts": _utils.utc_now(), "note": note})
     _save_index(runtime.paths["learning_index"], index)
-    return note
+    return entry
 
 
-def learning_payload(runtime: SubstrateRuntime, *, limit: int = 30) -> dict[str, Any]:
+def learning_payload(runtime: SubstrateRuntime) -> dict[str, Any]:
+    """Return the full learning index augmented with runtime metadata."""
     index = _load_index(runtime.paths["learning_index"])
-    known_good_entries = sorted(
-        index["known_good"].values(),
-        key=lambda item: item.get("last_success_at") or "",
-        reverse=True,
-    )[:limit]
-    error_entries = sorted(
-        index["errors"].values(),
-        key=lambda item: item.get("last_seen") or "",
-        reverse=True,
-    )[:limit]
     return {
-        "summary": {
-            "known_good_total": len(index["known_good"]),
-            "error_signatures_total": len(index["errors"]),
-            "tests": index.get("tests", {}),
-            "updated_at": index.get("updated_at"),
-        },
-        "known_good": known_good_entries,
-        "errors": error_entries,
-        "log_path": str(runtime.paths["learning_log"]),
-        "index_path": str(runtime.paths["learning_index"]),
+        "learning_index_path": str(runtime.paths["learning_index"]),
+        "learning_log_path": str(runtime.paths["learning_log"]),
+        "updated_at": index.get("updated_at"),
+        "known_good": index.get("known_good", {}),
+        "errors": index.get("errors", {}),
+        "tests": index.get("tests", {"total": 0, "passed": 0, "failed": 0}),
     }

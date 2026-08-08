@@ -5,8 +5,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-import yaml
-
+from . import _utils
 from .registry import SubstrateRuntime
 
 DEFAULT_TOOL_PROFILES_FILE = "tool_profiles.yaml"
@@ -24,24 +23,8 @@ MANAGER_BINARIES = {
 }
 
 
-def _load_yaml(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    if not isinstance(payload, dict):
-        raise ValueError(f"{path.name} must be a YAML mapping.")
-    return payload
-
-
-def _ensure_list(payload: Any, field: str) -> list[Any]:
-    if payload is None:
-        return []
-    if not isinstance(payload, list):
-        raise ValueError(f"{field} must be a list.")
-    return payload
-
-
 def _manager_availability() -> dict[str, bool]:
+    """Return the availability of each package manager binary."""
     availability: dict[str, bool] = {}
     for manager, binary in MANAGER_BINARIES.items():
         if binary is None:
@@ -87,8 +70,8 @@ def _preferred_manager(
 
 
 def _normalize_profiles(root: Path) -> dict[str, Any]:
-    source = _load_yaml(root / DEFAULT_TOOL_PROFILES_FILE)
-    manager_priority_raw = _ensure_list(
+    source = _utils.load_yaml(root / DEFAULT_TOOL_PROFILES_FILE)
+    manager_priority_raw = _utils.ensure_list(
         source.get("manager_priority"), "manager_priority"
     )
     manager_priority = [str(item) for item in manager_priority_raw] or list(
@@ -96,14 +79,14 @@ def _normalize_profiles(root: Path) -> dict[str, Any]:
     )
 
     profiles: list[dict[str, Any]] = []
-    for raw_profile in _ensure_list(source.get("profiles"), "profiles"):
+    for raw_profile in _utils.ensure_list(source.get("profiles"), "profiles"):
         if not isinstance(raw_profile, dict):
             raise ValueError("profiles items must be mappings.")
         profile_id = str(raw_profile.get("id") or "").strip()
         if not profile_id:
             raise ValueError("profile id is required.")
         tools: list[dict[str, Any]] = []
-        for raw_tool in _ensure_list(
+        for raw_tool in _utils.ensure_list(
             raw_profile.get("tools"), f"profiles[{profile_id}].tools"
         ):
             if not isinstance(raw_tool, dict):

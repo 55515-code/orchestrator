@@ -17,6 +17,66 @@ projects:
     docs_url: https://langchain-ai.github.io/langgraph/
     rationale: Structured orchestration for agent workflows with durable state patterns.
 
+  - slug: smolagents
+    name: smolagents
+    repo_url: https://github.com/huggingface/smolagents
+    docs_url: https://huggingface.co/docs/smolagents
+    rationale: Minimal code-first agent framework from Hugging Face with CodeAgent, ToolCallingAgent, and multi-agent hierarchies.
+
+  - slug: agent-collabs
+    name: agent-collabs
+    repo_url: https://github.com/huggingface/agent-collabs
+    docs_url: https://huggingface.co/learn/agents-course
+    rationale: Multi-agent collaboration template with FastAPI backend, message board, taskforces, leaderboard, and eval-space.
+
+  - slug: transformers
+    name: Hugging Face Transformers
+    repo_url: https://github.com/huggingface/transformers
+    docs_url: https://huggingface.co/docs/transformers
+    rationale: Core library for loading and running open-source models; foundation for local inference integrations.
+
+  - slug: huggingface_hub
+    name: Hugging Face Hub
+    repo_url: https://github.com/huggingface/huggingface_hub
+    docs_url: https://huggingface.co/docs/huggingface_hub
+    rationale: Python client for the Hugging Face Hub; model, dataset, and Space discovery and downloads.
+
+  - slug: vllm
+    name: vLLM
+    repo_url: https://github.com/vllm-project/vllm
+    docs_url: https://docs.vllm.ai/
+    rationale: High-throughput open-source LLM serving engine with PagedAttention; Hugging Face recommends for production deployments.
+
+  - slug: sglang
+    name: SGLang
+    repo_url: https://github.com/sgl-project/sglang
+    docs_url: https://docs.sglang.ai/
+    rationale: Structured generation and LLM serving with RadixAttention; strong for agentic and shared-prefix workloads.
+
+  - slug: optimum
+    name: Optimum
+    repo_url: https://github.com/huggingface/optimum
+    docs_url: https://huggingface.co/docs/optimum
+    rationale: Hardware optimization toolkit for Transformers, Diffusers, and Sentence Transformers across ONNX, OpenVINO, ExecuTorch, and NVIDIA backends.
+
+  - slug: diskcache
+    name: diskcache
+    repo_url: https://github.com/grantjenks/python-diskcache
+    docs_url: https://diskcache.readthedocs.io/
+    rationale: Disk and file-backed Python cache with SQLite metadata, tag eviction, and memoization recipes.
+
+  - slug: cachetools
+    name: cachetools
+    repo_url: https://github.com/tkem/cachetools
+    docs_url: https://cachetools.readthedocs.io/
+    rationale: Lightweight in-memory Python caching with TTL, LRU, and LFU policies.
+
+  - slug: joblib
+    name: Joblib
+    repo_url: https://github.com/joblib/joblib
+    docs_url: https://joblib.readthedocs.io/
+    rationale: Disk-based function memoization and parallel computing toolkit from the scikit-learn ecosystem.
+
   - slug: fastapi
     name: FastAPI
     repo_url: https://github.com/fastapi/fastapi

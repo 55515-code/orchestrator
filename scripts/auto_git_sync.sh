@@ -3,6 +3,9 @@
 # Substrate Autonomous Git Sync Daemon
 # Automates repository initialization, staging, committing, and pushing.
 # Designed to run alongside other daemon loops without conflicts.
+#
+# Safety: runs a secret scan before committing and refuses to push if the
+# scan fails. Ignores directories listed in .gitignore (e.g. .kilo/).
 
 set -e
 
@@ -63,6 +66,13 @@ fi
 
 # 4. Stage and Commit
 git add -A
+
+# 4a. Secret scan gate — refuse to commit if secret-like material is staged
+if ! bash scripts/scan_secrets.sh "$WORKSPACE_DIR"; then
+    echo "[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] SECRET SCAN BLOCKED COMMIT. Unstaging and aborting sync."
+    git reset 2>/dev/null || true
+    exit 1
+fi
 
 # Check if there are any changes to commit
 if git diff --staged --quiet; then
