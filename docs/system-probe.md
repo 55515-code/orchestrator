@@ -1,6 +1,6 @@
 # System Probe
 
-- Generated (UTC): 2026-08-08T04:01:37Z
+- Generated (UTC): 2026-08-08T04:25:34Z
 - Host: cachyos-x8664
 - User: ahron
 - Working directory: /home/ahron/codespace
@@ -22,8 +22,8 @@ RAM total: 62.5GB
 ## Disk
 ```text
 Disk total: 472.9GB
-Disk used: 381.1GB
-Disk free: 80.3GB
+Disk used: 381.0GB
+Disk free: 80.4GB
 ```
 
 ## Network
@@ -41,7 +41,7 @@ Detected: nvidia:8192MB
 
 ### NVIDIA GPUs
 ```text
-  [0] NVIDIA RTX A2000 8GB Laptop GPU | VRAM 8192MB (free 7842MB) | util 0%
+  [0] NVIDIA RTX A2000 8GB Laptop GPU | VRAM 8192MB (free 7842MB) | util 1%
 ```
 
 ## Core Tooling Snapshot
