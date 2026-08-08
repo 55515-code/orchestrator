@@ -223,7 +223,7 @@ repositories:
             - httpx
             - pytest
             - -q
-              - tests/test_decentralized_governance.py
+            - tests/test_decentralized_governance.py
   - slug: luigios
     path: LuigiOS
     allow_mutations: true

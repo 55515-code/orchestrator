@@ -367,6 +367,35 @@ def _git(
         return None
 
 
+def ensure_python_env(work_root: Path, *, timeout: float = 600.0) -> bool:
+    """Best-effort warm-up of the uv-managed environment inside a worktree.
+
+    Environment preparation happens outside bounded validation so that the
+    bounded test attempts start with a ready interpreter. Returns True when
+    the environment is usable (or nothing needs doing).
+    """
+    import shutil
+
+    if not (work_root / "pyproject.toml").exists():
+        return True
+    if not shutil.which("uv"):
+        return True
+    if (work_root / ".venv").exists():
+        return True
+    try:
+        completed = subprocess.run(
+            ["uv", "sync", "--quiet"],
+            cwd=work_root,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return completed.returncode == 0
+
+
 def is_git_repo(path: Path) -> bool:
     if not path.exists():
         return False
@@ -448,17 +477,36 @@ def cleanup_stale_agent_artifacts(
     if not is_git_repo(repo_path):
         return {"removed_worktrees": [], "removed_branches": []}
 
-    if worktrees_root.exists():
-        for entry in sorted(worktrees_root.iterdir()):
-            if not entry.is_dir():
+    listing = _git(repo_path, "worktree", "list", "--porcelain")
+    if listing is not None and listing.returncode == 0:
+        worktree_path: str | None = None
+        worktree_branch: str | None = None
+        entries: list[tuple[str, str]] = []
+        for line in listing.stdout.splitlines():
+            if line.startswith("worktree "):
+                if worktree_path and worktree_branch:
+                    entries.append((worktree_path, worktree_branch))
+                worktree_path = line[len("worktree ") :].strip()
+                worktree_branch = None
+            elif line.startswith("branch refs/heads/"):
+                worktree_branch = line[len("branch refs/heads/") :].strip()
+        if worktree_path and worktree_branch:
+            entries.append((worktree_path, worktree_branch))
+
+        resolved_root = worktrees_root.resolve()
+        for path_text, branch_name in entries:
+            if not branch_name.startswith(AGENT_BRANCH_PREFIX):
                 continue
-            epoch = _branch_committer_epoch(repo_path, entry.name.replace("-", "/", 1))
-            if epoch is None:
-                epoch = int(entry.stat().st_mtime)
-            if epoch > cutoff_epoch:
+            entry_path = Path(path_text)
+            try:
+                entry_path.resolve().relative_to(resolved_root)
+            except (ValueError, OSError):
                 continue
-            _git(repo_path, "worktree", "remove", "--force", str(entry), timeout=60.0)
-            removed_worktrees.append(entry.name)
+            epoch = _branch_committer_epoch(repo_path, branch_name)
+            if epoch is None or epoch > cutoff_epoch:
+                continue
+            _git(repo_path, "worktree", "remove", "--force", path_text, timeout=60.0)
+            removed_worktrees.append(branch_name)
 
     completed = _git(
         repo_path,

@@ -244,7 +244,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
                     f"- #{number}: {title} (labels: {labels or 'none'})"
                     + (" — possible duplicate" if duplicate else "")
                 )
-                lines.append(f"  - Draft reply: acknowledge and triage (human review required).")
+                lines.append("  - Draft reply: acknowledge and triage (human review required).")
             lines.append("")
     else:
         lines.append(f"- Skipped: {github_triage.get('error')}")

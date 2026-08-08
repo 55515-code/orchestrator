@@ -18,6 +18,7 @@ from .core import (
     agent_branch_name,
     bounded_validation_limits,
     check_action_permission,
+    ensure_python_env,
     prepare_agent_worktree,
     run_command_bounded,
 )
@@ -198,6 +199,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
 
     test_command, test_task_id = _find_test_command(repo)
     limits = bounded_validation_limits(runtime)
+    ensure_python_env(work_root)
     if test_command is not None:
         test_detail = run_command_bounded(
             test_command,
@@ -249,6 +251,38 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
             "actions": actions,
         }
 
+    diff_output = _git(work_root, "diff") or None
+    diff_text = diff_output.stdout if diff_output else ""
+    report_dir = runtime.paths["research"] / agent.repo_slug
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f"{date_str}-update-failure.md"
+    report_path.write_text(
+        "\n".join(
+            [
+                f"# Update agent failure report — {agent.repo_slug} ({date_str})",
+                "",
+                f"- Branch: `{branch_name}`",
+                f"- Commit allowed: `{allowed}` ({reason})",
+                f"- Test detail: `{test_detail.get('reason')}` "
+                f"(returncode={test_detail.get('returncode')}, attempts={test_detail.get('attempts')})",
+                "",
+                "## stderr tail",
+                "",
+                "```",
+                str(test_detail.get("stderr") or "")[-2000:],
+                "```",
+                "",
+                "## Uncommitted diff",
+                "",
+                "```diff",
+                diff_text[-6000:],
+                "```",
+            ]
+        ).rstrip()
+        + "\n",
+        encoding="utf-8",
+    )
+    outputs.append(str(report_path.relative_to(runtime.root)))
     _git(work_root, "checkout", "--", ".")
     _git(work_root, "clean", "-fd")
     actions.append(

@@ -64,11 +64,43 @@ The following paths are ignored by the substrate and should not be included in a
 | File | Purpose |
 |------|---------|
 | `workspace.yaml` | Repository/task registry and policy |
+| `agents.yaml` | Agent roster (roles, cadence, autonomy tiers, providers) |
 | `standards.yaml` | Trusted standards catalog (Ducky, Kali, ATT&CK, Android) |
 | `tool_profiles.yaml` | Optional tool assembly profiles |
 | `integrations.yaml` | External service integration registry |
 | `upstreams.yaml` | Source-project catalog for evidence-based decisions |
 | `config_sync_profiles.yaml` | Portable config backup/sync profiles |
+
+### Agent Automation
+
+A roster of scheduled agents in `agents.yaml` performs research, development,
+update, and moderation work across substrate-core, LuigiOS, and
+ahrondarnell-site. Implementation lives in `substrate/agents/`.
+
+**Roster:**
+- `research-agent` (per repo, daily, Tier 0) — refreshes upstream source facts, writes evidence notes to `.research/<repo>/`, satisfies `require_source_facts_before_mutation`.
+- `dev-agent` (per repo, daily, Tier 1) — picks a backlog issue (GitHub via `gh`, else local TODO scan), generates a patch via `chains/local-agent-chain.yaml` in an isolated worktree (`agent/<repo>/dev-<date>` branch), runs bounded validation, commits only when tests are green.
+- `update-agent` (per repo, weekly, Tier 1) — dependency bumps (`uv lock --upgrade`, `npm audit fix`), polish workflows, docs freshness checks; commits only when tests are green.
+- `content-moderator` (ahrondarnell-site, hourly, Tier 1) — triages the site queue; auto-applies hold/needs-changes marks, writes rationale to `.research/site-moderation/`; approvals/rejections remain human-only.
+- `community-manager` (cross-repo, every 4h, Tier 1) — WhatsApp gateway status, GitHub issue/PR triage drafts, community simulation cycles (`.research/community-sim/`); never sends outbound messages.
+
+**Autonomy tiers:**
+- Tier 0: always automatic (notes, reports, branches, test runs).
+- Tier 1: automatic only when validation is green (agent-branch commits, queue hold/needs-changes).
+- Tier 2: always requires an explicit human directive (merges, deploys, publishing, queue approvals, outbound replies). Promoting an action (e.g. Tier 2 → Tier 1) requires editing the tier checks in `substrate/agents/` and the agent's `autonomy_tier` in `agents.yaml` with explicit approval.
+
+**Commands:**
+- `uv run python scripts/substrate_cli.py agent-cycle` — run every due agent sequentially (used by the systemd timer).
+- `uv run python scripts/substrate_cli.py agent-run --role <role> --repo <slug> [--force] [--directive <text>]` — run one agent manually.
+- `uv run python scripts/substrate_cli.py agent-status` — show roster, last runs, next due times.
+
+**Scheduler:** `scripts/install_agent_timer.sh` installs the
+`substrate-agent-timer` systemd user timer (every 5 minutes; `agent-cycle`
+evaluates cadence internally). Logs: `journalctl --user -u
+substrate-agent-timer`. Rollback: `systemctl --user stop
+substrate-agent-timer.timer`. Idempotency keys in `state/agent-idempotency/`
+prevent duplicate runs; stale agent branches/worktrees (>30 days) are cleaned
+on each cycle. Agent state: `state/agent-state.json`.s |
 
 ### Safety Rules
 

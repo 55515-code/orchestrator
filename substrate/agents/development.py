@@ -20,6 +20,7 @@ from .core import (
     agent_branch_name,
     bounded_validation_limits,
     check_action_permission,
+    ensure_python_env,
     prepare_agent_worktree,
     run_command_bounded,
 )
@@ -340,6 +341,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
 
     test_command, test_task_id = _find_test_command(repo)
     limits = bounded_validation_limits(runtime)
+    ensure_python_env(work_root)
     tests_green = False
     test_detail: dict[str, Any] = {}
     if test_command is not None:
