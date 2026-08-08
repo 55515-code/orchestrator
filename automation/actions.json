@@ -59,6 +59,26 @@
     "headscale_links": {
       "command": "tailscale status --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); self_node=d.get(\"SelfNode\",{}); print(\"Hostname:\", self_node.get(\"HostName\")); print(\"Tailscale IPs:\", self_node.get(\"Addresses\")); print(\"MagicDNS:\", self_node.get(\"Name\"))' 2>/dev/null || echo 'tailscale not running'",
       "description": "Show Tailscale self-node info + MagicDNS"
+    },
+    "proton_drive_list": {
+      "command": "rclone lsd protondrive: 2>&1 | head -20",
+      "description": "List top-level Proton Drive folders"
+    },
+    "proton_drive_status": {
+      "command": "rclone listremotes 2>&1 | grep protondrive && echo 'protondrive configured' || echo 'protondrive NOT configured - run automation/proton-setup.sh'",
+      "description": "Check Proton Drive remote status"
+    },
+    "proton_vpn_status": {
+      "command": "protonvpn-cli status 2>&1 || echo 'protonvpn-cli not installed'",
+      "description": "Show Proton VPN connection status"
+    },
+    "proton_mail_status": {
+      "command": "systemctl --user is-active protonmail-bridge 2>&1; ss -tlnp 2>/dev/null | grep -E ':1143|:1025' | head -3 || echo 'mail bridge not running'",
+      "description": "Check Proton Mail Bridge status"
+    },
+    "proton_setup": {
+      "command": "bash ~/codespace/automation/proton-setup.sh",
+      "description": "Interactive Proton setup helper (drive/mail/vpn)"
     }
   }
 }
