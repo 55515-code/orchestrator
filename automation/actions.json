@@ -131,6 +131,11 @@
     "snapshot_init_r2": {
       "command": "CF_R2_ACCOUNT_ID=${CF_R2_ACCOUNT_ID:-} bash ~/codespace/scripts/backup_snapshot.sh --init 2>&1 | tail -8",
       "description": "Initialize restic repo on Cloudflare R2 (set CF_R2_* env first)"
+    },
+    "security_report": {
+      "description": "Run daily security report (system, code, public sites, public repos); writes to memory/security-reports/ and emails if enabled",
+      "command": "python3 ~/codespace/scripts/daily_security_report.py",
+      "cwd": "."
     }
   }
 }

@@ -42,6 +42,11 @@ EMAIL_FROM_CANDIDATES = [
 SMTP_HOST = os.environ.get("SECURITY_REPORT_SMTP_HOST", "127.0.0.1")
 SMTP_PORT = int(os.environ.get("SECURITY_REPORT_SMTP_PORT", "1025"))
 
+# Email is opt-in via ~/.config/substrate/security_report.json:
+#   {"email": {"enabled": true, "to": "...", "from": "...",
+#              "smtp_host": "127.0.0.1", "smtp_port": 1025}}
+CONFIG_PATH = Path(os.environ.get("SECURITY_REPORT_CONFIG", str(Path.home() / ".config/substrate/security_report.json")))
+
 REPOS = [
     ("orchestrator", CODESPACE),
     ("ahrondarnell-site", CODESPACE / "ahrondarnell-site"),
@@ -133,14 +138,22 @@ def scan_lines(lines: list[str]) -> list[str]:
 def system_section() -> list[str]:
     lines: list[str] = []
     lines.append("## Local system")
-    listeners = run(["ss", "-tulpn"])
-    exposed = [
-        l for l in listeners.splitlines()
-        if re.search(r"(0\.0\.0\.0:|:::|192\.168\.)", l)
-    ]
+    listeners = run(["ss", "-tulpn"]).splitlines()[1:]
+    SAFE_UDP_PORTS = {"5353", "5355", "41641", "5353:*", "5355:*", "41641:*"}
+    exposed = []
+    for line in listeners:
+        cols = line.split()
+        if len(cols) < 5:
+            continue
+        local = cols[3]
+        if local.startswith(("0.0.0.0:", "[::]:", "192.168.")):
+            port = local.split(":")[-1]
+            if cols[0] == "udp" and port in SAFE_UDP_PORTS:
+                continue
+            exposed.append(line.strip())
     lines.append(f"- Exposed listeners (non-loopback): {len(exposed)}")
     for l in exposed[:8]:
-        lines.append(f"  `{l.strip()}`")
+        lines.append(f"  `{l}`")
     if not exposed:
         lines.append("  none - all services loopback/tailnet only")
 
@@ -186,7 +199,7 @@ def system_section() -> list[str]:
         lines.append(f"- Load avg: {', '.join(load[:3])}")
 
     jerr = run(["journalctl", "--user", "-p", "err", "--since", "24 hours ago", "--no-pager"]).splitlines()
-    jerr = [e for e in jerr if not re.search(r"cosmic-comp|shortcuts custom config|EGL|eglInitialize", e)]
+    jerr = [e for e in jerr if not re.search(r"cosmic-comp|cosmic-launcher|CosmicTheme|com\.system76|shortcuts custom config|EGL|eglInitialize|Failed to create watcher", e)]
     if jerr:
         lines.append(f"- User-journal errors (24h, cosmic/EGL noise filtered): {len(jerr)}")
         for e in jerr[:3]:
@@ -332,6 +345,23 @@ def compose(state: dict) -> str:
 
 
 def send_email(report: str) -> str:
+    cfg: dict = {}
+    try:
+        cfg = json.loads(CONFIG_PATH.read_text())
+    except Exception:
+        pass
+    email_cfg = cfg.get("email", {})
+    if not email_cfg.get("enabled", False):
+        return ("email disabled in ~/.config/substrate/security_report.json "
+                "(enable with {\"email\": {\"enabled\": true}}); report written locally")
+
+    to = email_cfg.get("to") or EMAIL_TO
+    smtp_host = email_cfg.get("smtp_host", SMTP_HOST)
+    smtp_port = int(email_cfg.get("smtp_port", SMTP_PORT))
+    from_candidates = [
+        email_cfg.get("from", ""),
+        *[f for f in EMAIL_FROM_CANDIDATES if f and f != email_cfg.get("from", "")],
+    ]
     msg = (
         "From: Substrate Security <{frm}>\n"
         "To: {to}\n"
@@ -341,16 +371,16 @@ def send_email(report: str) -> str:
         "Content-Type: text/plain; charset=utf-8\n\n"
         "{body}"
     )
-    for frm in [f for f in EMAIL_FROM_CANDIDATES if f]:
+    for frm in [f for f in from_candidates if f]:
         try:
-            s = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10)
+            s = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
             s.ehlo()
             s.starttls()
             s.ehlo()
             s.sendmail(
                 frm,
-                [EMAIL_TO],
-                msg.format(frm=frm, to=EMAIL_TO, date=datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z"), body=report),
+                [to],
+                msg.format(frm=frm, to=to, date=datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z"), body=report),
             )
             s.quit()
             return f"email sent from {frm} via bridge"
@@ -371,7 +401,7 @@ def main() -> int:
     print(report)
     result = send_email(report)
     print("\n== " + result)
-    if not result.startswith("email sent"):
+    if "FAILED" in result:
         return 1
     return 0
 
