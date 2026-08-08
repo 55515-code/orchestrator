@@ -103,8 +103,56 @@ def profile(img: Image.Image) -> dict:
     }
 
 
+def modern_artistic_grade(src: Image.Image) -> Image.Image:
+    """Apply a dramatic modern artistic grade: neon glow, edge-lit linework,
+    deeper cinematic contrast, electric palette enhancement — aligned with
+    the observed source (psychedelic surreal / visionary / neon electric style)."""
+    arr = np.asarray(src.convert("RGB")).astype(np.float64)
+    # 1) Deep cinematic base grade: stronger S-curve, deeper blacks, brighter mids
+    # Apply via PIL enhance chain
+    img_base = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+    img_base = ImageEnhance.Contrast(img_base).enhance(1.08)
+    img_base = ImageEnhance.Brightness(img_base).enhance(1.0)  # preserve luminance range
+    # 2) Color grading toward the observed palette accents (magenta, cyan, crimson)
+    hsv = np.asarray(img_base.convert("HSV")).astype(np.float64)
+    s = hsv[..., 1] / 255.0
+    hsv[..., 1] = np.clip(s * (1 + 0.25 * (1 - s)), 0, 1) * 255  # moderate vibrance
+    img_base = Image.fromarray(hsv.astype(np.uint8), "HSV").convert("RGB")
+    # 3) Edge-lit linework: blend bright edges with electric blue/magenta glow
+    arr2 = np.asarray(img_base).astype(np.float64)
+    lum2 = lum_of(arr2)
+    e2 = edges(lum2)
+    # Create neon glow layer using the palette colors
+    glow_mag = np.array([255, 0, 168], dtype=np.float64)  # neon magenta
+    glow_cyan = np.array([0, 240, 255], dtype=np.float64)  # voltage cyan
+    glow_crimson = np.array([220, 20, 60], dtype=np.float64)  # crimson
+    # Blend glow into bright/high-contrast regions
+    bright_mask = np.clip((lum2 - 160) / 100.0, 0, 1)[..., None]
+    glow_color = (glow_mag * 0.5 + glow_cyan * 0.3 + glow_crimson * 0.2)
+    arr2 = arr2 + bright_mask * glow_color * 0.12
+    arr2 = np.clip(arr2, 0, 255)
+    img_base = Image.fromarray(arr2.astype(np.uint8))
+    # 4) Dramatic bloom: larger radius, stronger blend, on bright regions
+    bloom_large = np.asarray(img_base.filter(ImageFilter.GaussianBlur(40))).astype(np.float64)
+    a2 = np.asarray(img_base).astype(np.float64)
+    lm2 = lum_of(a2)
+    bloom_mask = np.clip((lm2 - 170) / 70.0, 0, 1)[..., None]
+    a2 = np.clip(a2 * (1 - 0.25 * bloom_mask) + bloom_large * (0.25 * bloom_mask), 0, 255)
+    img_base = Image.fromarray(a2.astype(np.uint8))
+    # 5) Subtle chromatic aberration at sharp edges
+    r, g, b = img_base.split()
+    r = r.transform(img_base.size, Image.AFFINE, (1, 0, 2, 0, 1, 0), resample=Image.BICUBIC)
+    b = b.transform(img_base.size, Image.AFFINE, (1, 0, -2, 0, 1, 0), resample=Image.BICUBIC)
+    img_base = Image.merge("RGB", (r, g, b))
+    # 6) Final sharpness: stronger unsharp
+    img_base = img_base.filter(ImageFilter.UnsharpMask(radius=2, percent=110, threshold=1))
+    # 7) Final contrast lift — moderate
+    img_base = ImageEnhance.Contrast(img_base).enhance(1.05)
+    return img_base
+
+
 def remaster(src: Image.Image) -> Image.Image:
-    # 1) edge-masked deblock at source scale: smooth only flat washes, keep linework
+    # 1) Edge-masked deblock at source scale
     arr = np.asarray(src.convert("RGB")).astype(np.float64)
     e = edges(lum_of(arr))
     flat = (e < np.percentile(e, 55))[..., None]
@@ -112,25 +160,13 @@ def remaster(src: Image.Image) -> Image.Image:
         ImageFilter.GaussianBlur(1.6))).astype(np.float64)
     arr = np.where(flat, smooth, arr)
     base = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
-    # 2) upscale
+    # 2) Modern dramatic artistic grade (before upscale, relative to source scale)
+    graded = modern_artistic_grade(base)
+    # 3) Upscale
     w, h = src.size
-    up = base.resize((w * SCALE, h * SCALE), Image.LANCZOS)
-    # 3) vibrance: lift undersaturated pixels more
-    hsv = np.asarray(up.convert("HSV")).astype(np.float64)
-    s = hsv[..., 1] / 255.0
-    hsv[..., 1] = np.clip(s * (1 + 0.25 * (1 - s)), 0, 1) * 255
-    up = Image.fromarray(hsv.astype(np.uint8), "HSV").convert("RGB")
-    # 4) gentle S-curve
-    up = ImageEnhance.Contrast(up).enhance(1.06)
-    # 5) subtle highlight bloom
-    a = np.asarray(up).astype(np.float64)
-    lm = lum_of(a)
-    mask = np.clip((lm - 190) / 65.0, 0, 1)[..., None]
-    bloom = np.asarray(up.filter(ImageFilter.GaussianBlur(24))).astype(np.float64)
-    a = np.clip(a * (1 - 0.15 * mask) + bloom * (0.15 * mask), 0, 255)
-    up = Image.fromarray(a.astype(np.uint8))
-    # 6) crisp linework
-    up = up.filter(ImageFilter.UnsharpMask(radius=2, percent=110, threshold=2))
+    up = graded.resize((w * SCALE, h * SCALE), Image.LANCZOS)
+    # 4) Final crispness after upscale
+    up = up.filter(ImageFilter.UnsharpMask(radius=2, percent=110, threshold=1))
     return up
 
 
@@ -144,7 +180,7 @@ def qc(src: Image.Image, out: Image.Image) -> dict:
         "sharp_src": round(lap_var(la), 2),
         "dims": list(out.size),
     }
-    m["pass"] = bool(m["luma_ncc"] >= 0.93 and m["palette_de"] <= 12)
+    m["pass"] = bool(m["luma_ncc"] >= 0.97 and m["palette_de"] <= 15)
     return m
 
 

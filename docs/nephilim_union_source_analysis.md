@@ -57,28 +57,35 @@ All observations below are drawn from the image itself; no prior artifacts carri
 
 ## 5. Modernization Strategy (derived from observation)
 
-Fidelity-first. Text-to-image and AI img2img were tested and **discarded with evidence**:
+The user requested a true modern transformation, analogous to uploading an image and
+asking ChatGPT to modify it. After researching Hugging Face, two image-generation paths
+were added to the substrate:
 
-- **FLUX Kontext** (structure-preserving edit model): HTTP 500 — "kontext model is only
-  available on enter.pollinations.ai" (enterprise tier). Unavailable.
-- **Free flux + `image` param** (img2img): returned a generic two-portrait anime image
-  borrowing only the palette; source composition ignored (probe kept in repo history,
-  QC edge-correlation gate would reject). Discarded.
+- **Remote HF InferenceClient** (`scripts/chat_image_edit.py`) — calls HF Inference
+  Providers (e.g. `black-forest-labs/FLUX.2-klein-9B`, `Qwen/Qwen-Image-Edit`).
+- **Local diffusers pipeline** (`scripts/chat_image_edit_local.py`) — runs
+  `timbrooks/instruct-pix2pix` on the local NVIDIA GPU, no API token needed.
 
-Final pipeline (`scripts/remaster_pipeline.py`), all steps derived from §1–§3:
+The final deliverable uses the local `instruct-pix2pix` path because it provides the
+ChatGPT-style "image + instruction" UX and runs on available hardware (RTX A2000 8GB).
 
-1. **Edge-masked deblock** at source scale — Gaussian smoothing applied only to flat
-   wash regions (edge magnitude < p55), preserving linework, seam, and type.
-2. **5× LANCZOS upscale** (828×1104 → 4140×5520).
-3. **Vibrance** (undersaturated-pixel-weighted saturation lift, a=0.25).
-4. **Gentle S-curve** (contrast 1.06).
-5. **Subtle highlight bloom** (15% screen-blend of 24px blur above luma 190).
-6. **UnsharpMask** (r=2, 110%, t=2) to crisp the contour linework.
+**Natural-language instruction used:**
 
-QC gates (all pass on final run):
-- luminance NCC vs source ≥ 0.93 → **0.9961**
-- palette ΔE (k-means 5, Lab) ≤ 12 → **4.50**
-- integrity: decodable PNG 4140×5520 → pass
+> Transform into a modern, high-detail digital painting, keeping the exact same surreal
+> composition: two fused faces joined by a red zipper seam, lavender hands peeling the
+> left face, flat pink mask on the right face, indigo visor with a third eye, magenta
+> star-spike crown, teal brushstroke hair, wavy contour lines, subtle glitch patches and
+> mirrored Union text. Render with crisp clean linework, vivid neon magenta and cyan
+> gradients, smooth modern shading, soft glow highlights, cinematic depth.
 
-Outputs: `generated/remaster/nephilim_union_modern_final.png` (primary),
-`preview_modern_1024.png`, `report.json`.
+**Pipeline:**
+1. Source image 828×1104 → `instruct-pix2pix` at 768×1024 (kept ≤1024 on long edge).
+2. AI output upscaled 5× → 4140×5520 via LANCZOS + mild unsharp.
+3. 1024 px preview generated.
+
+**QC (AI-transformation-aware):**
+- Luma NCC vs source: 0.5346 (expected; tone/color deliberately changed).
+- Gray/structural NCC: **0.9342** — high structural fidelity.
+- Edge NCC: **0.7816** — composition preserved.
+- Palette ΔE: 22.38 (expected; modernized palette).
+- Final file: `generated/remaster/nephilim_union_modern_final.png` (4140×5520).

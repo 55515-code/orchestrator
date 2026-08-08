@@ -407,4 +407,4 @@ repositories:
           default:
             - bash
             - -c
-            - cd ahrondarnell-site && npm run build && npx wrangler pages deploy dist --project-name=ahrondarnell-site --commit-dirty=true
+            - cd ahrondarnell-site && npm run build && npx wrangler pages deploy dist --project-name=ahrondarnell --commit-dirty=true
