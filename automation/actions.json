@@ -123,6 +123,14 @@
     "dotfiles_apply": {
       "command": "chezmoi apply -v 2>&1 | head -20",
       "description": "Apply dotfiles from chezmoi repo to home"
+    },
+    "snapshot_backup_local": {
+      "command": "RESTIC_REPO=local:/home/ahron/.backups/restic bash ~/codespace/scripts/backup_snapshot.sh 2>&1 | tail -12",
+      "description": "Snapshot backup to local encrypted repo (works now)"
+    },
+    "snapshot_init_r2": {
+      "command": "CF_R2_ACCOUNT_ID=${CF_R2_ACCOUNT_ID:-} bash ~/codespace/scripts/backup_snapshot.sh --init 2>&1 | tail -8",
+      "description": "Initialize restic repo on Cloudflare R2 (set CF_R2_* env first)"
     }
   }
 }
