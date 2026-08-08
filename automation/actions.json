@@ -69,16 +69,60 @@
       "description": "Check Proton Drive remote status"
     },
     "proton_vpn_status": {
-      "command": "protonvpn-cli status 2>&1 || echo 'protonvpn-cli not installed'",
+      "command": "protonvpn status 2>&1 | head -12 || echo 'protonvpn not available'",
       "description": "Show Proton VPN connection status"
     },
     "proton_mail_status": {
-      "command": "systemctl --user is-active protonmail-bridge 2>&1; ss -tlnp 2>/dev/null | grep -E ':1143|:1025' | head -3 || echo 'mail bridge not running'",
+      "command": "systemctl --user is-active protonmail-bridge 2>&1; ss -tlnp 2>/dev/null | grep -E ':1143|:1025' | head -3 || echo 'mail bridge not listening'",
       "description": "Check Proton Mail Bridge status"
     },
     "proton_setup": {
       "command": "bash ~/codespace/automation/proton-setup.sh",
       "description": "Interactive Proton setup helper (drive/mail/vpn)"
+    },
+    "proton_vpn_connect": {
+      "command": "protonvpn connect --fastest 2>&1 | tail -5",
+      "description": "Connect Proton VPN (fastest server)"
+    },
+    "proton_vpn_disconnect": {
+      "command": "protonvpn disconnect 2>&1 | tail -3",
+      "description": "Disconnect Proton VPN"
+    },
+    "proton_drive_sync": {
+      "command": "rclone sync ~/codespace/artifacts protondrive:substrate-backups/artifacts --create-empty-src-dirs 2>&1 | tail -5; echo '---'; rclone lsd protondrive: 2>&1 | head -10",
+      "description": "Backup substrate artifacts to Proton Drive"
+    },
+    "proton_ai_scribe": {
+      "command": "uv run --no-sync python ~/codespace/automation/scribe.py draft --brief \"%PROMPT%\"",
+      "description": "Draft an email with local AI (Ollama llama3.1) - enter brief"
+    },
+    "proton_ai_proofread": {
+      "command": "uv run --no-sync python ~/codespace/automation/scribe.py proofread --text \"%PROMPT%\"",
+      "description": "Proofread text with local AI"
+    },
+    "proton_ai_shorten": {
+      "command": "uv run --no-sync python ~/codespace/automation/scribe.py shorten --text \"%PROMPT%\"",
+      "description": "Shorten text with local AI"
+    },
+    "proton_ai_formalize": {
+      "command": "uv run --no-sync python ~/codespace/automation/scribe.py formalize --text \"%PROMPT%\"",
+      "description": "Formalize text with local AI"
+    },
+    "snapshot_backup": {
+      "command": "bash ~/codespace/scripts/backup_snapshot.sh 2>&1 | tail -15",
+      "description": "Run restic snapshot backup to Proton Drive"
+    },
+    "snapshot_restore_list": {
+      "command": "bash ~/codespace/scripts/backup_snapshot.sh --restore-list 2>&1 | tail -15",
+      "description": "List restic snapshots for restore"
+    },
+    "dotfiles_status": {
+      "command": "chezmoi diff 2>&1 | head -30; echo '---'; chezmoi status 2>&1 | head -10",
+      "description": "Show pending dotfile changes (chezmoi)"
+    },
+    "dotfiles_apply": {
+      "command": "chezmoi apply -v 2>&1 | head -20",
+      "description": "Apply dotfiles from chezmoi repo to home"
     }
   }
 }
