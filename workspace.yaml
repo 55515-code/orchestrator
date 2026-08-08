@@ -224,6 +224,37 @@ repositories:
             - pytest
             - -q
             - tests/test_decentralized_governance.py
+      storage_status:
+        description: Report filesystem facts and the recommended Btrfs plan.
+        mode: observe
+        command:
+          default:
+            - uv
+            - run
+            - python
+            - scripts/substrate_cli.py
+            - storage-status
+      storage_validate:
+        description: Validate Btrfs recommendations against the tooling stack.
+        mode: observe
+        command:
+          default:
+            - uv
+            - run
+            - python
+            - scripts/substrate_cli.py
+            - storage-validate
+      storage_maintenance:
+        description: Run Btrfs dedup/defrag maintenance (dry-run; requires --apply for writes).
+        mode: mutate
+        command:
+          default:
+            - uv
+            - run
+            - python
+            - scripts/substrate_cli.py
+            - storage-maintenance
+            - --apply
   - slug: luigios
     path: LuigiOS
     allow_mutations: true
@@ -408,3 +439,94 @@ repositories:
             - bash
             - -c
             - cd ahrondarnell-site && npm run build && npx wrangler pages deploy dist --project-name=ahrondarnell --commit-dirty=true
+
+  - slug: hak5-security-lab
+    path: .
+    allow_mutations: true
+    default_mode: mutate
+    tasks:
+      hak5_payload_scan:
+        description: Scan Hak5 payload repositories for new upstream payloads and format changes.
+        mode: observe
+        command:
+          default:
+            - python
+            - -c
+            - |
+              import json
+              from pathlib import Path
+              from substrate.research import refresh_upstreams
+              from substrate.registry import SubstrateRuntime
+              runtime = SubstrateRuntime()
+              hak5_slugs = [
+                  "hak5-usbrubberducky-payloads",
+                  "hak5-bashbunny-payloads",
+                  "hak5-wifipineapplepager-payloads",
+                  "hak5-sharkjack-payloads",
+                  "hak5-packetsquirrel-payloads",
+                  "hak5-keycroc-payloads",
+                  "hak5-omg-payloads",
+              ]
+              refreshed = refresh_upstreams(runtime)
+              hak5 = [r for r in refreshed if r["slug"] in hak5_slugs]
+              print(json.dumps({"hak5_upstreams": hak5}, indent=2))
+      hak5_standards_report:
+        description: Generate a standards and compatibility report for Hak5 device tooling.
+        mode: observe
+        command:
+          default:
+            - python
+            - -c
+            - |
+              import json
+              from substrate.standards import standards_payload
+              from substrate.registry import SubstrateRuntime
+              runtime = SubstrateRuntime()
+              payload = standards_payload(runtime, track_id="hak5_device_ecosystem")
+              print(json.dumps(payload, indent=2))
+      hak5_tooling_ensure:
+        description: Ensure optional Hak5 hardware lab tooling dependencies are installed.
+        mode: mutate
+        command:
+          default:
+            - python
+            - scripts/substrate_cli.py
+            - deps-ensure
+            - --profile
+            - hak5_hardware_lab
+      hak5_wireless_audit_ensure:
+        description: Ensure optional wireless auditing suite dependencies are installed.
+        mode: mutate
+        command:
+          default:
+            - python
+            - scripts/substrate_cli.py
+            - deps-ensure
+            - --profile
+            - hak5_hardware_lab
+      hak5_upstream_research:
+        description: Refresh upstream research evidence for Hak5 and comparable open-source security tooling.
+        mode: observe
+        command:
+          default:
+            - python
+            - -c
+            - |
+              import json
+              from pathlib import Path
+              from substrate.research import refresh_upstreams
+              from substrate.registry import SubstrateRuntime
+              runtime = SubstrateRuntime()
+              refreshed = refresh_upstreams(runtime)
+              hak5_and_peers = [r for r in refreshed if "hak5" in r["slug"] or r["slug"] in (
+                  "flipperzero-firmware",
+                  "hackrf",
+                  "proxmark3",
+                  "p4wnp1",
+                  "pwnagotchi",
+                  "aircrack-ng",
+                  "bettercap",
+                  "kismet",
+                  "unleashed-firmware",
+              )]
+              print(json.dumps({"hak5_and_peer_upstreams": hak5_and_peers}, indent=2))

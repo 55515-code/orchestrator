@@ -20,5 +20,6 @@ nav:
   - Deployment: deployment.md
   - Chains: chains.md
   - Standards: standards.md
+  - Btrfs Storage Optimization: btrfs-optimization.md
   - System Probe: system-probe.md
   - References: references.md

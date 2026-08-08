@@ -41,7 +41,7 @@ class CacheStore:
         self._init_schema()
 
     def _init_schema(self) -> None:
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS cache_entries (
@@ -64,6 +64,20 @@ class CacheStore:
                 "CREATE INDEX IF NOT EXISTS idx_expires ON cache_entries(expires_at)"
             )
             conn.commit()
+
+    def _connect(self) -> sqlite3.Connection:
+        """Open a connection with storage-layer tuned pragmas.
+
+        WAL + synchronous=NORMAL is the documented safe pairing (fsync only on
+        WAL checkpoint instead of every commit), which keeps the cache cheap on
+        CoW filesystems. busy_timeout absorbs multi-process lock collisions
+        between the ops panel, dashboard, and agent cycle.
+        """
+        connection = sqlite3.connect(self._db_path)
+        connection.execute("PRAGMA journal_mode=WAL;")
+        connection.execute("PRAGMA synchronous=NORMAL;")
+        connection.execute("PRAGMA busy_timeout=5000;")
+        return connection
 
     @staticmethod
     def make_key(kind: str, inputs: dict[str, Any]) -> str:
@@ -96,7 +110,7 @@ class CacheStore:
 
     def has(self, key: str) -> bool:
         """Return True if ``key`` exists and has not expired."""
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             row = conn.execute(
                 "SELECT expires_at FROM cache_entries WHERE key = ?", (key,)
             ).fetchone()
@@ -109,7 +123,7 @@ class CacheStore:
 
     def get(self, key: str) -> Any | None:
         """Return the cached value for ``key`` or None if missing/expired."""
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             row = conn.execute(
                 "SELECT blob_path, expires_at FROM cache_entries WHERE key = ?",
                 (key,),
@@ -129,7 +143,7 @@ class CacheStore:
         except (OSError, pickle.PickleError):
             self.delete(key)
             return None
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             conn.execute(
                 "UPDATE cache_entries SET hit_count = hit_count + 1 WHERE key = ?",
                 (key,),
@@ -139,7 +153,7 @@ class CacheStore:
 
     def get_summary(self, key: str) -> str | None:
         """Return the stored summary for ``key`` without loading the blob."""
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             row = conn.execute(
                 "SELECT summary, expires_at FROM cache_entries WHERE key = ?", (key,)
             ).fetchone()
@@ -174,7 +188,7 @@ class CacheStore:
                 time.time() + ttl_seconds, tz=timezone.utc
             ).isoformat()
         tags_str = self._tags_to_str(tags)
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             conn.execute(
                 """
                 INSERT INTO cache_entries
@@ -196,7 +210,7 @@ class CacheStore:
 
     def delete(self, key: str) -> bool:
         """Remove ``key`` and its blob.  Return True if it existed."""
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             row = conn.execute(
                 "SELECT blob_path FROM cache_entries WHERE key = ?", (key,)
             ).fetchone()
@@ -237,7 +251,7 @@ class CacheStore:
             conditions.append("created_at < ?")
             params.append(cutoff)
         where_clause = " AND ".join(conditions) if conditions else "1=1"
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             rows = conn.execute(
                 f"SELECT key, blob_path FROM cache_entries WHERE {where_clause}", params
             ).fetchall()
@@ -255,7 +269,7 @@ class CacheStore:
     def prune(self, max_age_days: int = 30, max_size_mb: float | None = None) -> dict[str, Any]:
         """Remove expired and old entries; optionally cap total size."""
         now = self._now_iso()
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             expired_rows = conn.execute(
                 "SELECT key, blob_path FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < ?",
                 (now,),
@@ -277,7 +291,7 @@ class CacheStore:
             cutoff = datetime.fromtimestamp(
                 time.time() - max_age_days * 86400, tz=timezone.utc
             ).isoformat()
-            with sqlite3.connect(self._db_path) as conn:
+            with self._connect() as conn:
                 old_rows = conn.execute(
                     "SELECT key, blob_path FROM cache_entries WHERE created_at < ? ORDER BY created_at ASC",
                     (cutoff,),
@@ -295,7 +309,7 @@ class CacheStore:
         if max_size_mb is not None and max_size_mb > 0:
             max_bytes = int(max_size_mb * 1024 * 1024)
             while True:
-                with sqlite3.connect(self._db_path) as conn:
+                with self._connect() as conn:
                     total = conn.execute(
                         "SELECT COALESCE(SUM(size_bytes), 0) FROM cache_entries"
                     ).fetchone()[0]
@@ -324,7 +338,7 @@ class CacheStore:
 
     def stats(self) -> dict[str, Any]:
         """Return aggregate cache statistics."""
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             row = conn.execute(
                 """
                 SELECT
@@ -338,7 +352,7 @@ class CacheStore:
             ).fetchone()
         count, total_bytes, hits, oldest, newest = row or (0, 0, 0, None, None)
         kinds: dict[str, int] = {}
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             for kind, kcount in conn.execute(
                 "SELECT kind, COUNT(*) FROM cache_entries GROUP BY kind"
             ):
@@ -368,7 +382,7 @@ class CacheStore:
             params.append(kind)
         where_clause = " AND ".join(conditions) if conditions else "1=1"
         params.extend([limit, offset])
-        with sqlite3.connect(self._db_path) as conn:
+        with self._connect() as conn:
             rows = conn.execute(
                 f"""
                 SELECT key, kind, summary, tags, created_at, expires_at, hit_count, size_bytes

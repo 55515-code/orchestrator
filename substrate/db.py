@@ -18,6 +18,15 @@ class OrchestratorDB:
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.db_path, check_same_thread=False)
         connection.row_factory = sqlite3.Row
+        # Production-tuned settings for the CoW storage layer:
+        # - WAL is persistent but re-asserted for safety.
+        # - synchronous=NORMAL is the documented safe pairing with WAL and
+        #   avoids fsync on every commit (important on nodatacow subvolumes).
+        # - busy_timeout keeps the multi-process agent/services working when a
+        #   short-lived lock collision occurs.
+        connection.execute("PRAGMA journal_mode=WAL;")
+        connection.execute("PRAGMA synchronous=NORMAL;")
+        connection.execute("PRAGMA busy_timeout=5000;")
         return connection
 
     def _init_schema(self) -> None:

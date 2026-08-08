@@ -65,7 +65,9 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
             objective=(
                 f"Refresh upstream research evidence for repository "
                 f"'{agent.repo_slug}' (dependency advisories, security CVEs, "
-                "upstream project changes)."
+                "upstream project changes, Hak5 device ecosystem and comparable "
+                "open-source security, penetration-testing, wireless-auditing, "
+                "SDR, RFID, and HID tooling changes)."
             ),
             context=json.dumps(
                 {"repo_slug": agent.repo_slug, "sources": len(sources)},

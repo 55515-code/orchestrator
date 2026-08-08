@@ -226,3 +226,102 @@ projects:
     repo_url: https://github.com/OWASP/owasp-mastg
     docs_url: https://mas.owasp.org/
     rationale: Mobile AppSec testing guide and verification baseline for structured assessment coverage.
+
+  # Hak5 device ecosystem
+  - slug: hak5-usbrubberducky-payloads
+    name: Hak5 USB Rubber Ducky Payloads
+    repo_url: https://github.com/hak5/usbrubberducky-payloads
+    docs_url: https://docs.hak5.org/hak5-usb-rubber-ducky/usb-rubber-ducky-by-hak5/
+    rationale: Official DuckyScript payload corpus for HID keystroke injection; baseline for BadUSB automation design.
+  - slug: hak5-bashbunny-payloads
+    name: Hak5 Bash Bunny Payloads
+    repo_url: https://github.com/hak5/bashbunny-payloads
+    docs_url: https://docs.hak5.org/hak5-bash-bunny/
+    rationale: Multi-vector HID/network/storage payload library for the Bash Bunny; switch-slot and LED conventions.
+  - slug: hak5-wifipineapplepager-payloads
+    name: Hak5 WiFi Pineapple Pager Payloads
+    repo_url: https://github.com/hak5/wifipineapplepager-payloads
+    docs_url: https://docs.hak5.org/wifi-pineapple-pager/
+    rationale: Official payload repository for the WiFi Pineapple Pager; OpenWrt bash payloads with DuckyScript UI helpers.
+  - slug: hak5-sharkjack-payloads
+    name: Hak5 Shark Jack Payloads
+    repo_url: https://github.com/hak5/sharkjack-payloads
+    docs_url: https://docs.hak5.org/shark-jack/
+    rationale: Ethernet hotplug and network automation payloads for the Shark Jack; hotplug-triggered execution baseline.
+  - slug: hak5-packetsquirrel-payloads
+    name: Hak5 Packet Squirrel Payloads
+    repo_url: https://github.com/hak5/packetsquirrel-payloads
+    docs_url: https://docs.hak5.org/packet-squirrel/
+    rationale: Inline network tap, VPN tunneling, and packet-capture payloads for the Packet Squirrel.
+  - slug: hak5-keycroc-payloads
+    name: Hak5 Key Croc Payloads
+    repo_url: https://github.com/hak5/keycroc-payloads
+    docs_url: https://docs.hak5.org/key-croc/
+    rationale: Keystroke logging, word-detection, and HID injection payloads for the Key Croc.
+  - slug: hak5-omg-payloads
+    name: Hak5 O.MG Payloads
+    repo_url: https://github.com/hak5/omg-payloads
+    docs_url: https://docs.hak5.org/omg/
+    rationale: HTML/JavaScript web-interface payloads for the O.MG cable and covert physical-access tooling.
+  - slug: hak5-wifipineapple-openwrt
+    name: Hak5 WiFi Pineapple OpenWrt Support
+    repo_url: https://github.com/hak5/wifipineapple-openwrt
+    docs_url: https://docs.hak5.org/wifi-pineapple/
+    rationale: OpenWrt NANO/TETRA support layer for WiFi Pineapple; opkg module packaging and dependency conventions.
+  - slug: hak5-pineapple-modules
+    name: Hak5 WiFi Pineapple Modules
+    repo_url: https://github.com/hak5/pineapple-modules
+    docs_url: https://docs.hak5.org/wifi-pineapple/
+    rationale: TypeScript-based Pineapple modules for the web management interface and Cloud C² integration.
+  - slug: hak5-lanturtle-modules
+    name: Hak5 LAN Turtle Modules
+    repo_url: https://github.com/hak5/lanturtle-modules
+    docs_url: https://docs.hak5.org/lan-turtle/
+    rationale: Persistent network implant modules for reverse SSH, DNS poisoning, and Responder-style NTLM capture.
+
+  # Comparable open-source security, penetration testing, and hardware/software tooling
+  - slug: flipperzero-firmware
+    name: Flipper Zero Firmware
+    repo_url: https://github.com/flipperdevices/flipperzero-firmware
+    docs_url: https://developer.flipper.net/flipperzero/
+    rationale: Multi-tool firmware with BadUSB/DuckyScript, Sub-GHz, NFC, RFID, IR, BLE; direct payload-ecosystem competitor.
+  - slug: hackrf
+    name: HackRF (Great Scott Gadgets)
+    repo_url: https://github.com/greatscottgadgets/hackrf
+    docs_url: https://hackrf.readthedocs.io/
+    rationale: Open-source 1 MHz–6 GHz software-defined radio; baseline for RF auditing, sub-GHz analysis, and signal replay.
+  - slug: proxmark3
+    name: Proxmark3
+    repo_url: https://github.com/Proxmark/proxmark3
+    docs_url: https://github.com/Proxmark/proxmark3
+    rationale: Open-source RFID/NFC sniffing, cloning, and simulation toolchain; comparable to Hak5 RFID devices.
+  - slug: p4wnp1
+    name: P4wnP1 ALOA
+    repo_url: https://github.com/mame82/P4wnP1
+    docs_url: https://p4wnp1.googlecode.com/
+    rationale: Raspberry Pi Zero USB attack platform with HID backdoor and trigger-based payloads; open-hardware Ducky/Bunny alternative.
+  - slug: pwnagotchi
+    name: Pwnagotchi
+    repo_url: https://github.com/evilsocket/pwnagotchi
+    docs_url: https://pwnagotchi.ai/
+    rationale: AI-based WiFi cracking and handshake collection on Raspberry Pi; automated WiFi audit baseline comparable to Pineapple.
+  - slug: aircrack-ng
+    name: Aircrack-ng
+    repo_url: https://github.com/aircrack-ng/aircrack-ng
+    docs_url: https://www.aircrack-ng.org/
+    rationale: Canonical open-source WiFi audit suite for monitor mode, deauth, and WEP/WPA cracking.
+  - slug: bettercap
+    name: Bettercap
+    repo_url: https://github.com/bettercap/bettercap
+    docs_url: https://www.bettercap.org/
+    rationale: MITM framework for WiFi, BLE, Ethernet, and HID with event-driven scripting.
+  - slug: kismet
+    name: Kismet
+    repo_url: https://github.com/kismetwireless/kismet
+    docs_url: https://www.kismetwireless.net/
+    rationale: Wireless detector, sniffer, and WIDS supporting WiFi, Bluetooth, BLE, SDR, and drone detection.
+  - slug: unleashed-firmware
+    name: Unleashed Firmware
+    repo_url: https://github.com/DarkFlippers/unleashed-firmware
+    docs_url: https://github.com/DarkFlippers/unleashed-firmware
+    rationale: Extended Flipper Zero firmware with extra pentesting features and expanded BadUSB capabilities.

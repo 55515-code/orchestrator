@@ -30,6 +30,7 @@ orchestrator core and Scheduler Studio UX as the primary delivery surface.
 - Add plugin-style adapters for maintained security tooling.
 - Keep integration provenance, versions, and expected output contracts explicit.
 - Normalize results so AI and humans can compare signals across tools.
+- Add native support for Hak5 device ecosystems (USB Rubber Ducky, Bash Bunny, WiFi Pineapple, Packet Squirrel, Key Croc, Shark Jack, LAN Turtle, O.MG) and comparable open-source hardware security projects (Flipper Zero, HackRF, Proxmark3, P4wnP1, Aircrack-ng, Bettercap, Kismet).
 
 4. AI collaboration and transparency
 - Auto-generate educational reports from run artifacts.

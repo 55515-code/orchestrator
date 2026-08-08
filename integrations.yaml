@@ -152,3 +152,161 @@ services:
         - "SCIM user provisioning"
         - "managed profile rollout"
       guidance: Only provision users or deploy VPN profiles through documented admin or device-management flows with an explicit directive.
+
+  - id: hak5_device_ecosystem
+    name: Hak5 Device Ecosystem
+    category: hardware_security_tools
+    availability: general
+    api_status: github_repo_and_local_tooling
+    notes: Hak5 hardware tools are managed through local CLI tooling, GitHub-hosted payload repositories, and device-specific management interfaces (Cloud C², qFlipper, PayloadStudio). No centralized public API is assumed; integration is via local binaries, scripts, and GitHub source ingestion.
+    auth:
+      methods: [github_repo_read, local_usb, local_network, docker_image]
+      login_url: https://github.com/hak5
+      docs_url: https://docs.hak5.org/
+    cli_tools:
+      - duckyencoder
+      - qflipper
+      - proxmark3
+      - hackrf_info
+      - aircrack-ng
+      - bettercap
+      - kismet
+      - nmap
+      - flipper
+      - p4wnp1
+    supported_surfaces:
+      - github_payload_repos
+      - local_usb_hid
+      - local_network_ssh
+      - docker_image
+      - openwrt_modules
+    alternatives:
+      - Flipper Zero Firmware (open-source alternative)
+      - Proxmark3 (open-source RFID/NFC)
+      - HackRF (open-source SDR)
+      - P4wnP1 ALOA (open-hardware USB attack platform)
+      - Aircrack-ng (open-source WiFi audit suite)
+      - Bettercap (open-source MITM framework)
+    community_projects:
+      - bad-antics/nullsec-pineapple-suite
+      - bad-antics/nullsec-hak5-toolkit
+      - pineapple-pager-projects/pineapple_pager_loki
+      - wickednull/PagerSploit
+    read_profile:
+      default_scopes:
+        - "public payload repository read"
+        - "device documentation read"
+        - "local hardware status"
+        - "local network reconnaissance"
+      guidance: Read payload repositories and documentation for authorized testing workflows. Local hardware interaction requires physical access and explicit authorization.
+    write_profile:
+      scopes:
+        - "payload deployment to authorized devices"
+        - "local configuration mutation"
+        - "GitHub fork/PR for payload contributions"
+      guidance: All device writes require explicit operator directive and valid authorization scope. Never deploy payloads to systems you do not own or have written permission to assess.
+
+  - id: wireless_auditing_suite
+    name: Wireless Auditing Suite
+    category: network_security_tools
+    availability: general
+    api_status: local_cli_and_openwrt
+    notes: Wireless auditing tools (Aircrack-ng, Kismet, Bettercap, Wifite) are local CLI utilities with optional OpenWrt packaging for embedded deployment on devices like WiFi Pineapple and Packet Squirrel.
+    auth:
+      methods: [local_cli, openwrt_opkg, docker_image]
+      login_url: ""
+      docs_url: https://www.aircrack-ng.org/
+    cli_tools:
+      - aircrack-ng
+      - kismet
+      - bettercap
+      - wifite
+      - nmap
+      - hcxdumptool
+      - hcxtools
+      - reaver
+      - bully
+    supported_surfaces:
+      - kali_linux
+      - parrot_security
+      - openwrt
+      - docker_container
+    alternatives:
+      - Aircrack-ng suite
+      - Kismet wireless detector
+      - Bettercap MITM framework
+      - Wifite automated attacker
+    community_projects:
+      - aircrack-ng/aircrack-ng
+      - kismetwireless/kismet
+      - bettercap/bettercap
+      - kimocoder/wifite
+      - ZerBea/hcxdumptool
+    read_profile:
+      default_scopes:
+        - "local wireless reconnaissance"
+        - "packet capture and analysis"
+        - "network mapping"
+      guidance: Use read-only reconnaissance first (airodump-ng, kismet). Active attacks (deauth, WPS brute force) require explicit directive and authorized scope.
+    write_profile:
+      scopes:
+        - "packet injection"
+        - "WPA/WPA2 handshake capture"
+        - "WPS PIN testing"
+        - " Evil Twin / Rogue AP deployment"
+      guidance: Active wireless attacks are Tier 2 actions requiring explicit human directive and documented authorization.
+
+  - id: sdr_rfid_hardware
+    name: SDR, RFID, and Hardware Hacking Tools
+    category: hardware_security_tools
+    availability: general
+    api_status: local_cli_and_firmware
+    notes: Software-defined radio (HackRF, RTL-SDR), RFID/NFC (Proxmark3, Flipper Zero), and general hardware hacking tools are managed through local firmware flashes, CLI utilities, and device-specific software.
+    auth:
+      methods: [local_cli, firmware_flash, docker_image]
+      login_url: ""
+      docs_url: https://github.com/greatscottgadgets/hackrf
+    cli_tools:
+      - hackrf_info
+      - hackrf_transfer
+      - rtl_sdr
+      - rtl_fm
+      - gqrx
+      - urh
+      - proxmark3
+      - flipper
+      - qzbid
+      - mfoc
+    supported_surfaces:
+      - linux_host
+      - macos_host
+      - windows_host
+      - docker_container
+      - android_termux
+    alternatives:
+      - HackRF One / Portapack
+      - RTL-SDR
+      - Proxmark3
+      - Flipper Zero
+      - LimeSDR
+      - BladeRF
+    community_projects:
+      - greatscottgadgets/hackrf
+      - Proxmark/proxmark3
+      - flipperdevices/flipperzero-firmware
+      - osmocom/rtl-sdr
+      - BastilleResearch/paperkey
+    read_profile:
+      default_scopes:
+        - "RF spectrum analysis"
+        - "RFID/NFC tag reading"
+        - "firmware inspection"
+        - "signal capture and logging"
+      guidance: Passive signal capture and tag reading are generally low-risk. Active transmission requires frequency-specific authorization.
+    write_profile:
+      scopes:
+        - "RF signal transmission"
+        - "RFID tag cloning"
+        - "firmware modification and flash"
+        - "device firmware extraction"
+      guidance: Active transmission, cloning, and firmware modification require explicit directive and compliance with local radio regulations.

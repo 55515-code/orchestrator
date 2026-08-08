@@ -18,6 +18,23 @@ The dashboard and API expose this as execution guidance so implementation stays 
 
 ## Included Tracks
 
+- Hak5 device ecosystem and comparable open-source security tooling:
+  - Hak5 USB Rubber Ducky (DuckyScript 3.0)
+  - Hak5 Bash Bunny payload format
+  - Hak5 WiFi Pineapple Pager payloads
+  - Hak5 Shark Jack payloads
+  - Hak5 Packet Squirrel payloads
+  - Hak5 Key Croc payloads
+  - Hak5 O.MG payloads
+  - Flipper Zero BadUSB format
+  - Proxmark3 (RFID/NFC)
+  - HackRF (SDR)
+  - P4wnP1 ALOA (open-hardware USB attack platform)
+  - Pwnagotchi (AI-based WiFi cracking)
+  - Aircrack-ng (WiFi audit suite)
+  - Bettercap (MITM framework)
+  - Kismet (wireless detector/WIDS)
+  - OpenWrt security modules
 - Device-inspired operations:
   - Hak5 USB Rubber Ducky (DuckyScript)
   - Flipper Zero BadUSB/Sub-GHz formats
@@ -68,6 +85,9 @@ uv run python scripts/substrate_cli.py deps-ensure --profile android_lab
 
 # apply install plan
 uv run python scripts/substrate_cli.py deps-ensure --profile android_lab --apply
+
+# check Hak5 hardware lab tooling
+uv run python scripts/substrate_cli.py deps-status --profile hak5_hardware_lab
 ```
 
 ## Web API Usage

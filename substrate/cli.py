@@ -38,6 +38,16 @@ from .learning import learning_payload, record_execution, record_resolution_note
 from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
 from .providers import SUPPORTED_PROVIDERS
+from .swarm_control import (
+    DEFAULT_BASE_URL,
+    deploy_production,
+    emit_work_items,
+    run_iteration_loop,
+    run_triage_from_simulation,
+    run_user_simulation,
+    smoke_tests,
+    swarm_status,
+)
 from .registry import SubstrateRuntime
 from .research import refresh_upstreams
 from .standards import standards_payload
@@ -832,6 +842,93 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Show configured agents, last run state, and next due times.",
     )
 
+    subparsers.add_parser(
+        "storage-status",
+        help="Report filesystem facts, recommended Btrfs plan, and compatibility.",
+    )
+
+    subparsers.add_parser(
+        "storage-validate",
+        help="Validate Btrfs recommendations against the tooling stack.",
+    )
+
+    storage_maintenance = subparsers.add_parser(
+        "storage-maintenance",
+        help="Run dedup + defrag maintenance (dry-run by default; --apply to run).",
+    )
+    storage_maintenance.add_argument(
+        "--apply",
+        action="store_true",
+        help="Execute the maintenance commands. Explicit directive required.",
+    )
+    storage_maintenance.add_argument(
+        "--no-dedup",
+        action="store_true",
+        help="Skip the duperemove dedup step.",
+    )
+    storage_maintenance.add_argument(
+        "--no-defrag",
+        action="store_true",
+        help="Skip the defrag + compress step.",
+    )
+    storage_maintenance.add_argument(
+        "--compress-level",
+        default="zstd:1",
+        help="Compression algorithm:level for defrag (default zstd:1).",
+    )
+
+    swarm_control = subparsers.add_parser(
+        "swarm-control",
+        help="Coordinated multi-agent swarm control for the control panel "
+        "(user simulation, QA triage, dev delegation, iteration loop, deploy).",
+    )
+    swarm_control_sub = swarm_control.add_subparsers(dest="swarm_command")
+
+    sim_users = swarm_control_sub.add_parser(
+        "simulate-users",
+        help="Run the user simulation swarm (all experience levels + edge segments).",
+    )
+    sim_users.add_argument("--base-url", default=DEFAULT_BASE_URL)
+
+    triage = swarm_control_sub.add_parser(
+        "qa-triage",
+        help="Validate user-simulation feedback and assign severity/priority.",
+    )
+    triage.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    triage.add_argument("--simulation-file", default=None,
+                        help="Path to a prior user-simulation.json (default: latest).")
+
+    work_items = swarm_control_sub.add_parser(
+        "work-items",
+        help="Emit validated, prioritized dev work items from the QA triage.",
+    )
+    work_items.add_argument("--triage-file", default=None,
+                            help="Path to a prior qa-triage.json (default: latest).")
+
+    loop = swarm_control_sub.add_parser(
+        "run-loop",
+        help="Run simulation -> triage iterations until critical/high issues converge.",
+    )
+    loop.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    loop.add_argument("--max-iterations", type=int, default=5)
+
+    deploy = swarm_control_sub.add_parser(
+        "deploy",
+        help="DevOps production deployment: smoke tests, monitoring, rollback protocol.",
+    )
+    deploy.add_argument("--base-url", default=DEFAULT_BASE_URL)
+
+    smoke = swarm_control_sub.add_parser(
+        "smoke",
+        help="Run the post-deployment smoke test suite against the live app.",
+    )
+    smoke.add_argument("--base-url", default=DEFAULT_BASE_URL)
+
+    status = swarm_control_sub.add_parser(
+        "status",
+        help="Show swarm-control state (simulations, triage, work items, deployments).",
+    )
+
     return parser
 
 
@@ -1394,6 +1491,83 @@ def main(argv: Sequence[str] | None = None) -> int:
         except AgentConfigError as exc:
             parser.error(str(exc))
         print(json.dumps(payload, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "storage-status":
+        from .btrfs import status_report
+
+        report = status_report(runtime.root)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "storage-validate":
+        from .btrfs import compatibility_report
+
+        report = compatibility_report(runtime.root)
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 1 if not report["compatible"] else 0
+
+    if args.command == "storage-maintenance":
+        from .btrfs import run_maintenance
+
+        result = run_maintenance(
+            runtime.root,
+            apply=args.apply,
+            dedup=not args.no_dedup,
+            defrag=not args.no_defrag,
+            compress_level=args.compress_level,
+        )
+        record_execution(
+            runtime,
+            run_type="storage-maintenance",
+            run_id=None,
+            repo_slug=None,
+            stage="local",
+            command=(
+                f"storage-maintenance --apply"
+                if args.apply
+                else "storage-maintenance (dry-run)"
+            ),
+            status="success",
+            exit_code=0,
+            stdout=json.dumps(result, ensure_ascii=False),
+            note="Btrfs dedup/defrag maintenance",
+        )
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
+
+    if args.command == "swarm-control":
+        if args.swarm_command == "simulate-users":
+            result = run_user_simulation(args.base_url)
+        elif args.swarm_command == "qa-triage":
+            sim_path = Path(args.simulation_file) if args.simulation_file else None
+            if sim_path is None or not sim_path.exists():
+                sim_path = Path("state/swarm-control/user-simulation.json")
+            if not sim_path.exists():
+                parser.error(
+                    "no user simulation found; run 'swarm-control simulate-users' first"
+                )
+            simulation = json.loads(sim_path.read_text())
+            result = run_triage_from_simulation(simulation)
+        elif args.swarm_command == "work-items":
+            triage_path = Path(args.triage_file) if args.triage_file else None
+            if triage_path is None or not triage_path.exists():
+                triage_path = Path("state/swarm-control/qa-triage.json")
+            if not triage_path.exists():
+                parser.error(
+                    "no QA triage found; run 'swarm-control qa-triage' first"
+                )
+            triage = json.loads(triage_path.read_text())
+            result = emit_work_items(triage)
+        elif args.swarm_command == "run-loop":
+            result = run_iteration_loop(args.base_url, max_iterations=args.max_iterations)
+        elif args.swarm_command == "deploy":
+            result = deploy_production(args.base_url)
+        elif args.swarm_command == "smoke":
+            result = smoke_tests(args.base_url)
+        else:  # status
+            result = swarm_status()
+        print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
 
     parser.print_help(sys.stderr)

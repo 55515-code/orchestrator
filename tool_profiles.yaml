@@ -205,3 +205,135 @@ profiles:
             - pipx install sigma-cli
           manual:
             - Install sigma-cli from its maintained Python package source.
+
+  - id: hak5_hardware_lab
+    name: Hak5 Hardware Security Lab
+    description: Open-source tooling for Hak5 device ecosystems and comparable hardware security, penetration-testing, wireless-auditing, SDR, RFID, and HID projects.
+    tools:
+      - id: duckyencoder
+        name: DuckyScript Encoder
+        binary: duckyencoder
+        source_url: https://github.com/hak5darren/USB-Rubber-Ducky
+        install:
+          manual:
+            - Build the USB Rubber Ducky encoder from source or use a community Docker image (e.g. wwehr/usb-rubber-ducky).
+      - id: flipper
+        name: Flipper Zero Firmware / CLI
+        binary: flipper
+        source_url: https://github.com/flipperdevices/flipperzero-firmware
+        install:
+          manual:
+            - Flash Flipper Zero firmware from official releases or build from source; use qFlipper for desktop management.
+      - id: proxmark3
+        name: Proxmark3
+        binary: proxmark3
+        source_url: https://github.com/Proxmark/proxmark3
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y proxmark3
+          manual:
+            - Build Proxmark3 client and firmware from source for your device variant (RDV2, RV4, etc.).
+      - id: hackrf
+        name: HackRF One / Portapack
+        binary: hackrf_info
+        source_url: https://github.com/greatscottgadgets/hackrf
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y hackrf
+          manual:
+            - Install HackRF tools from Great Scott Gadgets packages or build from source.
+      - id: aircrack_ng
+        name: Aircrack-ng Suite
+        binary: aircrack-ng
+        source_url: https://github.com/aircrack-ng/aircrack-ng
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y aircrack-ng
+          brew:
+            - brew install aircrack-ng
+          manual:
+            - Install Aircrack-ng from your OS distribution or build from source with required dependencies.
+      - id: bettercap
+        name: Bettercap
+        binary: bettercap
+        source_url: https://github.com/bettercap/bettercap
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y bettercap
+          brew:
+            - brew install bettercap
+          manual:
+            - Install Bettercap from official releases or your OS package manager.
+      - id: kismet
+        name: Kismet
+        binary: kismet
+        source_url: https://github.com/kismetwireless/kismet
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y kismet
+          brew:
+            - brew install kismet
+          manual:
+            - Install Kismet from official packages or build from source.
+      - id: nmap
+        name: Nmap
+        binary: nmap
+        source_url: https://github.com/nmap/nmap
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y nmap
+          brew:
+            - brew install nmap
+          manual:
+            - Install Nmap from official binaries or your OS package manager.
+      - id: hcxdumptool
+        name: hcxdumptool / hcxtools
+        binary: hcxdumptool
+        source_url: https://github.com/ZerBea/hcxdumptool
+        install:
+          manual:
+            - Build hcxdumptool and hcxtools from source; required for PMKID and handshake capture workflows.
+      - id: reaver
+        name: Reaver / Bully
+        binary: reaver
+        source_url: https://github.com/t6x/reaver-wps-fork-t6x
+        install:
+          apt:
+            - sudo apt-get update
+            - sudo apt-get install -y reaver bully
+          manual:
+            - Install Reaver or Bully for WPS PIN brute-forcing from source or package repositories.
+      - id: wifite
+        name: Wifite
+        binary: wifite
+        source_url: https://github.com/kimocoder/wifite
+        install:
+          manual:
+            - Clone and run Wifite from source for automated WiFi attack workflows.
+      - id: p4wnp1
+        name: P4wnP1 ALOA
+        binary: p4wnp1
+        source_url: https://github.com/mame82/P4wnP1
+        install:
+          manual:
+            - Flash P4wnP1 image to Raspberry Pi Zero SD card; configure via p4wnp1.service or USB gadget scripts.
+      - id: flipper_badusb_tools
+        name: Flipper Zero BadUSB Tools
+        binary: flipper
+        source_url: https://github.com/flipperdevices/flipperzero-firmware
+        install:
+          manual:
+            - Use qFlipper to manage apps; install community BadUSB apps from Flipper Zero app catalog.
+      - id: omg_cable_tools
+        name: O.MG Cable Tools
+        binary: omg
+        source_url: https://github.com/hak5/omg-payloads
+        install:
+          manual:
+            - Use O.MG Cable web interface or command-line tooling for payload deployment and configuration.
