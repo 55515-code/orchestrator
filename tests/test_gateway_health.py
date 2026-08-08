@@ -15,7 +15,6 @@ def test_healthz_reports_gateway_readiness_details() -> None:
     assert payload["service"] == "local-agent-substrate-ops-panel"
     assert "checks" in payload
     assert payload["checks"]["runtime"]["status"] in {"ok", "degraded"}
-    assert payload["checks"]["scheduler"]["status"] in {"ok", "degraded"}
     assert payload["checks"]["openclaw"]["status"] in {"available", "unavailable"}
     assert "reason" in payload["checks"]["openclaw"]
     assert payload["checks"]["providers"]["local"]["status"] in {

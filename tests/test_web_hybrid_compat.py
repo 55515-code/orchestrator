@@ -5,11 +5,15 @@ from fastapi.testclient import TestClient
 from substrate.web import app
 
 
-def test_root_serves_scheduler_studio_ui() -> None:
-    with TestClient(app) as client:
+def test_root_redirects_to_control_panel() -> None:
+    with TestClient(app, follow_redirects=False) as client:
         response = client.get("/")
-        assert response.status_code == 200
-        assert "Codex Scheduler Studio" in response.text
+        assert response.status_code == 302
+        assert "/panel" in response.headers["location"]
+
+        panel = client.get("/panel")
+        assert panel.status_code == 200
+        assert "Substrate Control Panel" in panel.text
 
 
 def test_legacy_panel_and_legacy_api_endpoints_remain_available() -> None:
