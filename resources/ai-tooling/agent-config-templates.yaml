@@ -1,0 +1,109 @@
+# AI Agent Configuration Templates
+# Version: 1.0 · Category: AI Tooling
+# Purpose: drop-in configuration patterns for running autonomous agents safely.
+# These templates follow the autonomy-tier model: Tier 0 always automatic,
+# Tier 1 automatic when validation is green, Tier 2 requires a human directive.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Template 1: Research agent (read-only evidence gathering — Tier 0)
+# ---------------------------------------------------------------------------
+research_agent:
+  id: research-agent
+  role: research-agent
+  pass: research
+  cadence: daily
+  autonomy_tier: 0
+  enabled: true
+  constraints:
+    read_only: true
+    network_scope: allowlist
+    allowlist:
+      - upstreams.yaml
+      - public documentation
+  outputs:
+    - ".research/<repo>/<date>-upstream-research.md"
+  guardrails:
+    require_source_facts_before_mutation: true
+
+# ---------------------------------------------------------------------------
+# Template 2: Development agent (writes code, gated by tests — Tier 1)
+# ---------------------------------------------------------------------------
+dev_agent:
+  id: dev-agent
+  role: dev-agent
+  pass: development
+  cadence: daily
+  autonomy_tier: 1
+  enabled: true
+  constraints:
+    worktree_isolation: true
+    branch_prefix: "agent/<repo>/dev-"
+    commit_only_when: validation_green
+  validation:
+    command: "uv run --with pytest --with httpx pytest -q tests"
+    max_attempts: 2
+    deadline_seconds: 60
+  guardrails:
+    require_source_facts_before_mutation: true
+
+# ---------------------------------------------------------------------------
+# Template 3: Content moderator (auto-hold, human approve — Tier 1)
+# ---------------------------------------------------------------------------
+content_moderator:
+  id: content-moderator
+  role: content-moderator
+  pass: research
+  cadence: hourly
+  autonomy_tier: 1
+  enabled: true
+  constraints:
+    auto_actions: [hold, needs-changes]
+    human_only_actions: [approve, reject]
+  outputs:
+    - ".research/site-moderation/<date>-<id>.md"
+
+# ---------------------------------------------------------------------------
+# Template 4: Financial operation (Tier 2 — always human-directed)
+# Use this skeleton for ANY action that moves money or touches keys.
+# ---------------------------------------------------------------------------
+financial_operation:
+  id: <operation-name>
+  role: <role>
+  pass: development
+  cadence: on_demand
+  autonomy_tier: 2
+  enabled: true
+  constraints:
+    requires_directive: true
+    directive_source: human
+    never_log: [seed_phrase, private_key, api_secret]
+    audit: state/crypto/audit.jsonl
+  guardrails:
+    encrypt_at_rest: true
+    verify_before_commit: true
+    backup_verified: true
+
+# ---------------------------------------------------------------------------
+# Template 5: Scheduled pipeline with quality gate
+# ---------------------------------------------------------------------------
+generation_pipeline:
+  name: resource-generation
+  triggers: [weekly, manual]
+  stages:
+    - name: research_demand
+      autonomy_tier: 0
+    - name: generate_draft
+      autonomy_tier: 1
+      gate: quality_gate
+    - name: moderate
+      autonomy_tier: 1
+    - name: publish
+      autonomy_tier: 2       # human directive required
+      gate: directive_present
+  quality_gate:
+    min_sections: 3
+    require_checklist: true
+    banned_terms: [guaranteed returns, free money, act now]
+  on_failure: hold_for_review

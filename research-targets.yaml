@@ -1,0 +1,82 @@
+version: 1
+
+# Research swarm targets — where and how to sell digital resources to both
+# humans and autonomous agent networks. The market-research agent refreshes
+# evidence for each target (Tier 0, read-only) and writes findings with
+# demand/channel scores to .research/market-demand/, which feed the expansion
+# trigger and pricing comparator updates.
+#
+# Safety: discovery here is PASSIVE and PULL-based (manifests, directories,
+# payment-protocol endpoints). No unsolicited outreach automation (PF-015).
+
+targets:
+  # --- Autonomous agent networks / machine buyers -------------------------
+  - id: x402-payment-protocol
+    kind: protocol
+    name: x402 (HTTP 402 payment-required for agents)
+    focus: Micropayment contract surface; agents pay per request in stablecoins.
+    questions:
+      - Which x402 facilitator/explorer networks list services?
+      - What manifest format do x402 crawlers expect?
+      - Typical per-call price ranges for document/API services?
+    demand_score: 0.8
+    competition: 0.3
+
+  - id: agent-marketplaces
+    kind: channel
+    name: Agent marketplaces and MCP directories
+    focus: List the resource-delivery API where agents shop for tools.
+    questions:
+      - Which MCP server directories accept paid service listings?
+      - What metadata (llms.txt, openapi, pricing) do they require?
+    demand_score: 0.7
+    competition: 0.4
+
+  - id: a2a-commerce-standards
+    kind: protocol
+    name: Agent-to-agent commerce standards (AP2, ACP)
+    focus: Interop formats for contracts and delegated microtransactions.
+    questions:
+      - Which agent payment protocols are gaining adoption?
+      - What contract/mandate schemas do they define?
+    demand_score: 0.6
+    competition: 0.2
+
+  - id: llm-discovery
+    kind: channel
+    name: LLM/answer-engine discovery (llms.txt, FAQ schema)
+    focus: Being cited by AI assistants when buyers ask for compliance help.
+    questions:
+      - Which structured-data patterns raise AI citation rates?
+      - What llms.txt conventions are crawlers honoring this quarter?
+    demand_score: 0.9
+    competition: 0.5
+
+  # --- Human-facing advertising channels ----------------------------------
+  - id: seo-answer-engine
+    kind: channel
+    name: SEO + answer-engine optimization for compliance queries
+    focus: FAQ/structured content for 'SOC 2 checklist for startups' queries.
+    demand_score: 0.85
+    competition: 0.6
+
+  - id: linkedin-compliance-community
+    kind: channel
+    name: LinkedIn compliance/security communities
+    focus: Share free lead magnets; convert to paid resources.
+    demand_score: 0.75
+    competition: 0.5
+
+  - id: msp-partner-channel
+    kind: channel
+    name: MSP and vCISO partner referrals
+    focus: White-label checklists for MSPs serving small businesses.
+    demand_score: 0.7
+    competition: 0.3
+
+  - id: free-tier-funnel
+    kind: funnel
+    name: Free resources -> paid conversion funnel
+    focus: Track free downloads; measure conversion to paid catalog.
+    demand_score: 0.8
+    competition: 0.2

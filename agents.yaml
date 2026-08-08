@@ -117,3 +117,23 @@ agents:
     provider: local
     enabled: true
     command: scripts/substrate_cli.py agent-run --role community-manager --repo substrate-core
+
+  - id: market-research
+    role: market-research
+    repo_slug: substrate-core
+    pass: research
+    cadence: weekly
+    autonomy_tier: 0
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role market-research --repo substrate-core
+
+  - id: resource-generator
+    role: resource-generator
+    repo_slug: substrate-core
+    pass: development
+    cadence: weekly
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role resource-generator --repo substrate-core

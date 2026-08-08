@@ -17,16 +17,22 @@ Security invariants:
 
 from .backup import backup_wallet_seeds, proton_sync_dir
 from .inventory import ResourceInventory
+from .opportunities import MICRO_SPEND_FLOOR_USD, Opportunity, OpportunityEngine
 from .policy import PaymentFlowGovernance, load_payment_rules
 from .pricing import PricingEngine
+from .revenue import RevenueTracker
 from .token_registry import SUPPORTED_TOKENS, TokenRegistry
 from .wallet_manager import WalletError, WalletManager, WalletPermissionError
 
 __all__ = [
+    "MICRO_SPEND_FLOOR_USD",
+    "SUPPORTED_TOKENS",
+    "Opportunity",
+    "OpportunityEngine",
     "PaymentFlowGovernance",
     "PricingEngine",
     "ResourceInventory",
-    "SUPPORTED_TOKENS",
+    "RevenueTracker",
     "TokenRegistry",
     "WalletError",
     "WalletManager",

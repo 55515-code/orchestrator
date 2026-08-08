@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "service": "1pointo digital resources",
+  "generated_at": "2026-08-08T16:26:27.370586+00:00",
+  "note": "Payments accepted in USDC/DAI on Polygon and Base. See docs/CRYPTO_PAYMENT_RUNBOOK.md for the delivery flow.",
+  "resources": [
+    {
+      "id": "soc2-checklist",
+      "title": "SOC 2 Type II Readiness Checklist",
+      "category": "compliance",
+      "description": "Step-by-step SOC 2 Type II readiness checklist mapped to AICPA Trust Services Criteria: scoping, control design, evidence collection, auditor fieldwork.",
+      "price_usdc": 150,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "soc2 compliance readiness",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "hipaa-risk-assessment",
+      "title": "HIPAA Security Risk Assessment Template",
+      "category": "compliance",
+      "description": "HIPAA Security Rule risk analysis template: asset inventory, threat mapping, safeguard gap analysis, risk scoring, and remediation plan.",
+      "price_usdc": 175,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "hipaa ephi risk assessment",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "pci-gap-analysis",
+      "title": "PCI DSS Gap Analysis Workbook",
+      "category": "compliance",
+      "description": "PCI DSS v4.0 workbook: SAQ selection, CDE scoping, 12-requirement gap analysis, remediation plan, and maintenance calendar.",
+      "price_usdc": 125,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "pci dss saq compliance",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "incident-response-plan",
+      "title": "Incident Response Plan Template",
+      "category": "security",
+      "description": "Small-business incident response plan: roles, severity levels, contain-eradicate-recover workflow, notification clocks, and tabletop maintenance.",
+      "price_usdc": 95,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "incident response security",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "vulnerability-assessment-guide",
+      "title": "Vulnerability Assessment Program Guide",
+      "category": "security",
+      "description": "Recurring vulnerability assessment program: inventory, scan cadence, prioritization, remediation SLAs, metrics, and pen-test escalation.",
+      "price_usdc": 85,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "vulnerability scanning assessment",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "agent-config-templates",
+      "title": "AI Agent Configuration Templates",
+      "category": "ai-tooling",
+      "description": "Drop-in autonomy-tier configuration templates for research, dev, moderation, financial, and pipeline agents with guardrails.",
+      "price_usdc": 45,
+      "free": false,
+      "version": "1.0",
+      "format": "yaml",
+      "topic": "ai agents automation config",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "prompt-engineering-guide",
+      "title": "Prompt Engineering Guide for Compliance & Security Automation",
+      "category": "ai-tooling",
+      "description": "Reliable prompt patterns for compliance and security documents: grounding, R-T-S-C structure, templates, and quality gates.",
+      "price_usdc": 35,
+      "free": false,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "prompt engineering llm",
+      "delivery": "token-gated"
+    },
+    {
+      "id": "security-baseline-checklist",
+      "title": "Small Business Security Baseline Checklist",
+      "category": "security",
+      "description": "Free: the fifteen highest-leverage security controls for small businesses \u2014 MFA, updates, backups, phishing defense, and network basics.",
+      "price_usdc": 0,
+      "free": true,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "security basics small business",
+      "delivery": "free"
+    },
+    {
+      "id": "ai-policy-checklist",
+      "title": "Secure AI Adoption Policy Checklist",
+      "category": "ai-tooling",
+      "description": "Free: build an enforceable AI usage policy covering shadow AI inventory, allowlists, human review, and prompt hygiene.",
+      "price_usdc": 0,
+      "free": true,
+      "version": "1.0",
+      "format": "markdown",
+      "topic": "ai policy shadow ai governance",
+      "delivery": "free"
+    }
+  ]
+}

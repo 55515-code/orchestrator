@@ -1,0 +1,167 @@
+version: 1
+
+# Payment Flow Governance Rules
+#
+# Standing requirement: payment flows and their technology must ALWAYS be
+# documented, kept current, and vetted before use. These rules are enforced by
+# substrate.crypto.policy.PaymentFlowGovernance and audited in
+# state/crypto/audit.jsonl. Review evidence accumulates in
+# state/crypto/reviews.json.
+
+documentation:
+  runbook: docs/CRYPTO_PAYMENT_RUNBOOK.md
+  max_age_days: 90
+  requirements:
+    - Every payment flow (verification, delivery, donation, refund) must have a
+      runbook section describing inputs, outputs, failure modes, and rollback.
+    - The runbook frontmatter 'last_verified' date must be updated whenever a
+      flow is tested end to end.
+    - Component inventory in the runbook must list every worker, script, and
+      wallet purpose involved in money movement.
+
+review:
+  state: state/crypto/reviews.json
+  required_checklist:
+    - docs_updated
+    - tests_green
+    - threat_model_considered
+    - rollback_documented
+
+rules:
+  - id: PF-001
+    title: Documentation is mandatory and current
+    enforcement: automatic
+    description: >
+      Payment-flow documentation must exist and be re-verified within the
+      freshness window. verify_all() fails when the runbook is missing or
+      stale, which blocks promotion of any payment change.
+
+  - id: PF-002
+    title: Changes require vetting before use
+    enforcement: automatic
+    description: >
+      Any change to payment flows (workers, wallet config, pricing, token
+      registry, delivery) must pass gate_change with a Tier 2 directive,
+      updated docs, green tests, and a completed vetting checklist. Approved
+      changes are recorded in state/crypto/reviews.json.
+
+  - id: PF-003
+    title: Financial operations are Tier 2
+    enforcement: automatic
+    description: >
+      Wallet generation, address derivation, publishing, token swaps, price
+      updates, and refunds always require an explicit human directive. Automated
+      agents may prepare and validate, never execute.
+
+  - id: PF-004
+    title: No secrets in code or edge deployments
+    enforcement: automatic
+    description: >
+      Seed phrases and private keys never appear in source, logs, Workers, or
+      the audit trail. Only public addresses may be exported (site data, D1).
+
+  - id: PF-005
+    title: Backups must be verified
+    enforcement: automatic
+    description: >
+      Wallet backups are written to the Proton Drive sync folder (or staged for
+      manual upload) and verified by read-back with checksum comparison. An
+      unverified backup while wallets exist fails vetting.
+
+  - id: PF-006
+    title: Rate limiting and abuse detection on public endpoints
+    enforcement: automatic
+    description: >
+      Payment verification and delivery endpoints enforce rate limits
+      (IP + wallet based) and anomaly detection. Delivery tokens are one-time
+      use with expiry.
+
+  - id: PF-007
+    title: RPC redundancy
+    enforcement: automatic
+    description: >
+      On-chain verification must configure multiple RPC providers with fallback
+      so no single provider outage blocks or forges payment confirmation.
+
+  - id: PF-008
+    title: Hash-chained audit trail
+    enforcement: automatic
+    description: >
+      All financial operations append to state/crypto/audit.jsonl. Chain
+      integrity is re-verified during vetting; any broken link fails the report.
+
+  - id: PF-009
+    title: Stablecoin-first value preservation
+    enforcement: advisory
+    description: >
+      Prices are quoted in USDC/DAI; volatile tokens are quoted with live rates
+      only and conversion to stablecoins is a Tier 2, human-directed action with
+      slippage protection.
+
+  - id: PF-010
+    title: Regulatory watch
+    enforcement: advisory
+    description: >
+      Crypto-payment regulation is uncertain. Keep volumes modest, prefer
+      stablecoins, record jurisdictions served, and escalate legal questions to
+      a human before expanding payment surfaces.
+
+  - id: PF-011
+    title: Competitive undercutting only while revenue rises
+    enforcement: automatic
+    description: >
+      Undercut prices are proposed against comparator market prices and applied
+      only when the revenue trend is upward and the cut stays above the
+      cost-covering floor (FLOOR_FACTOR). A declining trend blocks further cuts
+      (apply_competitive_update).
+
+  - id: PF-012
+    title: Revenue trend is monitored
+    enforcement: automatic
+    description: >
+      Settled payments are recorded in state/crypto/revenue.json and monthly
+      trends are checked by monitoring. Flat or declining revenue raises an
+      alert before any discounting is allowed.
+
+  - id: PF-013
+    title: Programmatic (bot) access is keyed and Tier 2
+    enforcement: automatic
+    description: >
+      Bot/agent access to resources and offload services uses API keys issued
+      only with a human directive, with expiry and revocation. Public catalog
+      endpoints stay unauthenticated; anything that consumes work or money is
+      keyed and rate limited.
+
+  - id: PF-014
+    title: Machine-readable catalog is kept current
+    enforcement: automatic
+    description: >
+      The LLM/agent-facing catalog (resources/llm-catalog.json, site llms.txt,
+      worker /api/llms) must mirror resources/catalog.json. The export script
+      regenerates it; a stale or mismatched machine catalog fails vetting.
+
+  - id: PF-015
+    title: Passive, pull-based selling only
+    enforcement: automatic
+    description: >
+      Selling surfaces are discovery manifests and payment endpoints that
+      autonomous agents pull. No unsolicited outreach, spamming, or posting
+      automation is ever run (market-research agent is read-only).
+
+  - id: PF-016
+    title: No-loss capital discipline
+    enforcement: automatic
+    description: >
+      Principal is the power source and is never allocated. Only earned surplus
+      (the stack) may be spent, and only when expected value exceeds cost by a
+      safety margin, at or above the micro-spend floor, and under a per-opportunity
+      cap. Every allocation requires a Tier 2 directive and is audited. No
+      speculative instruments, leverage, or loss-accepting positions.ever.
+
+  - id: PF-017
+    title: Reinvestment is a closed loop
+    enforcement: automatic
+    description: >
+      Earnings (revenue tracker) feed the stack; the stack funds micro-spend on
+      vetted opportunities; returns flow back into the stack. The loop is
+      Tier-2-gated at every spend and never touches principal.

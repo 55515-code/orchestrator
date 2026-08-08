@@ -43,3 +43,25 @@ Email delivery via ProtonMail Bridge is opt-in: enable with
   gateway credential leaked into history; all branches force-pushed.
 - Services bind loopback-only; the ops panel is exposed tailnet-wide via
   `tailscale serve :10000` and is protected by tailnet ACLs (not a shared secret).
+
+## Crypto Payment Security Posture
+
+Payment flows are governed by `crypto-rules.yaml` and enforced by
+`substrate/crypto/policy.py`. The full operating procedure lives in
+`docs/CRYPTO_PAYMENT_RUNBOOK.md` (machine-checked freshness).
+
+- **Key custody**: seeds are Fernet-encrypted in `state/crypto/seeds.enc`
+  (gitignored); keys resolve from env, system keyring, or `master.key`
+  (chmod 600). No secret ever reaches Workers, D1, R2, logs, or the audit trail.
+- **Autonomy tiers**: wallet generation, publishing, swaps, price updates, and
+  refunds are Tier 2 and require an explicit human directive; refusals are
+  audited.
+- **Backups**: encrypted bundles are written to the Proton Drive sync folder
+  (or staged for manual upload) and verified by read-back + checksum
+  (3 attempts). Unverified backups raise a critical alert.
+- **Edge safety**: payment verification uses ≥2 RPC providers with fallback,
+  confirmation depth checks, replay protection (D1 primary key on tx hash),
+  one-time delivery tokens with expiry, and IP+wallet rate limiting.
+- **Audit**: every financial operation appends to a hash-chained trail
+  (`state/crypto/audit.jsonl`); vetting (`verify_all`) re-checks chain
+  integrity, catalog checksums, backup status, and documentation freshness.

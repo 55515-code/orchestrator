@@ -1,0 +1,20 @@
+# resource-delivery — token-gated delivery of resources from R2.
+#
+# Shares the crypto-payments D1 database with payment-verifier.
+# No secrets required; delivery tokens are issued by payment-verifier.
+
+name = "resource-delivery"
+main = "index.js"
+compatibility_date = "2026-08-01"
+
+[vars]
+RATE_LIMIT_PER_HOUR = "30"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "crypto-payments"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "RESOURCES"
+bucket_name = "digital-resources"

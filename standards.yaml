@@ -231,6 +231,36 @@ tracks:
         maintained_by: scikit-learn / Joblib maintainers
         notes: Use for deterministic heavy computations and data pipelines where function source-code hashing is acceptable.
 
+  - id: crypto_payment_flows
+    name: Crypto Payment Flows
+    description: Maintained standards for deterministic wallets, address encoding, and governed on-chain payment verification used by the crypto value automation system.
+    tags: [crypto, payments, bip, eip, wallets]
+    standards:
+      - id: bip39
+        name: BIP-39 Mnemonic Seeds
+        format: 128-256 bit entropy mapped to mnemonic phrases with checksum.
+        source_url: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+        maintained_by: Bitcoin BIP process
+        notes: Wallet generation uses 256-bit entropy; seeds encrypted at rest, never logged.
+      - id: bip44
+        name: BIP-44 Derivation Paths
+        format: Hierarchical deterministic derivation m/44'/60'/0'/0/<index> for EVM chains.
+        source_url: https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+        maintained_by: Bitcoin BIP process
+        notes: One master seed per purpose; child addresses derived on demand.
+      - id: eip55
+        name: EIP-55 Checksum Addresses
+        format: Mixed-case checksum encoding for Ethereum-compatible addresses.
+        source_url: https://eips.ethereum.org/EIPS/eip-55
+        maintained_by: Ethereum EIP process
+        notes: Always display and store EIP-55 checksummed addresses to catch typos.
+      - id: substrate_payment_governance
+        name: Substrate Payment Flow Governance
+        format: crypto-rules.yaml rules + machine-checked runbook + hash-chained audit trail.
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: Payment flows must stay documented, current, and vetted; financial operations are Tier 2.
+
   - id: decentralized_governance_networks
     name: Decentralized Governance Networks
     description: Commons-based, non-hierarchical organizational models rooted in socialist, anarchist, cooperative, Indigenous, and federated governance traditions. Embeds decentralization, collective awareness, consensus-driven data, non-Westernized perspectives, and transparent value systems into substrate operations.

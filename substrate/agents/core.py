@@ -20,6 +20,8 @@ AGENT_ROLES = frozenset(
         "update-agent",
         "content-moderator",
         "community-manager",
+        "market-research",
+        "resource-generator",
     }
 )
 VALID_CADENCES = ("hourly", "every_4_hours", "daily", "weekly", "on_demand")
@@ -576,8 +578,10 @@ def run_agent(
     """Execute a single agent with idempotency, learning, and state recording."""
     from . import community as community_role
     from . import development as development_role
+    from . import market_research as market_research_role
     from . import moderation as moderation_role
     from . import research as research_role
+    from . import resource_gen as resource_gen_role
     from . import update as update_role
 
     handlers: dict[str, Callable[..., dict[str, Any]]] = {
@@ -586,6 +590,8 @@ def run_agent(
         "update-agent": update_role.run,
         "content-moderator": moderation_role.run,
         "community-manager": community_role.run,
+        "market-research": market_research_role.run,
+        "resource-generator": resource_gen_role.run,
     }
     handler = handlers.get(agent.role)
     if handler is None:

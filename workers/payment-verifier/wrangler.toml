@@ -1,0 +1,31 @@
+# payment-verifier — on-chain payment verification.
+#
+# Secrets are NEVER stored here. Set them with:
+#   wrangler secret put RPC_URLS      # comma-separated, >= 2 providers (PF-007)
+#   wrangler secret put PAYMENT_ADDRESS
+#
+# Create the D1 database and R2 bucket first:
+#   wrangler d1 create crypto-payments
+#   wrangler r2 bucket create digital-resources
+#   wrangler d1 execute crypto-payments --file ../schema.sql
+# then paste the database_id below.
+
+name = "payment-verifier"
+main = "index.js"
+compatibility_date = "2026-08-01"
+
+[vars]
+# Non-secret defaults. RPC fallback list and payment address are secrets.
+MIN_CONFIRMATIONS = "10"
+RATE_LIMIT_PER_HOUR = "60"
+# USD price of POL used for volatile-token pricing (updated by operator).
+POL_USD = "0.50"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "crypto-payments"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "RESOURCES"
+bucket_name = "digital-resources"
