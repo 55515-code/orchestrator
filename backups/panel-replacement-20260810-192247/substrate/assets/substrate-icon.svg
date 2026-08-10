@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Local Agent Substrate icon: interconnected hexagonal nodes representing
+     the decentralized orchestration lattice. -->
+<svg width="128" height="128" viewBox="0 0 128 128"
+    xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="20" fill="#0f172a"/>
+  <g stroke="#38bdf8" stroke-width="1.5" fill="none">
+    <!-- Outer hexagon ring -->
+    <polygon points="64,16 92,32 92,64 64,80 36,64 36,32"/>
+    <polygon points="64,48 80,56 80,72 64,80 48,72 48,56"/>
+    <!-- Inner connections -->
+    <line x1="64" y1="16" x2="64" y2="80"/>
+    <line x1="36" y1="32" x2="92" y2="64"/>
+    <line x1="92" y1="32" x2="36" y2="64"/>
+    <line x1="48" y1="56" x2="80" y2="56"/>
+    <!-- Center node -->
+    <circle cx="64" cy="48" r="4" fill="#38bdf8"/>
+    <circle cx="64" cy="64" r="4" fill="#38bdf8"/>
+    <circle cx="48" cy="56" r="3" fill="#64748b"/>
+    <circle cx="80" cy="56" r="3" fill="#64748b"/>
+  </g>
+  <!-- Accent glow -->
+  <g fill="none" stroke="#0ea5e9" stroke-width="0.5" opacity="0.4">
+    <circle cx="64" cy="48" r="12"/>
+    <circle cx="64" cy="64" r="12"/>
+  </g>
+</svg>

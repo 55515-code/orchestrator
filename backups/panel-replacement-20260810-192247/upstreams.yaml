@@ -1,0 +1,327 @@
+projects:
+  - slug: uv
+    name: uv
+    repo_url: https://github.com/astral-sh/uv
+    docs_url: https://docs.astral.sh/uv/
+    rationale: Fast Python runtime/package management with reproducible lock workflows.
+
+  - slug: mise
+    name: mise
+    repo_url: https://github.com/jdx/mise
+    docs_url: https://mise.jdx.dev/
+    rationale: Cross-platform version-managed CLI tooling and task runtime.
+
+  - slug: langgraph
+    name: LangGraph
+    repo_url: https://github.com/langchain-ai/langgraph
+    docs_url: https://langchain-ai.github.io/langgraph/
+    rationale: Structured orchestration for agent workflows with durable state patterns.
+
+  - slug: smolagents
+    name: smolagents
+    repo_url: https://github.com/huggingface/smolagents
+    docs_url: https://huggingface.co/docs/smolagents
+    rationale: Minimal code-first agent framework from Hugging Face with CodeAgent, ToolCallingAgent, and multi-agent hierarchies.
+
+  - slug: agent-collabs
+    name: agent-collabs
+    repo_url: https://github.com/huggingface/agent-collabs
+    docs_url: https://huggingface.co/learn/agents-course
+    rationale: Multi-agent collaboration template with FastAPI backend, message board, taskforces, leaderboard, and eval-space.
+
+  - slug: transformers
+    name: Hugging Face Transformers
+    repo_url: https://github.com/huggingface/transformers
+    docs_url: https://huggingface.co/docs/transformers
+    rationale: Core library for loading and running open-source models; foundation for local inference integrations.
+
+  - slug: huggingface_hub
+    name: Hugging Face Hub
+    repo_url: https://github.com/huggingface/huggingface_hub
+    docs_url: https://huggingface.co/docs/huggingface_hub
+    rationale: Python client for the Hugging Face Hub; model, dataset, and Space discovery and downloads.
+
+  - slug: vllm
+    name: vLLM
+    repo_url: https://github.com/vllm-project/vllm
+    docs_url: https://docs.vllm.ai/
+    rationale: High-throughput open-source LLM serving engine with PagedAttention; Hugging Face recommends for production deployments.
+
+  - slug: sglang
+    name: SGLang
+    repo_url: https://github.com/sgl-project/sglang
+    docs_url: https://docs.sglang.ai/
+    rationale: Structured generation and LLM serving with RadixAttention; strong for agentic and shared-prefix workloads.
+
+  - slug: optimum
+    name: Optimum
+    repo_url: https://github.com/huggingface/optimum
+    docs_url: https://huggingface.co/docs/optimum
+    rationale: Hardware optimization toolkit for Transformers, Diffusers, and Sentence Transformers across ONNX, OpenVINO, ExecuTorch, and NVIDIA backends.
+
+  - slug: diskcache
+    name: diskcache
+    repo_url: https://github.com/grantjenks/python-diskcache
+    docs_url: https://diskcache.readthedocs.io/
+    rationale: Disk and file-backed Python cache with SQLite metadata, tag eviction, and memoization recipes.
+
+  - slug: cachetools
+    name: cachetools
+    repo_url: https://github.com/tkem/cachetools
+    docs_url: https://cachetools.readthedocs.io/
+    rationale: Lightweight in-memory Python caching with TTL, LRU, and LFU policies.
+
+  - slug: joblib
+    name: Joblib
+    repo_url: https://github.com/joblib/joblib
+    docs_url: https://joblib.readthedocs.io/
+    rationale: Disk-based function memoization and parallel computing toolkit from the scikit-learn ecosystem.
+
+  - slug: fastapi
+    name: FastAPI
+    repo_url: https://github.com/fastapi/fastapi
+    docs_url: https://fastapi.tiangolo.com/
+    rationale: Lightweight async API and templating framework suitable for CLI-first ops tooling.
+
+  - slug: caddy
+    name: Caddy
+    repo_url: https://github.com/caddyserver/caddy
+    docs_url: https://caddyserver.com/docs/
+    rationale: Open-source HTTPS reverse proxy for secure self-hosting with minimal ops overhead.
+
+  - slug: cloudflared
+    name: cloudflared
+    repo_url: https://github.com/cloudflare/cloudflared
+    docs_url: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+    rationale: Tunnel-based secure ingress option for no-domain or low-cost remote access.
+
+  - slug: tailscale
+    name: Tailscale
+    repo_url: https://github.com/tailscale/tailscale
+    docs_url: https://tailscale.com/kb/
+    rationale: Encrypted mesh networking for private control panel access across distributed environments.
+
+  - slug: chezmoi
+    name: chezmoi
+    repo_url: https://github.com/twpayne/chezmoi
+    docs_url: https://www.chezmoi.io/
+    rationale: Cross-platform config management and templating for portable user environments.
+
+  - slug: yadm
+    name: yadm
+    repo_url: https://github.com/yadm-dev/yadm
+    docs_url: https://yadm.io/docs/getting_started
+    rationale: Git-backed config workflow with bootstrap hooks and lightweight setup.
+
+  - slug: gnu-stow
+    name: GNU Stow
+    repo_url: https://git.savannah.gnu.org/cgit/stow.git
+    docs_url: https://www.gnu.org/software/stow/manual/stow.html
+    rationale: Standard symlink-farm approach for organizing configuration packages.
+
+  - slug: syncthing
+    name: Syncthing
+    repo_url: https://github.com/syncthing/syncthing
+    docs_url: https://docs.syncthing.net/
+    rationale: Encrypted peer-to-peer sync for cross-device config distribution.
+
+  - slug: restic
+    name: restic
+    repo_url: https://github.com/restic/restic
+    docs_url: https://restic.readthedocs.io/en/stable/
+    rationale: Encrypted snapshot backups with restore flows suited for config portability.
+
+  - slug: rclone
+    name: rclone
+    repo_url: https://github.com/rclone/rclone
+    docs_url: https://rclone.org/docs/
+    rationale: Multi-provider sync/transfer tool for low-cost remote config replication.
+
+  - slug: proton-mail
+    name: Proton Mail
+    repo_url: https://proton.me/support/imap-smtp-and-pop3-setup
+    docs_url: https://proton.me/support/automatically-start-bridge
+    rationale: Documented Bridge and CLI guidance for mail-client integration; no public general mail API is assumed.
+
+  - slug: proton-drive
+    name: Proton Drive
+    repo_url: https://proton.me/blog/proton-drive-sdk-preview
+    docs_url: https://proton.me/support/drive/proton-drive-for-business
+    rationale: Official Drive support and SDK preview context for managed file-sync workflows.
+
+  - slug: proton-vpn
+    name: Proton VPN
+    repo_url: https://proton.me/support/setup-vpn-business
+    docs_url: https://proton.me/support/business/vpn
+    rationale: Managed VPN deployment and business admin surfaces, with no assumed public consumer automation API.
+
+  - slug: dokku
+    name: Dokku
+    repo_url: https://github.com/dokku/dokku
+    docs_url: https://dokku.com/docs/
+    rationale: Low-cost Heroku-like open-source PaaS pattern for affordable staged deployments.
+
+  - slug: coolify
+    name: Coolify
+    repo_url: https://github.com/coollabsio/coolify
+    docs_url: https://coolify.io/docs
+    rationale: Self-hosted developer platform for affordable app deployment with Git-based automation.
+
+  - slug: ducky-payloads
+    name: USB Rubber Ducky Payloads
+    repo_url: https://github.com/hak5/usbrubberducky-payloads
+    docs_url: https://docs.hak5.org/hak5-usb-rubber-ducky/
+    rationale: Community-maintained DuckyScript payload corpus and conventions for device-inspired workflow design.
+
+  - slug: flipper-firmware
+    name: Flipper Zero Firmware
+    repo_url: https://github.com/flipperdevices/flipperzero-firmware
+    docs_url: https://developer.flipper.net/flipperzero/
+    rationale: Official source for Flipper file formats, BadUSB semantics, and device capability references.
+
+  - slug: atomic-red-team
+    name: Atomic Red Team
+    repo_url: https://github.com/redcanaryco/atomic-red-team
+    docs_url: https://github.com/redcanaryco/atomic-red-team
+    rationale: ATT&CK-mapped atomic test content to avoid one-off bespoke validation routines.
+
+  - slug: sigma
+    name: Sigma Rules
+    repo_url: https://github.com/SigmaHQ/sigma
+    docs_url: https://sigmahq.io/
+    rationale: Generic YAML detection rule standard for backend-agnostic detection content.
+
+  - slug: nuclei-templates
+    name: Nuclei Templates
+    repo_url: https://github.com/projectdiscovery/nuclei-templates
+    docs_url: https://docs.projectdiscovery.io/templates/introduction
+    rationale: Maintained template ecosystem for repeatable security checks before custom scanner work.
+
+  - slug: apktool
+    name: Apktool
+    repo_url: https://github.com/iBotPeaches/Apktool
+    docs_url: https://apktool.org/
+    rationale: Standard open-source Android APK decode/build flow used across app reverse workflows.
+
+  - slug: jadx
+    name: JADX
+    repo_url: https://github.com/skylot/jadx
+    docs_url: https://github.com/skylot/jadx
+    rationale: Widely adopted Dex decompiler for Android static analysis pipelines.
+
+  - slug: mobsf
+    name: MobSF
+    repo_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
+    docs_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
+    rationale: Open-source mobile application testing framework for first-pass Android/iOS security triage.
+
+  - slug: frida
+    name: Frida
+    repo_url: https://github.com/frida/frida
+    docs_url: https://frida.re/docs/
+    rationale: Cross-platform dynamic instrumentation toolkit for runtime mobile and software analysis.
+
+  - slug: owasp-mastg
+    name: OWASP MASTG
+    repo_url: https://github.com/OWASP/owasp-mastg
+    docs_url: https://mas.owasp.org/
+    rationale: Mobile AppSec testing guide and verification baseline for structured assessment coverage.
+
+  # Hak5 device ecosystem
+  - slug: hak5-usbrubberducky-payloads
+    name: Hak5 USB Rubber Ducky Payloads
+    repo_url: https://github.com/hak5/usbrubberducky-payloads
+    docs_url: https://docs.hak5.org/hak5-usb-rubber-ducky/usb-rubber-ducky-by-hak5/
+    rationale: Official DuckyScript payload corpus for HID keystroke injection; baseline for BadUSB automation design.
+  - slug: hak5-bashbunny-payloads
+    name: Hak5 Bash Bunny Payloads
+    repo_url: https://github.com/hak5/bashbunny-payloads
+    docs_url: https://docs.hak5.org/hak5-bash-bunny/
+    rationale: Multi-vector HID/network/storage payload library for the Bash Bunny; switch-slot and LED conventions.
+  - slug: hak5-wifipineapplepager-payloads
+    name: Hak5 WiFi Pineapple Pager Payloads
+    repo_url: https://github.com/hak5/wifipineapplepager-payloads
+    docs_url: https://docs.hak5.org/wifi-pineapple-pager/
+    rationale: Official payload repository for the WiFi Pineapple Pager; OpenWrt bash payloads with DuckyScript UI helpers.
+  - slug: hak5-sharkjack-payloads
+    name: Hak5 Shark Jack Payloads
+    repo_url: https://github.com/hak5/sharkjack-payloads
+    docs_url: https://docs.hak5.org/shark-jack/
+    rationale: Ethernet hotplug and network automation payloads for the Shark Jack; hotplug-triggered execution baseline.
+  - slug: hak5-packetsquirrel-payloads
+    name: Hak5 Packet Squirrel Payloads
+    repo_url: https://github.com/hak5/packetsquirrel-payloads
+    docs_url: https://docs.hak5.org/packet-squirrel/
+    rationale: Inline network tap, VPN tunneling, and packet-capture payloads for the Packet Squirrel.
+  - slug: hak5-keycroc-payloads
+    name: Hak5 Key Croc Payloads
+    repo_url: https://github.com/hak5/keycroc-payloads
+    docs_url: https://docs.hak5.org/key-croc/
+    rationale: Keystroke logging, word-detection, and HID injection payloads for the Key Croc.
+  - slug: hak5-omg-payloads
+    name: Hak5 O.MG Payloads
+    repo_url: https://github.com/hak5/omg-payloads
+    docs_url: https://docs.hak5.org/omg/
+    rationale: HTML/JavaScript web-interface payloads for the O.MG cable and covert physical-access tooling.
+  - slug: hak5-wifipineapple-openwrt
+    name: Hak5 WiFi Pineapple OpenWrt Support
+    repo_url: https://github.com/hak5/wifipineapple-openwrt
+    docs_url: https://docs.hak5.org/wifi-pineapple/
+    rationale: OpenWrt NANO/TETRA support layer for WiFi Pineapple; opkg module packaging and dependency conventions.
+  - slug: hak5-pineapple-modules
+    name: Hak5 WiFi Pineapple Modules
+    repo_url: https://github.com/hak5/pineapple-modules
+    docs_url: https://docs.hak5.org/wifi-pineapple/
+    rationale: TypeScript-based Pineapple modules for the web management interface and Cloud C² integration.
+  - slug: hak5-lanturtle-modules
+    name: Hak5 LAN Turtle Modules
+    repo_url: https://github.com/hak5/lanturtle-modules
+    docs_url: https://docs.hak5.org/lan-turtle/
+    rationale: Persistent network implant modules for reverse SSH, DNS poisoning, and Responder-style NTLM capture.
+
+  # Comparable open-source security, penetration testing, and hardware/software tooling
+  - slug: flipperzero-firmware
+    name: Flipper Zero Firmware
+    repo_url: https://github.com/flipperdevices/flipperzero-firmware
+    docs_url: https://developer.flipper.net/flipperzero/
+    rationale: Multi-tool firmware with BadUSB/DuckyScript, Sub-GHz, NFC, RFID, IR, BLE; direct payload-ecosystem competitor.
+  - slug: hackrf
+    name: HackRF (Great Scott Gadgets)
+    repo_url: https://github.com/greatscottgadgets/hackrf
+    docs_url: https://hackrf.readthedocs.io/
+    rationale: Open-source 1 MHz–6 GHz software-defined radio; baseline for RF auditing, sub-GHz analysis, and signal replay.
+  - slug: proxmark3
+    name: Proxmark3
+    repo_url: https://github.com/Proxmark/proxmark3
+    docs_url: https://github.com/Proxmark/proxmark3
+    rationale: Open-source RFID/NFC sniffing, cloning, and simulation toolchain; comparable to Hak5 RFID devices.
+  - slug: p4wnp1
+    name: P4wnP1 ALOA
+    repo_url: https://github.com/mame82/P4wnP1
+    docs_url: https://p4wnp1.googlecode.com/
+    rationale: Raspberry Pi Zero USB attack platform with HID backdoor and trigger-based payloads; open-hardware Ducky/Bunny alternative.
+  - slug: pwnagotchi
+    name: Pwnagotchi
+    repo_url: https://github.com/evilsocket/pwnagotchi
+    docs_url: https://pwnagotchi.ai/
+    rationale: AI-based WiFi cracking and handshake collection on Raspberry Pi; automated WiFi audit baseline comparable to Pineapple.
+  - slug: aircrack-ng
+    name: Aircrack-ng
+    repo_url: https://github.com/aircrack-ng/aircrack-ng
+    docs_url: https://www.aircrack-ng.org/
+    rationale: Canonical open-source WiFi audit suite for monitor mode, deauth, and WEP/WPA cracking.
+  - slug: bettercap
+    name: Bettercap
+    repo_url: https://github.com/bettercap/bettercap
+    docs_url: https://www.bettercap.org/
+    rationale: MITM framework for WiFi, BLE, Ethernet, and HID with event-driven scripting.
+  - slug: kismet
+    name: Kismet
+    repo_url: https://github.com/kismetwireless/kismet
+    docs_url: https://www.kismetwireless.net/
+    rationale: Wireless detector, sniffer, and WIDS supporting WiFi, Bluetooth, BLE, SDR, and drone detection.
+  - slug: unleashed-firmware
+    name: Unleashed Firmware
+    repo_url: https://github.com/DarkFlippers/unleashed-firmware
+    docs_url: https://github.com/DarkFlippers/unleashed-firmware
+    rationale: Extended Flipper Zero firmware with extra pentesting features and expanded BadUSB capabilities.

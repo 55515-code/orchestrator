@@ -32,6 +32,31 @@ Use the substrate CLI via `uv run python -m substrate.cli` or `uv run python scr
 
 See `docs/btrfs-optimization.md` for the storage-layer tradeoffs and runbook.
 
+### Panel Security
+
+The ops panel (`substrate-panel.service`, 127.0.0.1:8090) enforces, in
+`substrate/web.py`:
+
+- **Origin/Host CSRF + DNS-rebinding checks** — state-changing requests must
+  come from a loopback host or the machine's own Tailscale name (`tailscale
+  serve`); HMAC-protected `/gateway/*/webhook` paths are exempt.
+- **Bearer-token auth** — every POST/PUT/PATCH/DELETE requires
+  `Authorization: Bearer <token>` when `PANEL_AUTH_TOKEN` is configured. The
+  token lives in the service unit and is mirrored to `state/panel-auth-token.txt`
+  (mode 600) for operator reference. GET endpoints remain open.
+- **Per-IP rate limiting** — 100 requests/minute per client; excess requests
+  get `429` with a `Retry-After` header. The browser UI authenticates
+  automatically via the same-origin `/__panel_auth_bootstrap__.js` bootstrap.
+- **XSS hardening** — `escapeHtml()` in `substrate/static/control-panel.js`
+  escapes all user-generated content before `innerHTML` interpolation.
+- **Shell injection hardening** — automation prompts are passed to `run.sh` as
+  argv elements, never interpolated into a shell string
+  (`substrate/iphone_panel.py`).
+
+Rotate the token by regenerating it with
+`python3 -c "import secrets; print(secrets.token_urlsafe(32))"` and updating
+`Environment=PANEL_AUTH_TOKEN` in `~/.config/systemd/user/substrate-panel.service`.
+
 ### Desktop Chatbot
 
 A desktop chatbot (`substrate/chatbot/`) gives the user a chat interface that

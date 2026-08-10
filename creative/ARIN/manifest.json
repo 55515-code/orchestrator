@@ -1,0 +1,13 @@
+{
+  "project": "ARIN",
+  "package_version": "1.0",
+  "primary_agent": "Kilo AI automation suite",
+  "poster": "assets/ARIN_final_poster.png",
+  "target_words": [
+    80000,
+    95000
+  ],
+  "external_side_effect_policy": "human_approval_required",
+  "autonomous_internal_work": true,
+  "entrypoint": "00_START_HERE/KILO_MASTER_DIRECTIVE.md"
+}
