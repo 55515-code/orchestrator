@@ -40,6 +40,8 @@ LOG_FILE = LOG_DIR / "lister.log"
 CHECK_INTERVAL_SECONDS = int(os.environ.get("SUBSTRATE_LISTER_INTERVAL", "60"))
 
 TAILSCALE_BIN = shutil.which("tailscale") or "/usr/bin/tailscale"
+OPENCLAW_BIN = shutil.which("openclaw") or "/home/ahron/.npm-global/bin/openclaw"
+OPENCLAW_AGENT_CYCLE_JOB_ID = "69997515-7b90-4ddc-95f3-488a1b36d3d9"
 
 # Services we care about (systemd --user units)
 # openclaw-gateway is the primary UI on 8090; substrate-panel.service is
@@ -91,13 +93,9 @@ SERVICES = [
 ]
 
 # Timers we care about
+# Note: substrate-agent-timer was migrated to OpenClaw cron (job id
+# OPENCLAW_AGENT_CYCLE_JOB_ID). It is checked separately in check_agent_cycle().
 TIMERS = [
-    {
-        "name": "substrate-agent-timer",
-        "unit": "substrate-agent-timer.timer",
-        "required": True,
-        "description": "Substrate agent cycle (5min)",
-    }
 ]
 
 # ---------------------------------------------------------------------------
@@ -249,35 +247,32 @@ def check_agent_cycle() -> dict[str, Any]:
         "action": None,
     }
 
-    # Look for recent agent-cycle logs
+    # Check OpenClaw cron job status (agent cycle migrated from systemd timer)
     try:
         proc = run(
-            ["journalctl", "--user", "-u", "substrate-agent-timer.service", "-n", "20", "--no-pager"],
+            [OPENCLAW_BIN, "cron", "show", OPENCLAW_AGENT_CYCLE_JOB_ID, "--json"],
             capture=True,
+            timeout=10,
         )
-        output = proc.stdout
-        if "agent-cycle" in output or "agent_cycle" in output or "Finished Substrate agent cycle" in output:
-            result["recent"] = True
-            result["ok"] = True
-            result["last_run"] = utc_now_iso()
+        if proc.returncode == 0:
+            data = json.loads(proc.stdout)
+            result["ok"] = data.get("enabled", False)
+            result["active"] = data.get("enabled", False)
+            last_run_ms = data.get("state", {}).get("lastRunAtMs")
+            if last_run_ms:
+                last_run_dt = datetime.fromtimestamp(last_run_ms / 1000, tz=timezone.utc)
+                result["last_run"] = last_run_dt.isoformat()
+                # Consider recent if within the last 15 minutes (job runs every 5 min)
+                now = datetime.now(tz=timezone.utc)
+                if (now - last_run_dt).total_seconds() < 900:
+                    result["recent"] = True
+            result["action"] = f"openclaw_cron:{data.get('state', {}).get('lastRunStatus', 'unknown')}"
             return result
-    except Exception:  # noqa: BLE001
-        pass
-
-    # Check if timer has fired recently via list-timers
-    try:
-        proc = run(["systemctl", "--user", "list-timers", "substrate-agent-timer.timer", "--no-pager"])
-        output = proc.stdout
-        if "substrate-agent-timer.timer" in output and "LEFT" in output:
-            result["recent"] = True
-            result["ok"] = True
-            result["last_run"] = utc_now_iso()
-            return result
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:  # noqa: BLE001
+        result["action"] = f"openclaw_cron_check_failed:{exc}"
 
     if not result["ok"]:
-        result["action"] = "agent_cycle_not_recently_observed"
+        result["action"] = result.get("action") or "agent_cycle_not_recently_observed"
 
     return result
 

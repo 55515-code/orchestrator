@@ -51,7 +51,6 @@ UNITS: list[tuple[str, bool]] = [
     ("substrate-lister.service", True),
     ("substrate-chatbot.service", True),
     ("ttyd.service", True),
-    ("substrate-agent-timer.timer", True),
 ]
 
 TAILSCALE_BIN = shutil.which("tailscale") or "/usr/bin/tailscale"
