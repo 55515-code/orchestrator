@@ -46,7 +46,7 @@ TTYD_PORT = 8765
 # intentionally excluded to avoid port conflicts.
 UNITS: list[tuple[str, bool]] = [
     ("kilo-remote.service", True),
-    ("kilo-acp.service", True),
+    ("kilo-proxy.service", True),
     ("openclaw-gateway.service", True),
     ("substrate-lister.service", True),
     ("substrate-chatbot.service", True),

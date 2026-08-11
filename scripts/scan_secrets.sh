@@ -15,7 +15,11 @@ TARGET="${1:-$(pwd)}"
 cd "$TARGET" 2>/dev/null || { echo "ERROR: cannot cd to $TARGET" >&2; exit 1; }
 
 # Match added diff lines carrying obvious secret-like material.
-PATTERN='^\+.*(password[[:space:]]*[:=]|passwd[[:space:]]*[:=]|token[[:space:]]*[:=]|api[_-]?key[[:space:]]*[:=]|client_secret[[:space:]]*[:=]|BEGIN [A-Z ]*PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
+# Require a literal (quoted) value after password:/token:/api-key: etc. so
+# Python/JS variable assignments like api_key = payload.get(...) are NOT
+# flagged (false positives), while real secrets with a quoted string value
+# still are. Unambiguous token prefixes stay unconditional.
+PATTERN='^\+.*(password[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']+|passwd[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']+|token[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']+|api[_-]?key[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']+|client_secret[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']+|BEGIN [A-Z ]*PRIVATE KEY|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
 
 STAGED_FILES="$(git diff --cached --name-only 2>/dev/null)"
 if [ -z "$STAGED_FILES" ]; then

@@ -53,11 +53,13 @@ SERVICES = [
         "description": "Persistent Kilo remote session (mobile control)",
     },
     {
-        "name": "kilo-acp",
-        "unit": "kilo-acp.service",
+        "name": "kilo-proxy",
+        "unit": "kilo-proxy.service",
         "type": "simple",
         "required": True,
-        "description": "Kilo ACP headless server (automation)",
+        "description": "Kilo OpenAI-compatible proxy (cloud-first, Ollama fallback)",
+        "port": 4097,
+        "host": "127.0.0.1",
     },
     {
         "name": "openclaw-gateway",
