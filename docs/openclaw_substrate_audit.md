@@ -12,17 +12,17 @@ The machine runs a **working but partially-hygienic** local-first AI stack. The 
 
 **Headline issues (all evidence-backed):**
 
-| # | Severity | Issue |
-|---|----------|-------|
-| P0 | warning | **Version drift**: config written by `2026.7.1-2` but running CLI/gateway is `2026.6.34`. Blocks safe use of `doctor --fix` (would strip newer-config keys). |
-| P1 | warning | `tools.allow` used **Kilo tool names** (`todowrite`, `task`, `skill`, `suggest`, `question`, `webfetch`, `websearch`) that OpenClaw does not recognize. → **FIXED this session.** |
-| P1 | warning | Plaintext secrets in `openclaw.json` (`gateway.auth.token`, `models.providers.kilo-proxy.apiKey`). Should be SecretRefs. |
-| P2 | warning | `policy.jsonc` missing for the enabled Policy plugin (workspace artifact). Bundled default is empty (0 bytes), so it must be authored or restored. |
-| P2 | info | No `commands.ownerAllowFrom` → owner-only commands (`/diagnostics`, `/export-trajectory`, `/config`, exec approvals) have no allowed sender. |
-| P2 | info | "Memory system not found in workspace." Local `nomic-embed-text` is installed in Ollama and could back local-first semantic memory. |
-| P3 | info | Workspace identity files (`IDENTITY.md`, `USER.md`) are unfilled templates → OpenClaw agent has no real persona. |
-| P3 | housekeeping | Phantom `app-substrate-chatbot@autostart.service` (systemd "not-found" but "active") from a stale `.desktop`; duplicate chatbot HTTP server on :8321 (manual `tray`) vs :8322 (systemd `serve`). |
-| P3 | bug | `kilo_proxy.py` resolves its server password from `providers.kilo.apiKey`, but config uses `providers.kilo-proxy.apiKey`. → **FIXED this session** (cosmetic; password is unused in routing). |
+| # | Severity | Issue | Status |
+|---|----------|-------|--------|
+| P0 | warning | **Version drift**: config written by `2026.7.1-2` but running CLI/gateway was `2026.6.34`. | **RESOLVED** — updated to `2026.7.1-2`, gateway restarted & verified `live`. |
+| P1 | warning | `tools.allow` used **Kilo tool names** OpenClaw does not recognize. | **RESOLVED** — rewritten with valid OpenClaw tool IDs. |
+| P1 | warning | Plaintext secrets in `openclaw.json` (`gateway.auth.token`, `models.providers.kilo-proxy.apiKey`) + 2 in agent DB. | **DEFERRED** — needs a secrets provider + verification (auth-reliability risk). Runbook in §11. |
+| P2 | warning | `policy.jsonc` missing for the enabled Policy plugin. | **RESOLVED** — authored permissive baseline; `policy check` → `ok`. |
+| P2 | info | No `commands.ownerAllowFrom`. | **DEFERRED** — needs operator channel id. |
+| P2 | info | "Memory system not found in workspace." | **DEFERRED** — local `nomic-embed-text` available; wire post-verification. |
+| P3 | info | Workspace identity files are unfilled templates. | Operator personalization; left untouched. |
+| P3 | housekeeping | Phantom `app-substrate-chatbot@autostart.service`; duplicate chatbot :8321 vs :8322. | Benign; documented. |
+| P3 | bug | `kilo_proxy.py` password lookup used wrong provider key. | **RESOLVED.** |
 
 The stack is **live and healthy at the transport level**: `kilo-proxy` reports `kilo_healthy=true, ollama_healthy=true, route=kilo`; OpenClaw Gateway `/healthz` returns `live`.
 
@@ -147,8 +147,8 @@ Plus a config-load warning (stderr): `tools.allow` contained unknown entries (`g
   openclaw gateway stop && openclaw gateway install --force && openclaw gateway start
   openclaw doctor --lint --severity-min info --json
   ```
+- **RESOLVED (execution pass 2):** `npm -g install openclaw@2026.7.1-2` (in place, same path); `systemctl --user stop openclaw-gateway.service`; `openclaw gateway install --force` (unit rewritten; prior unit backed up to `openclaw-gateway.service.bak`); `systemctl --user start`; verified `is-active=active` and `/healthz` → `{"ok":true,"status":"live"}`; `openclaw --version` = `2026.7.1-2`. The version-mismatch doctor warning is gone.
 - **Rollback:** `npm -g install openclaw@2026.6.34`; restore `~/.openclaw/openclaw.json` from the `.bak` ring.
-- **Risk:** Medium (touches the live gateway). Note: the mission cautions against *beginning* with reinstalling/replacing infrastructure; an in-place version update is the sanctioned fix for this specific doctor-flagged drift. Deferred this session pending deliberate go-ahead.
 
 ### P1 — `tools.allow` used Kilo tool names → **FIXED this session**
 - **Evidence:** doctor flagged `glob, grep, todowrite, task, skill, suggest, question, webfetch, websearch` as unknown. Valid OpenClaw tool IDs (from package `dist` + doctor non-flagging) are `bash, read, write, edit, exec, browser, canvas, memory, webFetch, webSearch, grep, glob, session_status`.
@@ -166,13 +166,9 @@ Plus a config-load warning (stderr): `tools.allow` contained unknown entries (`g
   ```
 - **Risk:** Medium — verify the gateway still authenticates clients after migration (check a client can connect; token value is unchanged, just moved to the secret store).
 
-### P2 — Missing `policy.jsonc`
-- The bundled default (`dist/extensions/policy/policy.jsonc`) is **empty (0 bytes)**, so it cannot simply be copied. After the P0 update, let doctor restore it:
-  ```bash
-  openclaw doctor --fix --non-interactive    # restores policy.jsonc + drops unknown config keys (safe post-update)
-  openclaw doctor --lint --severity-min warning
-  ```
-- **Risk:** Low once version matches. Do NOT run `--fix` before P0 (would strip newer-config keys).
+### P2 — Missing `policy.jsonc` → **RESOLVED**
+- The bundled default (`dist/extensions/policy/policy.jsonc`) is **empty (0 bytes)** and `doctor --fix` does not author it. `readPolicyDocument` simply JSON5-parses the file into `value`, so a valid (permissive) workspace artifact just needs to exist.
+- **Fix applied:** created `~/codespace/policy.jsonc` as an empty/permissive baseline. `doctor --lint` no longer reports `policy/policy-jsonc-missing`, and `openclaw policy check` → `{"ok":true,"findings":[]}`. Empty policy enforces no constraints (matches prior behavior) — no risk of over-restricting the autonomous agent.
 
 ### P2 — No `commands.ownerAllowFrom`
 - **Plan:** set to the operator's channel id (requires the user's Telegram/WhatsApp id). Documented; needs operator input. Example: `openclaw config set commands.ownerAllowFrom '["whatsapp:<id>"]'`.
@@ -218,9 +214,56 @@ Plus a config-load warning (stderr): `tools.allow` contained unknown entries (`g
 
 ---
 
-## 10. Changes Applied This Session (safe, reversible)
+## 10. Changes Applied (execution pass 1 + pass 2 — safe, reversible)
 
-1. **`~/.openclaw/openclaw.json`** — `tools.allow` rewritten with valid OpenClaw tool IDs (removed Kilo-only names, fixed `webFetch`/`webSearch` casing, added `exec`/`browser`/`canvas`/`memory`). Backup: `openclaw.json.audit-bak-<ts>`. Effect on next gateway config load.
+**Pass 1 (config/substrate hygiene):**
+1. **`~/.openclaw/openclaw.json`** — `tools.allow` rewritten with valid OpenClaw tool IDs (removed Kilo-only names `todowrite/task/skill/suggest/question`, fixed `webFetch`/`webSearch` casing, added `exec`/`browser`/`canvas`/`memory`). Backup: `openclaw.json.audit-bak-<ts>`. Takes effect on next gateway config load.
 2. **`~/codespace/scripts/kilo_proxy.py`** — `resolve_server_password()` now reads `providers.kilo-proxy.apiKey` (was `providers.kilo`). Cosmetic; `py_compile` passes.
 
-**Deferred (need deliberate go-ahead / version-gated):** OpenClaw update to 2026.7.1-2 (P0), SecretRef migration (P1), `policy.jsonc` restore via `doctor --fix` (P2), `commands.ownerAllowFrom` (P2), local `nomic-embed-text` memory wiring (P2).
+**Pass 2 (version-gated, with operator consent):**
+3. **OpenClaw updated** `2026.6.34` → `2026.7.1-2` in place (`npm -g install openclaw@2026.7.1-2`); gateway unit reinstalled (`--force`, old unit → `openclaw-gateway.service.bak`) and restarted; verified `live`. Resolves the P0 version-drift warning.
+4. **`openclaw doctor --fix --non-interactive`** ran (versions now matched): disabled the `wacli` skill (allowed but binary unavailable), dropped stray config keys, rotated `openclaw.json.bak`.
+5. **`~/codespace/policy.jsonc`** authored (permissive baseline) → clears `policy/policy-jsonc-missing`; `openclaw policy check` → `ok`.
+
+**Final `doctor --lint` state:** only `core/doctor/security` (plaintext secrets) + `core/doctor/command-owner` (info) remain. Both are documented below with runbooks.
+
+---
+
+## 11. Deferred Runbooks (with consent, intentionally not auto-applied)
+
+### 11.1 SecretRef migration (P1 — security hardening; auth-reliability risk)
+`secrets audit --check` reports 4 plaintext secrets:
+`openclaw.json:gateway.auth.token`, `openclaw.json:models.providers.kilo-proxy.apiKey`,
+`agents/main/agent/openclaw-agent.sqlite:profiles.ollama:default.key`,
+`agents/main/agent/models.json:providers.kilo-proxy.apiKey`.
+
+**Why deferred:** there is no `secrets` provider configured (`secrets` key absent in config), so migration first requires standing up a provider. Moving the **gateway token** to a SecretRef introduces a runtime dependency on that store; if it is not reliably resolvable by the gateway, client auth (iPhone app / web UI) breaks — directly harming reliability. `secrets configure` is interactive and cannot be driven safely headless here.
+
+**Safe procedure (verify before trusting):**
+```bash
+# 1) Stand up a LOCAL secret provider (always resolvable on this machine):
+openclaw secrets configure --providers-only --yes      # choose the local/file provider when prompted
+# 2) Map the credential fields to SecretRefs (no new provider setup):
+openclaw secrets configure --skip-provider-setup --apply --yes --plan-out /tmp/secrets-plan.json
+# 3) Preflight only first:
+openclaw secrets apply --dry-run --from /tmp/secrets-plan.json
+# 4) Apply:
+openclaw secrets apply --from /tmp/secrets-plan.json
+# 5) Reload + VERIFY gateway still authenticates, then audit:
+openclaw gateway stop && openclaw gateway start
+curl -s http://127.0.0.1:8090/healthz        # expect {"ok":true,"status":"live"}
+curl -s -H "Authorization: Bearer <gateway token>" http://127.0.0.1:8090/...   # confirm a real auth'd call works
+openclaw secrets audit --check                 # expect plaintext=0 for migrated paths
+```
+**Rollback if auth breaks:** restore `~/.openclaw/openclaw.json` from `openclaw.json.bak` / `openclaw.json.pre-update-<ts>` and `agents/main/agent/models.json`; restart gateway.
+
+### 11.2 `commands.ownerAllowFrom` (P2 — info)
+Set to the operator's channel id so owner-only commands are protected:
+`openclaw config set commands.ownerAllowFrom '["whatsapp:<operator-id>"]'` (id required from operator).
+
+### 11.3 Local-first semantic memory (P2 — enhancement)
+Ollama has `nomic-embed-text` installed locally. Wire OpenClaw memory/search embeddings to `ollama/nomic-embed-text` for a fully local-first memory backend:
+`openclaw configure --section model` → set embedding provider to `ollama/nomic-embed-text`; confirm via `openclaw doctor --lint --all` (memory-search readiness).
+
+### 11.4 Identity personalization (P3)
+Fill `~/codespace/IDENTITY.md` / `USER.md` (operator's choice); not invented by automation.

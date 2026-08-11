@@ -1,0 +1,10 @@
+{
+  // OpenClaw Policy plugin — workspace policy artifact.
+  // Minimal permissive baseline. The Policy plugin loads this document and
+  // evaluates claims against it; an empty object enforces no constraints
+  // (matches the previous no-policy.jsonc behavior) and clears the
+  // `policy/policy-jsonc-missing` doctor warning.
+  // Author stricter, intentional rules here and verify with:
+  //   openclaw policy check
+  //   openclaw policy compare --baseline <path>
+}
