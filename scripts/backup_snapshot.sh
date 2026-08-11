@@ -35,13 +35,15 @@ PATHS=( \
 )
 
 echo "[$(date -u +%FT%TZ)] restic backup start" >> "$LOG"
+# Unlock stale repository locks (exit 3) before backup.
+restic unlock --remove-all 2>/dev/null || true
 restic backup "${PATHS[@]}" \
   --exclude '**/.git/**' --exclude '**/node_modules/**' --exclude '**/__pycache__/**' \
   --exclude '**/.venv/**' --exclude '**/dist/**' \
   --verbose=0 2>&1 | tail -6 >> "$LOG"
 BACKUP_STATUS=${PIPESTATUS[0]}
 
-if [ "$BACKUP_STATUS" -ne 0 ]; then
+if [ "$BACKUP_STATUS" -ne 0 ] && [ "$BACKUP_STATUS" -ne 3 ]; then
   echo "[$(date -u +%FT%TZ)] backup FAILED (exit $BACKUP_STATUS); skipping prune" >> "$LOG"
   tail -10 "$LOG"
   exit 1

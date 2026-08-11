@@ -252,7 +252,6 @@ def check_agent_cycle() -> dict[str, Any]:
         proc = run(
             [OPENCLAW_BIN, "cron", "show", OPENCLAW_AGENT_CYCLE_JOB_ID, "--json"],
             capture=True,
-            timeout=10,
         )
         if proc.returncode == 0:
             data = json.loads(proc.stdout)

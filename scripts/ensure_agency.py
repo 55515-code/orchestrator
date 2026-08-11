@@ -44,6 +44,8 @@ TTYD_PORT = 8765
 # (unit, required)
 # openclaw-gateway is the primary UI on 8090; substrate-panel.service is
 # intentionally excluded to avoid port conflicts.
+# Note: substrate-agent-timer.timer is managed by OpenClaw cron jobs, not
+# systemd, to avoid duplicate scheduling.
 UNITS: list[tuple[str, bool]] = [
     ("kilo-remote.service", True),
     ("kilo-proxy.service", True),

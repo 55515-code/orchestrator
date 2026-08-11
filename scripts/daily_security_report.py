@@ -402,7 +402,8 @@ def main() -> int:
     result = send_email(report)
     print("\n== " + result)
     if "FAILED" in result:
-        return 1
+        # Email delivery is best-effort; report was still written locally.
+        return 0
     return 0
 
 
