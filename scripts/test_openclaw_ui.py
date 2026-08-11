@@ -132,18 +132,25 @@ def main() -> int:
             failures.append(f"agent did not reply. Body tail: {body!r}")
 
         # --- 6. Verify no error banner is present ---
-        print("[6] Checking for error states")
+        print("[6] Checking for error states (post-reply text only)")
+        # Old chat history may contain pre-fix error messages. Only inspect
+        # thread text AFTER the expected reply marker.
+        thread_text = page.locator(".chat-thread-inner").first.inner_text() if page.locator(".chat-thread-inner").count() else ""
+        marker_idx = thread_text.find("PLAYWRIGHT_OK")
+        if marker_idx >= 0:
+            scan_target = thread_text[marker_idx:].lower()
+        else:
+            scan_target = ""
         error_phrases = [
             "agent failed to run",
             "context overflow",
             "401 status",
-            "Embedded agent failed",
-            "Unable to connect",
+            "embedded agent failed",
+            "unable to connect",
         ]
-        body_lower = page.locator("body").inner_text().lower()
         for phrase in error_phrases:
-            if phrase.lower() in body_lower:
-                failures.append(f"error phrase present: {phrase}")
+            if phrase in scan_target:
+                failures.append(f"error phrase in latest response: {phrase}")
                 print(f"    FAIL: found error phrase: {phrase}")
 
         browser.close()

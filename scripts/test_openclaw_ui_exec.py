@@ -93,11 +93,21 @@ def main() -> int:
             tail = page.locator("body").inner_text()[-400:]
             failures.append(f"execution result not returned. Body tail: {tail!r}")
 
-        print("[5] Checking for error states")
-        body_lower = page.locator("body").inner_text().lower()
-        for phrase in ("agent failed to run", "context overflow", "401 status", "embedded agent failed"):
-            if phrase in body_lower:
-                failures.append(f"error phrase present: {phrase}")
+        print("[5] Checking for error states (post-marker text only)")
+        # Old chat history may contain pre-fix error messages. Only inspect
+        # thread text AFTER the marker (i.e. the newest agent response).
+        thread_text = page.locator(".chat-thread-inner").first.inner_text() if page.locator(".chat-thread-inner").count() else ""
+        marker_idx = thread_text.find(MARKER)
+        if marker_idx >= 0:
+            scan_target = thread_text[marker_idx:].lower()
+        else:
+            scan_target = ""
+        error_phrases = ("agent failed to run", "context overflow", "401 status", "embedded agent failed")
+        for phrase in error_phrases:
+            if phrase in scan_target:
+                failures.append(f"error phrase in latest response: {phrase}")
+        if MARKER.lower() not in thread_text.lower():
+            failures.append("expected marker not found in chat thread")
 
         browser.close()
 
