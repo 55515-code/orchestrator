@@ -106,7 +106,10 @@ def resolve_server_password() -> str:
     config_path = Path.home() / ".openclaw" / "openclaw.json"
     try:
         payload = json.loads(config_path.read_text(encoding="utf-8"))
-        api_key = str(payload.get("models", {}).get("providers", {}).get("kilo", {}).get("apiKey", ""))
+        providers = payload.get("models", {}).get("providers", {})
+        api_key = str(providers.get("kilo-proxy", {}).get("apiKey", "")) or str(
+            providers.get("kilo", {}).get("apiKey", "")
+        )
         if api_key.startswith("kilo:"):
             return api_key.split(":", 1)[1]
     except (OSError, json.JSONDecodeError):
