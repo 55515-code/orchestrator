@@ -1,11 +1,13 @@
 # Deployment
 
-This control panel is designed to run without owning an official domain and to remain deployable anywhere Codex can access.
+> **Note:** OpenClaw Gateway is the primary ops UI on `http://127.0.0.1:8090/`.
+> The legacy substrate panel (`substrate_cli.py serve`) is retired; use it only
+> for local development on alternative ports if needed.
 
 ## Profile A: Local secure only
 
 ```bash
-uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
+uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8091
 ```
 
 Use this for personal/local ops with no public exposure.
@@ -13,7 +15,7 @@ Use this for personal/local ops with no public exposure.
 Pinch-mode shortcut:
 
 ```bash
-uv run python scripts/substrate_cli.py pinch --port 8090
+uv run python scripts/substrate_cli.py pinch --port 8091
 ```
 
 ## Profile B: Secure no-domain remote access

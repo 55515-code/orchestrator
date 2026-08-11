@@ -90,10 +90,11 @@ uv run python -m compileall substrate/dashboard substrate/pipelines substrate/gh
 
 #### Option 1: Integrated with Ops Panel
 
-The dashboard and pipelines are automatically available when running the main ops panel:
+OpenClaw Gateway is the primary UI on `127.0.0.1:8090`. The substrate CLI panel
+is retired on that port; use it only for local dev on alternative ports:
 
 ```bash
-uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
+uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8091
 ```
 
 Access the services at:

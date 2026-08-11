@@ -194,7 +194,7 @@ class GoogleGatewayChatModel:
 
 def build_model(provider: str, model: str):
     normalized = provider.strip().lower()
-    if normalized in {"mock", "codex"}:
+    if normalized == "mock":
         return None
     if normalized in {"local", "roo-router"}:
         return _build_local_router(model)

@@ -31,7 +31,7 @@ def _load_backlog(runtime: Any) -> dict[str, Any]:
 
 
 def _build_model(agent: Any):
-    if agent.provider in {"mock", "codex"}:
+    if agent.provider == "mock":
         return None
     try:
         from ..providers import DEFAULT_PROVIDER_MODELS, build_model

@@ -68,7 +68,7 @@ from .standards import standards_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
 
 ALLOWED_CHAIN_PROVIDERS = set(SUPPORTED_PROVIDERS)
-ALLOWED_AGENT_PROVIDERS = set(SUPPORTED_PROVIDERS) | {"codex"}
+ALLOWED_AGENT_PROVIDERS = set(SUPPORTED_PROVIDERS)
 ALLOWED_STAGES = {"local", "hosted_dev", "production"}
 ALLOWED_MODES = {"observe", "mutate"}
 ALLOWED_OPENCLAW_DATA_CLASSES = set(OPENCLAW_ALLOWED_DATA_CLASSES)
@@ -1673,6 +1673,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "serve":
         import uvicorn
+
+        # Port 8090 is owned by OpenClaw Gateway; warn before binding.
+        if args.port == 8090:
+            print(
+                "WARNING: OpenClaw Gateway owns 127.0.0.1:8090. "
+                "Use an alternative port for local dev (e.g. --port 8095).",
+                file=__import__("sys").stderr,
+            )
 
         uvicorn.run(
             "substrate.web:app",

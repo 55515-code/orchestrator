@@ -75,6 +75,13 @@ available and prints a cron fallback otherwise.
 
 ## Launch control panel
 
+OpenClaw Gateway is the primary ops UI on `127.0.0.1:8090`. It is managed by
+the `openclaw-gateway.service` systemd unit and is auto-healed by
+`ensure_agency.py`.
+
+For local development on an alternative port, the legacy substrate panel is
+still available:
+
 ```bash
-uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
+uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8091
 ```

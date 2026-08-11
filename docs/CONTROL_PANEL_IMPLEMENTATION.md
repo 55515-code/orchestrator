@@ -1,10 +1,17 @@
 # Substrate Control Panel - Modern Dashboard Implementation
 
+> **DEPRECATED:** This document describes the legacy substrate control panel.
+> OpenClaw Gateway is the primary UI on `http://127.0.0.1:8090/`. The legacy
+> panel code (`substrate/web.py`, `substrate/iphone_panel.py`,
+> `substrate/static/control-panel.*`) still exists on disk but is **not loaded**
+> by any active service. Do not run `substrate.cli serve` as it will conflict
+> with OpenClaw on port 8090.
+
 ## Overview
 
 A modern, OpenClaw-inspired control panel has been successfully deployed for the Local Agent Substrate. The interface features cutting-edge 2026 design patterns including glassmorphism, dark mode, bento grid layouts, and real-time updates via Server-Sent Events.
 
-**Live URL:** http://127.0.0.1:8090/panel
+**Legacy URL:** http://127.0.0.1:8090/panel (retired; use OpenClaw Gateway at `/`)
 
 ## Design Philosophy
 
@@ -303,16 +310,16 @@ logger.error(f"Control panel error: {e}")
 ### Common Issues
 
 **Issue**: Dashboard not loading
-**Solution**: Check server is running on port 8090, verify `/panel` endpoint
+**Solution**: OpenClaw Gateway is the primary UI on port 8090. Verify it is running with `systemctl --user status openclaw-gateway.service`. The legacy `/panel` endpoint is retired.
 
 **Issue**: Real-time updates not working
-**Solution**: Check browser console for SSE errors, verify `/stream/metrics` endpoint
+**Solution**: Check browser console for SSE errors, verify `/stream/metrics` endpoint through OpenClaw Gateway.
 
 **Issue**: Theme not persisting
-**Solution**: Clear browser localStorage, check for JavaScript errors
+**Solution**: Clear browser localStorage, check for JavaScript errors.
 
 **Issue**: Command palette not opening
-**Solution**: Ensure no other keyboard shortcuts are conflicting
+**Solution**: Ensure no other keyboard shortcuts are conflicting.
 
 ### Contact
 For issues or feature requests, refer to the substrate documentation or open an issue in the repository.

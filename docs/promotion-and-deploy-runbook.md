@@ -88,7 +88,7 @@ Promote only when Phase B has clean evidence:
 
 Operational profiles:
 
-- local-only serve: `uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090`
+- local-only serve: `uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8091` (legacy panel; OpenClaw Gateway is primary on 8090)
 - containerized: `bash scripts/run_local_container.sh up`
 
 ---

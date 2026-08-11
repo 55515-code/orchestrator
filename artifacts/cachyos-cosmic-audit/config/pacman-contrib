@@ -1,3 +1,0 @@
-# Pacman-Contrib arguments
-# Keep two cached versions of each installed package.
-PACCACHE_ARGS=-k2

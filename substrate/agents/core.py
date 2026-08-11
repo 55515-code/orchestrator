@@ -33,7 +33,7 @@ CADENCE_SECONDS: dict[str, int | None] = {
     "weekly": 7 * 86400,
     "on_demand": None,
 }
-ALLOWED_AGENT_PROVIDERS = set(SUPPORTED_PROVIDERS) | {"codex"}
+ALLOWED_AGENT_PROVIDERS = set(SUPPORTED_PROVIDERS)
 
 TIER_AUTO = 0
 TIER_AUTO_IF_GREEN = 1

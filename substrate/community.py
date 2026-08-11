@@ -68,7 +68,7 @@ OPERATING_CADENCE_PHASES = [
 DEFAULT_PROVIDER_MODELS = {
     **PROVIDER_DEFAULT_MODELS,
     "mock": "mock-codex-persona",
-    "codex": "default",
+    # "codex": legacy provider stub, retained for backward compatibility only.
 }
 
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
@@ -192,7 +192,7 @@ FEEDBACK_QUALITY = ["high_signal", "mixed", "noisy"]
 
 
 def _build_model(provider: str, model: str):
-    if provider in {"mock", "codex"}:
+    if provider == "mock":
         return None
     return build_provider_model(provider, model)
 
@@ -578,7 +578,7 @@ def _actor_prompt(
     rfc_lines = [f"- {item['id']}: {item['title']}" for item in RFC_CATALOG]
 
     return (
-        "You are an independent Codex-style agent participating in an open-source community cycle.\n"
+        "You are an independent AI agent participating in an open-source community cycle.\n"
         "You must respond with JSON only.\n\n"
         f"Cycle: {cycle}\n"
         f"Stage: {stage}\n"
@@ -657,105 +657,6 @@ def _codex_thread_id_from_stdout(stdout: str) -> str | None:
     return None
 
 
-def _run_codex_actor_session(
-    *,
-    agent: dict[str, Any],
-    cycle: int,
-    stage: str,
-    base_seed: int,
-    mission_statement: str,
-    model_name: str,
-    runtime_root: Path,
-    run_dir: Path,
-) -> dict[str, Any]:
-    codex_binary = shutil.which("codex")
-    if codex_binary is None:
-        raise RuntimeError("codex binary not found on PATH.")
-
-    prompt = _actor_prompt(
-        agent=agent,
-        cycle=cycle,
-        stage=stage,
-        mission_statement=mission_statement,
-    )
-    actor_id = str(agent["agent_id"])
-    actor_safe = actor_id.replace("/", "_")
-    raw_dir = run_dir / "codex_raw"
-    raw_dir.mkdir(parents=True, exist_ok=True)
-    output_file = raw_dir / f"{actor_safe}.last_message.txt"
-    stdout_log = raw_dir / f"{actor_safe}.stdout.log"
-    stderr_log = raw_dir / f"{actor_safe}.stderr.log"
-
-    command = [
-        codex_binary,
-        "exec",
-        "--skip-git-repo-check",
-        "-C",
-        str(runtime_root),
-        "--output-last-message",
-        str(output_file),
-        "--dangerously-bypass-approvals-and-sandbox",
-    ]
-    if model_name and model_name != "default":
-        command.extend(["-m", model_name])
-    command.append("-")
-
-    try:
-        completed = subprocess.run(
-            command,
-            input=prompt,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-    except OSError as exc:
-        fallback = _mock_actor_output(agent=agent, cycle=cycle, base_seed=base_seed)
-        fallback["source"] = "codex-launch-fallback"
-        fallback["narrative"] = (
-            f"Failed to launch codex process ({exc}); fallback output used for {actor_id}."
-        )
-        return fallback
-
-    stdout_log.write_text(completed.stdout, encoding="utf-8")
-    stderr_log.write_text(completed.stderr, encoding="utf-8")
-
-    if completed.returncode != 0:
-        fallback = _mock_actor_output(agent=agent, cycle=cycle, base_seed=base_seed)
-        fallback["source"] = "codex-returncode-fallback"
-        fallback["narrative"] = (
-            f"codex returned non-zero ({completed.returncode}); fallback output used for {actor_id}."
-        )
-        fallback["codex_exit_code"] = completed.returncode
-        return fallback
-
-    if not output_file.exists():
-        fallback = _mock_actor_output(agent=agent, cycle=cycle, base_seed=base_seed)
-        fallback["source"] = "codex-missing-output-fallback"
-        fallback["narrative"] = (
-            f"codex produced no output file; fallback output used for {actor_id}."
-        )
-        return fallback
-
-    try:
-        content = output_file.read_text(encoding="utf-8")
-        parsed = json.loads(_strip_code_fence(content))
-        if not isinstance(parsed, dict):
-            raise ValueError("codex actor response was not a JSON object")
-        normalized = _coerce_actor_output(parsed, agent)
-        normalized["source"] = "codex"
-        thread_id = _codex_thread_id_from_stdout(completed.stdout)
-        if thread_id:
-            normalized["codex_thread_id"] = thread_id
-        return normalized
-    except Exception as exc:  # noqa: BLE001
-        fallback = _mock_actor_output(agent=agent, cycle=cycle, base_seed=base_seed)
-        fallback["source"] = "codex-parse-fallback"
-        fallback["narrative"] = (
-            f"codex output parse failed ({exc}); fallback output used for {actor_id}."
-        )
-        return fallback
-
-
 def _run_actor_session(
     *,
     agent: dict[str, Any],
@@ -771,17 +672,6 @@ def _run_actor_session(
 ) -> dict[str, Any]:
     if provider == "mock":
         return _mock_actor_output(agent=agent, cycle=cycle, base_seed=base_seed)
-    if provider == "codex":
-        return _run_codex_actor_session(
-            agent=agent,
-            cycle=cycle,
-            stage=stage,
-            base_seed=base_seed,
-            mission_statement=mission_statement,
-            model_name=model_name,
-            runtime_root=runtime_root,
-            run_dir=run_dir,
-        )
 
     prompt = _actor_prompt(
         agent=agent,
@@ -825,7 +715,7 @@ def _run_agent_waves(
     runtime_root: Path,
     run_dir: Path,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    llm = _build_model(provider, model_name) if provider not in {"mock", "codex"} else None
+    llm = _build_model(provider, model_name) if provider != "mock" else None
     waves = _chunked(agents, concurrency_limit)
     sessions: list[dict[str, Any]] = []
     wave_summaries: list[dict[str, Any]] = []

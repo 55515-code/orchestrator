@@ -224,18 +224,9 @@ def make_cloud_command() -> list[str]:
     cloud_command_raw = os.getenv("AGENT_CLOUD_COMMAND", "").strip()
     if cloud_command_raw:
         return ["bash", "-lc", cloud_command_raw]
-    return [
-        "codex",
-        "cloud",
-        "exec",
-        "--attempts",
-        "1",
-        (
-            "Follow prompts/cloud_agent_hybrid_operator.md. "
-            "Perform deep analysis, testing, research planning, and development guidance "
-            "for this repository."
-        ),
-    ]
+    # Cloud execution is not configured. Set AGENT_CLOUD_COMMAND to enable
+    # the current Kilo/OpenClaw cloud execution path.
+    return []
 
 
 def run_single_loop(
@@ -257,38 +248,43 @@ def run_single_loop(
 
     cloud_result: dict[str, Any] | None = None
     if mode == "deep":
-        cloud_attempted = True
-        route = "cloud_agent"
-        cloud_result = run_command(
-            make_cloud_command(),
-            cwd=root,
-            timeout_seconds=timeout_seconds,
-        )
-        command_results.append(cloud_result)
-        cloud_success = bool(cloud_result.get("ok"))
-        if cloud_success:
-            cloud_note = "Cloud agent route completed."
+        cloud_command = make_cloud_command()
+        if cloud_command:
+            cloud_attempted = True
+            route = "cloud_agent"
+            cloud_result = run_command(
+                cloud_command,
+                cwd=root,
+                timeout_seconds=timeout_seconds,
+            )
+            command_results.append(cloud_result)
+            cloud_success = bool(cloud_result.get("ok"))
+            if cloud_success:
+                cloud_note = "Cloud agent route completed."
+            else:
+                route = "fallback_local_mock"
+                cloud_note = "Cloud agent unavailable or failed; fallback completed."
+                risks.append("Cloud route was unavailable during deep loop; fallback was used.")
+                fallback_commands = [
+                    ["uv", "run", "python", "scripts/substrate_cli.py", "scan"],
+                    [
+                        "uv",
+                        "run",
+                        "--with",
+                        "pytest",
+                        "--with",
+                        "httpx",
+                        "pytest",
+                        "-q",
+                        "tests/studio/test_connection.py",
+                        "tests/studio/test_api.py",
+                    ],
+                ]
+                for command in fallback_commands:
+                    command_results.append(run_command(command, cwd=root, timeout_seconds=timeout_seconds))
         else:
-            route = "fallback_local_mock"
-            cloud_note = "Cloud agent unavailable or failed; fallback completed."
-            risks.append("Cloud route was unavailable during deep loop; fallback was used.")
-            fallback_commands = [
-                ["uv", "run", "python", "scripts/substrate_cli.py", "scan"],
-                [
-                    "uv",
-                    "run",
-                    "--with",
-                    "pytest",
-                    "--with",
-                    "httpx",
-                    "pytest",
-                    "-q",
-                    "tests/studio/test_connection.py",
-                    "tests/studio/test_api.py",
-                ],
-            ]
-            for command in fallback_commands:
-                command_results.append(run_command(command, cwd=root, timeout_seconds=timeout_seconds))
+            cloud_note = "Cloud command not configured; skipping cloud route."
+            risks.append("AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.")
 
     failing = [entry for entry in command_results if not entry.get("ok")]
     if failing:
@@ -704,7 +700,7 @@ def main() -> int:
         "Safe gate merge requires loop checks and rebase/push success.",
     ]
     next_cycle_focus = [
-        "Increase cloud execution reliability and codex auth readiness.",
+        "Increase cloud execution reliability and Kilo/OpenClaw readiness.",
         "Expand defensive-tool evidence normalization coverage.",
         "Improve UX explainability for learner-safe security runs.",
     ]

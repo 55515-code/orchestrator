@@ -34,7 +34,7 @@ def _load_targets(runtime: Any) -> list[dict[str, Any]]:
 
 def _provider_note(agent: Any, prompt: str) -> str | None:
     """Optional enrichment from the configured provider; failures degrade."""
-    if agent.provider in {"mock", "codex"}:
+    if agent.provider == "mock":
         return None
     try:
         from ..providers import DEFAULT_PROVIDER_MODELS, build_model

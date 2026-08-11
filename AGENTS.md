@@ -10,6 +10,8 @@ This is the **Local Agent Substrate** — a portable, low-cost orchestration sub
 
 Use the substrate CLI via `uv run python -m substrate.cli` or `uv run python scripts/substrate_cli.py`. The CLI provides all operational commands.
 
+**Note:** OpenClaw Gateway is the primary ops UI on `127.0.0.1:8090`. The legacy substrate panel (`substrate serve`) is retired; use it only for local dev on alternative ports if needed.
+
 ### Key Commands
 
 - `/scan` — Run a repository scan and health check

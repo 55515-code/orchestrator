@@ -33,8 +33,8 @@ uv run python scripts/substrate_cli.py run-task \
 # Install recurring local schedule (systemd user timer + cron fallback)
 bash scripts/install_developer_polish_timer.sh
 
-# Run control panel
-uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
+# Run control panel (OpenClaw Gateway is primary on 8090)
+uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8091
 
 # Trusted standards and optional tool profiles
 uv run python scripts/substrate_cli.py standards
