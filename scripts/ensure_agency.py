@@ -42,6 +42,8 @@ TAILSCALE_HTTPS_PORT = 10000
 TTYD_PORT = 8765
 
 # (unit, required)
+# openclaw-gateway is the primary UI on 8090; substrate-panel.service is
+# intentionally excluded to avoid port conflicts.
 UNITS: list[tuple[str, bool]] = [
     ("kilo-remote.service", True),
     ("kilo-acp.service", True),

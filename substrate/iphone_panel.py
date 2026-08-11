@@ -184,7 +184,7 @@ def _gather_system_snapshot() -> dict[str, Any]:
 
     # Kilo service status
     snap["services"] = {}
-    for name in ("kilo-remote.service", "kilo-acp.service", "substrate-panel.service", "ttyd.service"):
+    for name in ("kilo-remote.service", "kilo-acp.service", "openclaw-gateway.service", "ttyd.service"):
         try:
             out = subprocess.run(
                 ["systemctl", "--user", "is-active", name],

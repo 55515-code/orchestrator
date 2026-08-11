@@ -42,6 +42,8 @@ CHECK_INTERVAL_SECONDS = int(os.environ.get("SUBSTRATE_LISTER_INTERVAL", "60"))
 TAILSCALE_BIN = shutil.which("tailscale") or "/usr/bin/tailscale"
 
 # Services we care about (systemd --user units)
+# openclaw-gateway is the primary UI on 8090; substrate-panel.service is
+# intentionally retired to avoid port conflicts.
 SERVICES = [
     {
         "name": "kilo-remote",

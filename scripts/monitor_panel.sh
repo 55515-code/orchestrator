@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Panel health monitor — part of the swarm-control production deployment.
 #
-# Checks the substrate control panel health endpoint and service state.
+# Checks the OpenClaw control panel health endpoint and service state.
 # With --restart, restarts the systemd service after 3 consecutive failures.
-# All output is written to journald so `journalctl --user -u substrate-panel-monitor` shows history.
+# All output is written to journald so `journalctl --user -u openclaw-gateway` shows history.
 
 set -uo pipefail
 
 PANEL_URL="${PANEL_URL:-http://127.0.0.1:8090}"
-SERVICE="${PANEL_SERVICE:-substrate-panel.service}"
+SERVICE="${PANEL_SERVICE:-openclaw-gateway.service}"
 STATE_DIR="${STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/substrate-panel-monitor}"
 FAILURES=0
 

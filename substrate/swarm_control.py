@@ -795,7 +795,7 @@ def smoke_tests(base_url: str = DEFAULT_BASE_URL) -> dict[str, Any]:
 # Production deployment support
 # --------------------------------------------------------------------------- #
 
-SERVICE_NAME = "substrate-panel.service"
+SERVICE_NAME = "openclaw-gateway.service"
 SYSTEMD_UNIT_PATH = Path.home() / ".config/systemd/user" / SERVICE_NAME
 ROLLBACK_DOC_PATH = Path("docs/PANEL_DEPLOYMENT_RUNBOOK.md")
 

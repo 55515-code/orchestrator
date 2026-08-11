@@ -168,7 +168,7 @@ def system_section() -> list[str]:
         lines.append("- Pending OS updates: 0 (or checkupdates unavailable)")
 
     svcs = {}
-    for s in ("substrate-panel.service", "ttyd.service", "kilo-remote.service",
+    for s in ("openclaw-gateway.service", "ttyd.service", "kilo-remote.service",
               "protonmail-bridge.service", "ollama.service", "tailscaled.service"):
         user = run(["systemctl", "--user", "is-active", s])
         svcs[s] = user if user in ("active", "failed") else run(["systemctl", "is-active", s])
