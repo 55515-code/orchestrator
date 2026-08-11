@@ -27,12 +27,22 @@ if [ "${1:-}" = "--init" ]; then
 fi
 
 # Critical, small, portable set — NOT the whole home (avoid OS images/binaries).
-PATHS=( \
+RAW_PATHS=( \
   "$HOME/.bashrc" "$HOME/.gitconfig" "$HOME/.npmrc" \
   "$HOME/.config/kilo" "$HOME/.config/chezmoi" "$HOME/.config/rclone" "$HOME/.config/systemd/user" \
   "$HOME/.local/share/chezmoi" \
   "$HOME/codespace/automation" "$HOME/codespace/artifacts" "$HOME/codespace/scripts" "$HOME/codespace/substrate" \
 )
+
+# Filter out missing paths to avoid restic warnings and failed snapshots.
+PATHS=()
+for p in "${RAW_PATHS[@]}"; do
+  if [ -e "$p" ]; then
+    PATHS+=("$p")
+  else
+    echo "[$(date -u +%FT%TZ)] skip missing path: $p" >> "$LOG"
+  fi
+done
 
 echo "[$(date -u +%FT%TZ)] restic backup start" >> "$LOG"
 # Unlock stale repository locks (exit 3) before backup.
