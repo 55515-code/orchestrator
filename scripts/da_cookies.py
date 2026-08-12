@@ -47,14 +47,35 @@ def get_safe_storage_keys() -> list[bytes]:
     return keys
 
 
-def decrypt_value(enc_value: bytes, key: bytes) -> str:
-    if enc_value[:3] == b"v10":
-        iv, ct = enc_value[3:15], enc_value[15:]
-        return unpad(AES.new(key, AES.MODE_CBC, iv).decrypt(ct), AES.block_size).decode()
+def derive_v11_key(password: bytes) -> bytes:
+    return PBKDF2(password, b"saltysalt", 16, count=1)
+
+
+def decrypt_value(enc_value: bytes, keys: list[bytes]) -> str | None:
     if enc_value[:3] == b"v11":
-        nonce, ct = enc_value[3:15], enc_value[15:]
-        return AES.new(key, AES.MODE_GCM, nonce=nonce).decrypt(ct).decode()
-    return enc_value.decode()
+        body = enc_value[3:]
+        if len(body) % 16 != 0 or len(body) < 32:
+            return None
+        iv, ct = body[:16], body[16:]
+        for pw in keys:
+            try:
+                k = derive_v11_key(pw)
+                plain = unpad(AES.new(k, AES.MODE_CBC, iv).decrypt(ct), AES.block_size)
+                return plain[16:].decode()
+            except Exception:
+                continue
+        return None
+    if enc_value[:3] == b"v10":
+        body = enc_value[3:]
+        for pw in keys:
+            try:
+                k = derive_v11_key(pw)
+                plain = unpad(AES.new(k, AES.MODE_CBC, b" " * 16).decrypt(body), AES.block_size)
+                return plain.decode()
+            except Exception:
+                continue
+        return None
+    return None
 
 
 def main() -> int:
@@ -83,13 +104,7 @@ def main() -> int:
 
     cookies = []
     for host, name, path, enc_val, expires, secure in rows:
-        val = None
-        for key in keys:
-            try:
-                val = decrypt_value(enc_val, key)
-                break
-            except Exception:
-                continue
+        val = decrypt_value(enc_val, keys)
         if val is None:
             continue
         cookies.append({

@@ -1,7 +1,7 @@
-# OpenClaw Theme Generation Prompt — LuigiOS "CachyOS COSMIC Workstation"
+# OpenClaw Theme Generation Prompt — LuigiOS Art Style
 
 ## Role
-You are generating a complete, production-ready OpenClaw theme based on the **LuigiOS** design system (CachyOS COSMIC Developer Workstation variant). Output must cover **all three OpenClaw theme surfaces**: TUI terminal, Control UI web dashboard, and Dashboard third-party skin.
+You are generating a complete, production-ready OpenClaw theme package based on the **LuigiOS** design system (CachyOS COSMIC Developer Workstation variant). Output must cover **all three OpenClaw theme surfaces** — TUI terminal, Control UI web dashboard, and Dashboard third-party skin — plus any required artwork assets.
 
 ---
 
@@ -90,7 +90,52 @@ Use these for gradient stops, hover states, and surface layering where the core 
 
 ---
 
-## 5. Theme Personality
+## 5. Mascot & Art References
+
+### Core Mascot Identity
+The LuigiOS caretaker is a raccoon. Stable identity traits across all variants:
+- Dark gray fur, black raccoon face mask, pointed ears, ringed tail visible
+- Practical charcoal utility jacket and small technical gear
+- Calm, capable, focused expression — not cute, not monstrous, not human
+- Polished semi-flat system UI illustration style with crisp hard outer contour and restrained interior texture
+
+### Angel Variant (safe/recommended states)
+- Restrained pale-green luminous halo (`#66FF66`)
+- Small stylized light-feather wing shapes behind shoulders
+- Use for: recommended defaults, successful validation, backups, restore points, safe mode, rollback, recoverable actions
+
+### Demon Variant (experimental/risky states)
+- Swept-back charcoal horns between the ears
+- Faint ember-red rim light (`#EF4444` only on horns/rim details)
+- Confident, knowing expression — mischievous but trustworthy
+- Use for: developer controls, experimental features, destructive operations, unsigned content warnings, actions that cannot be automatically reversed
+
+### Key Art Source Files
+Reference these existing assets when generating new artwork:
+- `LuigiOS/branding/source/caretaker-network-master.png` — master mascot identity reference
+- `LuigiOS/branding/source/caretaker-angel-chroma.png` — angel chroma-key source
+- `LuigiOS/branding/source/caretaker-demon-chroma.png` — demon chroma-key source
+- `LuigiOS/branding/assets/mascot/caretaker-angel.png` — angel mascot asset
+- `LuigiOS/branding/assets/mascot/caretaker-demon.png` — demon mascot asset
+- `LuigiOS/branding/assets/core/luigios-logo.svg` — full wordmark
+- `LuigiOS/branding/assets/core/luigios-symbolic.svg` — symbolic mark (small sizes)
+- `LuigiOS/branding/assets/boot/luigios-splash.mp4` — boot splash video
+- `LuigiOS/branding/assets/boot/luigios-splash-frame.png` — boot splash still
+- `LuigiOS/branding/assets/boot/boot-logo-4x3.png` — boot logo
+- `LuigiOS/branding/assets/boot/boot-logo-1280x800.png` — boot logo HD
+- `LuigiOS/branding/assets/desktop/wallpapers/luigios/1920x1080.png` — desktop wallpaper
+- `LuigiOS/branding/assets/desktop/wallpapers/luigios/1280x800.png` — desktop wallpaper SD
+- `LuigiOS/branding/assets/community/banner-1920x480.png` — community banner
+- `LuigiOS/branding/assets/community/avatar-512.png` — community avatar
+
+### Icon System
+- Base layer: Papirus Dark (standard application symbols)
+- Overlay: LuigiOS-specific icons with coherent green folders and original core application/launcher glyphs
+- Custom icons reserved for LuigiOS-owned surfaces only
+
+---
+
+## 6. Theme Personality
 
 - **Name:** `luigios-cosmic-workstation` (display as "LuigiOS Workstation")
 - **Vibe:** Deep neutral surfaces, crisp green accents, generous hierarchy, compact controls, limited decorative motion.
@@ -99,7 +144,7 @@ Use these for gradient stops, hover states, and surface layering where the core 
 
 ---
 
-## 6. OpenClaw TUI Theme JSON
+## 7. OpenClaw TUI Theme JSON
 
 Generate a complete TUI theme JSON file (`themes/luigios-cosmic-workstation.json`) with the following exact mappings. Do not invent new color keys; use only the documented `ThemeJson` schema.
 
@@ -182,7 +227,7 @@ Generate a complete TUI theme JSON file (`themes/luigios-cosmic-workstation.json
 
 ---
 
-## 7. OpenClaw Control UI Theme (tweakcn / CSS Custom Properties)
+## 8. OpenClaw Control UI Theme (CSS Custom Properties)
 
 Generate a tweakcn-compatible theme for the OpenClaw Control UI. The Control UI uses CSS custom properties. Provide the full CSS variable set and a tweakcn share link structure.
 
@@ -253,7 +298,7 @@ https://tweakcn.com/editor/theme?primary=22C55E&background=000000&foreground=F5F
 
 ---
 
-## 8. OpenClaw Dashboard Theme (Third-Party `themes.json`)
+## 9. OpenClaw Dashboard Theme (Third-Party `themes.json`)
 
 Generate a Dashboard theme entry compatible with the OpenClaw Dashboard (`themes.json` format, 19 CSS variables).
 
@@ -302,53 +347,85 @@ Generate a Dashboard theme entry compatible with the OpenClaw Dashboard (`themes
 
 ---
 
-## 9. Generation Instructions
+## 10. Image & Artwork Generation Prompts
 
-### If using `ai-theme` (npm)
-```bash
-npx ai-theme --primary "#22C55E" --secondary "#121416" --accent "#66FF66" --dark-mode -f json -o themes/luigios-cosmic-workstation.json
+Use these prompts when generating new visual assets. All image generation must use the chroma-key background (`#FF00FF`) for mascot variants so they can be cleanly extracted.
+
+### Caretaker Angel Variant
+```
+Use case: stylized-concept
+Asset type: LuigiOS interface mascot state plate, angel/safe variant
+Input image: reference image for the exact original caretaker raccoon mascot, dark technical illustration style, facial mask markings, proportions, utility clothing, backpack, and calm capable personality
+Primary request: create a clean waist-up character portrait of the SAME raccoon caretaker as an angel variant for recommended, protected, successful, backup, and recovery states
+Subject: unmistakably a raccoon, same dark gray fur, black raccoon face mask, pointed ears, ringed tail visible, practical charcoal utility jacket and small technical gear; add one restrained pale-green luminous halo and two small stylized light-feather wing shapes attached behind the shoulders; kind focused expression, not cute baby-like, not human
+Composition: centered single character, generous padding, readable at small UI sizes, silhouette fully inside canvas
+Style: polished semi-flat system UI illustration with crisp hard outer contour and restrained interior texture, closely matching the reference's serious dark technical caretaker aesthetic
+Color palette: charcoal, gray, white highlights, LuigiOS greens #22C55E and #66FF66; no other dominant hues
+Background: perfectly flat solid #FF00FF chroma-key background for later removal; uniform color, no shadows, gradients, texture, floor, reflections, glow spill, or lighting variation in the background
+Constraints: same mascot identity as reference; no logos, no words, no text, no watermark, no copyrighted character resemblance, no vendor marks; no #FF00FF anywhere in the character; no cast shadow; crisp separated edges suitable for chroma-key removal
 ```
 
-Then refine the generated JSON to match the exact mappings in Section 6 above. `ai-theme` does not support all OpenClaw token names, so post-process the output.
-
-### If using SeedFlip skill (`seedflip-theme`)
+### Caretaker Demon Variant
 ```
-Generate an OpenClaw dashboard theme named "LuigiOS Workstation" with these colors:
-- Background: #000000
-- Surface: #121416
-- Accent: #22C55E
-- Accent2: #66FF66
-- Text: #F5F7FA
-- Muted: #9CA3AF
-- Border: #262626
-- Error: #EF4444
-- Warning: #FBBF24
-- Info: #60A5FA
-Format: openclaw
+Use case: stylized-concept
+Asset type: LuigiOS interface mascot state plate, demon/advanced variant
+Input image: reference image for the exact original caretaker raccoon mascot, dark technical illustration style, facial mask markings, proportions, utility clothing, backpack, and calm capable personality
+Primary request: create a clean waist-up character portrait of the SAME raccoon caretaker as a demon variant for expert, experimental, risky, destructive, and irreversible settings
+Subject: unmistakably a raccoon, same dark gray fur, black raccoon face mask, pointed ears, ringed tail visible, practical charcoal utility jacket and small technical gear; add two small swept-back charcoal horns between the ears, a restrained dark pointed tail-tip cue integrated with the natural ringed raccoon tail, and a faint ember-red rim light; confident knowing expression, mischievous but trustworthy, not evil, not monstrous, not human
+Composition: centered single character, generous padding, readable at small UI sizes, silhouette fully inside canvas
+Style: polished semi-flat system UI illustration with crisp hard outer contour and restrained interior texture, closely matching the reference's serious dark technical caretaker aesthetic and the paired angel state plate
+Color palette: charcoal, gray, pale neutral highlights, LuigiOS green #22C55E for existing technical gear, restrained warning red #EF4444 only on horns/rim details; no other dominant hues
+Background: perfectly flat solid #FF00FF chroma-key background for later removal; uniform color, no shadows, gradients, texture, floor, reflections, glow spill, or lighting variation in the background
+Constraints: same mascot identity as reference; no logos, no words, no text, no watermark, no copyrighted character resemblance, no vendor marks; no #FF00FF anywhere in the character; no cast shadow; crisp separated edges suitable for chroma-key removal
 ```
 
-### If using tweakcn for Control UI
-1. Open `https://tweakcn.com/editor/theme`
-2. Set primary to `#22C55E`, background to `#000000`, foreground to `#F5F7FA`
-3. Adjust radius to `8px`
-4. Export as CSS custom properties and merge with Section 7.
+### Boot Splash / Wallpaper Style Prompt
+```
+Use case: stylized-concept
+Asset type: LuigiOS boot splash or desktop wallpaper, dark technical system UI art
+Subject: professional development operating system boot screen or wallpaper featuring the LuigiOS raccoon caretaker in a restrained, technically precise composition
+Style: polished semi-flat system UI illustration, dark technical aesthetic, crisp hard outer contours, restrained interior texture, no photorealism, no cartoonish exaggeration
+Color palette: deep neutral surfaces (#000000, #121416, #1A1A1A), crisp green accents (#22C55E, #66FF66), high contrast, OLED-friendly
+Composition: clean, centered, generous negative space, readable at small UI sizes, no clutter
+Mood: calm competence, technical precision, professional identity, accessible and inviting
+Constraints: no logos, no words, no text, no watermark, no copyrighted character resemblance, no vendor marks; no flashing elements; reduced-motion safe
+```
 
 ---
 
-## 10. Validation Checklist
+## 11. Generation Instructions
+
+### TUI Theme JSON
+Place the generated JSON at `themes/luigios-cosmic-workstation.json` in the OpenClaw themes directory. Validate against the `ThemeJson` schema (40 required color tokens).
+
+### Control UI CSS
+Place the generated CSS at `themes/luigios-cosmic-workstation.css`. Import into Control UI via the Appearance panel or tweakcn share link.
+
+### Dashboard Theme
+Merge the JSON entry into your `themes.json` file under the `themes` key.
+
+### Image Assets
+Generate mascot variants and artwork using the prompts in Section 10. Always use `#FF00FF` chroma-key backgrounds for mascot portraits so they can be extracted cleanly. Save final assets to the paths declared in `LuigiOS/branding/`.
+
+---
+
+## 12. Validation Checklist
 
 Before finalizing, verify:
 - [ ] All hex values match the canonical `design-tokens-v1.json` exactly.
-- [ ] TUI theme JSON passes `ThemeJson` schema validation.
+- [ ] TUI theme JSON passes `ThemeJson` schema validation (40 required color tokens).
 - [ ] Control UI CSS variables cover every property in the OpenClaw Control UI.
 - [ ] Dashboard `themes.json` entry has all 19 required color keys.
 - [ ] WCAG AA contrast is met for all text-on-background pairs.
 - [ ] Typography stack references `Exo 2`, `Inter`, and `JetBrains Mono` with correct fallbacks.
 - [ ] No legacy color values (no `#65d46e` from the old manifest; always use `#22C55E`).
+- [ ] Mascot variants maintain consistent raccoon identity across all states.
+- [ ] No `#FF00FF` leak in final mascot assets (chroma key must be fully removed).
+- [ ] All generated images have no text, logos, watermarks, or vendor marks.
 
 ---
 
-## 11. Output Artifacts
+## 13. Output Artifacts
 
 Produce exactly these files:
 
@@ -356,6 +433,7 @@ Produce exactly these files:
 2. `themes/luigios-cosmic-workstation.css` — Control UI CSS custom properties
 3. `themes/luigios-cosmic-workstation-dashboard.json` — Dashboard `themes.json` entry
 4. `themes/README.md` — Installation and switching instructions
+5. Artwork assets (if generating images) — mascot variants, logos, icons per Section 10
 
 ### README.md Template
 ```markdown
@@ -363,8 +441,8 @@ Produce exactly these files:
 
 ## Install
 1. Copy `luigios-cosmic-workstation.json` to your OpenClaw themes directory.
-2. Restart OpenClaw or run `/theme list` to verify.
-3. Switch with: `openclaw tui --theme luigios-cosmic-workstation`
+2. Restart OpenClaw or verify theme discovery.
+3. Switch via OpenClaw theme settings or theme API.
 
 ## Sources
 - LuigiOS design tokens: `LuigiOS/branding/design-tokens-v1.json`
@@ -376,7 +454,7 @@ CachyOS COSMIC Developer Workstation
 
 ---
 
-## 12. Source References
+## 14. Source References
 
 Canonical LuigiOS branding files that authority this theme:
 
@@ -385,12 +463,26 @@ Canonical LuigiOS branding files that authority this theme:
 - `LuigiOS/branding/ART_DIRECTION.md` — art direction and identity rules
 - `LuigiOS/branding/MASCOT.md` — mascot usage and variant rules
 - `LuigiOS/branding/README.md` — visual system overview
+- `LuigiOS/branding/cosmic-rice/README.md` — COSMIC rice design details
 - `LuigiOS/branding/prompts/caretaker-angel.md` — angel variant generation prompt
 - `LuigiOS/branding/prompts/caretaker-demon.md` — demon variant generation prompt
 - `LuigiOS/branding/source/caretaker-network-master.png` — mascot identity reference
 - `LuigiOS/branding/source/caretaker-angel-chroma.png` — angel chroma-key source
 - `LuigiOS/branding/source/caretaker-demon-chroma.png` — demon chroma-key source
+- `LuigiOS/branding/assets/core/luigios-logo.svg` — full wordmark
+- `LuigiOS/branding/assets/core/luigios-symbolic.svg` — symbolic mark
+- `LuigiOS/branding/assets/mascot/caretaker-angel.png` — angel mascot asset
+- `LuigiOS/branding/assets/mascot/caretaker-demon.png` — demon mascot asset
+- `LuigiOS/branding/assets/boot/luigios-splash.mp4` — boot splash video
+- `LuigiOS/branding/assets/boot/luigios-splash-frame.png` — boot splash still
+- `LuigiOS/branding/assets/boot/boot-logo-4x3.png` — boot logo
+- `LuigiOS/branding/assets/boot/boot-logo-1280x800.png` — boot logo HD
+- `LuigiOS/branding/assets/desktop/wallpapers/luigios/1920x1080.png` — desktop wallpaper
+- `LuigiOS/branding/assets/desktop/wallpapers/luigios/1280x800.png` — desktop wallpaper SD
+- `LuigiOS/branding/assets/community/banner-1920x480.png` — community banner
+- `LuigiOS/branding/assets/community/avatar-512.png` — community avatar
 - `LuigiOS/branding/cosmic-rice/luigios-dark.ron` — COSMIC theme color definitions
+- `LuigiOS/branding/cosmic-rice/vscode-theme/themes/luigios-workstation-color-theme.json` — VS Code color theme
 - `LuigiOS/docs/BRANDING.md` — branding deployment rules
 - `LuigiOS/docs/PRODUCT_PRINCIPLES.md` — product principles including professional identity
 
