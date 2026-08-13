@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-08-08T00:00:00Z",
+  "updated_at": "2026-08-13T20:34:23.494649+00:00",
   "resources": [
     {
       "id": "soc2-checklist",
@@ -104,7 +104,7 @@
       "id": "security-baseline-checklist",
       "title": "Small Business Security Baseline Checklist",
       "category": "security",
-      "description": "Free: the fifteen highest-leverage security controls for small businesses \u2014 MFA, updates, backups, phishing defense, and network basics.",
+      "description": "Free: the fifteen highest-leverage security controls for small businesses — MFA, updates, backups, phishing defense, and network basics.",
       "topic": "security basics small business",
       "price_usdc": 0,
       "version": "1.0",
@@ -127,6 +127,42 @@
       "checksum": "sha256:5a4c6b0b02ad843c8a43c1bc6bf4da3c97ec351a99b2d6d0bc265be3cb680923",
       "created_at": "2026-08-08T00:00:00Z",
       "autonomy_tier": 2
+    },
+    {
+      "id": "x402-payment-protocol",
+      "title": "X402-Payment-Protocol Checklist",
+      "category": "compliance",
+      "description": "Generated checklist: x402-payment-protocol.",
+      "topic": "x402-payment-protocol",
+      "price_usdc": 0.0,
+      "free": true,
+      "version": "1.0",
+      "file_path": "resources/drafts/x402-payment-protocol.md",
+      "checksum": "sha256:8f89e7b8c9558022fd10d0c27751467906b0190feef4ba1ba5469134b1a441e1"
+    },
+    {
+      "id": "llm-discovery",
+      "title": "Llm-Discovery Checklist",
+      "category": "compliance",
+      "description": "Generated checklist: llm-discovery.",
+      "topic": "llm-discovery",
+      "price_usdc": 0.0,
+      "free": true,
+      "version": "1.0",
+      "file_path": "resources/drafts/llm-discovery.md",
+      "checksum": "sha256:4c3c5b9affbb5479eeff16257d2803225cccbf2235ce886003cf20db78c16724"
+    },
+    {
+      "id": "free-tier-funnel",
+      "title": "Free-Tier-Funnel Checklist",
+      "category": "compliance",
+      "description": "Generated checklist: free-tier-funnel.",
+      "topic": "free-tier-funnel",
+      "price_usdc": 0.0,
+      "free": true,
+      "version": "1.0",
+      "file_path": "resources/drafts/free-tier-funnel.md",
+      "checksum": "sha256:b1696a031fa5b2dceb45104176af8e6b49c9e266a3dd640a105208bda32ac933"
     }
   ]
 }
