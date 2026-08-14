@@ -33,10 +33,12 @@ dependencies = [
   "cryptography>=42.0.0",
   "pystray>=0.19.5",
   "pillow>=12.3.0",
-  "pygobject>=3.56.3",
 ]
 
 [project.optional-dependencies]
+desktop = [
+  "pygobject>=3.56.3",
+]
 dev = [
   "pre-commit>=4.0.0",
   "ruff>=0.11.0",

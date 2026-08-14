@@ -1043,7 +1043,6 @@ dependencies = [
     { name = "pillow" },
     { name = "prometheus-client" },
     { name = "psutil" },
-    { name = "pygobject" },
     { name = "pystray" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
@@ -1057,6 +1056,9 @@ dependencies = [
 crypto = [
     { name = "eth-account" },
     { name = "mnemonic" },
+]
+desktop = [
+    { name = "pygobject" },
 ]
 dev = [
     { name = "pre-commit" },
@@ -1109,7 +1111,7 @@ requires-dist = [
     { name = "prometheus-client", specifier = ">=0.20.0" },
     { name = "protobuf", marker = "extra == 'render'", specifier = ">=5.0.0" },
     { name = "psutil", specifier = ">=5.9.0" },
-    { name = "pygobject", specifier = ">=3.56.3" },
+    { name = "pygobject", marker = "extra == 'desktop'", specifier = ">=3.56.3" },
     { name = "pystray", specifier = ">=0.19.5" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "python-multipart", specifier = ">=0.0.26" },
@@ -1124,7 +1126,7 @@ requires-dist = [
     { name = "transformers", marker = "extra == 'render'", specifier = ">=4.46.0" },
     { name = "uvicorn", specifier = ">=0.30.0" },
 ]
-provides-extras = ["dev", "crypto", "render"]
+provides-extras = ["desktop", "dev", "crypto", "render"]
 
 [[package]]
 name = "markdown"
