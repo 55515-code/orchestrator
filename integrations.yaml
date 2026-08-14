@@ -249,10 +249,10 @@ services:
   category: hardware_security_tools
   availability: general
   api_status: github_repo_and_local_tooling
-  notes: Hak5 hardware tools are managed through local CLI tooling, GitHub-hosted
-    payload repositories, and device-specific management interfaces (Cloud C², qFlipper,
-    PayloadStudio). No centralized public API is assumed; integration is via local
-    binaries, scripts, and GitHub source ingestion.
+  notes: "Hak5 hardware tools are managed through local CLI tooling, GitHub-hosted\
+    \ payload repositories, and device-specific management interfaces (Cloud C\xB2\
+    , qFlipper, PayloadStudio). No centralized public API is assumed; integration\
+    \ is via local binaries, scripts, and GitHub source ingestion."
   auth:
     methods:
     - github_repo_read

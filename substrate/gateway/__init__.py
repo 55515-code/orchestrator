@@ -16,6 +16,6 @@ __all__ = [
     "GatewayManager",
     "GatewayPlugin",
     "InboundMessage",
-    "OutboundMessage",
     "MessageRouter",
+    "OutboundMessage",
 ]

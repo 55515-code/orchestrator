@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 import subprocess
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .. import _utils
 from ..learning import record_execution
@@ -23,6 +24,7 @@ AGENT_ROLES = frozenset(
         "market-research",
         "resource-generator",
         "creative-agent",
+        "email-manager",
     }
 )
 VALID_CADENCES = ("hourly", "every_4_hours", "daily", "weekly", "on_demand")
@@ -204,7 +206,7 @@ def _parse_iso(value: str) -> datetime | None:
     except ValueError:
         return None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
     return parsed
 
 
@@ -214,7 +216,7 @@ def evaluate_due_agents(
     *,
     now: datetime | None = None,
 ) -> list[AgentConfig]:
-    current = now or datetime.now(timezone.utc)
+    current = now or datetime.now(UTC)
     due: list[AgentConfig] = []
     for agent in agents:
         if not agent.enabled:
@@ -236,7 +238,7 @@ def evaluate_due_agents(
 
 
 def cadence_bucket(agent: AgentConfig, *, now: datetime | None = None) -> str:
-    current = now or datetime.now(timezone.utc)
+    current = now or datetime.now(UTC)
     if agent.cadence == "hourly":
         return current.strftime("%Y-%m-%dT%H")
     if agent.cadence == "every_4_hours":
@@ -482,7 +484,7 @@ def cleanup_stale_agent_artifacts(
     """Remove agent worktrees and local agent branches older than max_age_days."""
     removed_worktrees: list[str] = []
     removed_branches: list[str] = []
-    current = now or datetime.now(timezone.utc)
+    current = now or datetime.now(UTC)
     cutoff_epoch = int(current.timestamp()) - max_age_days * 86400
 
     if not is_git_repo(repo_path):
@@ -588,6 +590,7 @@ def run_agent(
     from . import community as community_role
     from . import creative as creative_role
     from . import development as development_role
+    from . import email_manager as email_manager_role
     from . import market_research as market_research_role
     from . import moderation as moderation_role
     from . import research as research_role
@@ -603,6 +606,7 @@ def run_agent(
         "market-research": market_research_role.run,
         "resource-generator": resource_gen_role.run,
         "creative-agent": creative_role.run,
+        "email-manager": email_manager_role.run,
     }
     handler = handlers.get(agent.role)
     if handler is None:
@@ -736,7 +740,7 @@ def run_agent_cycle(
 
 
 def agent_status_payload(runtime: Any, *, now: datetime | None = None) -> dict[str, Any]:
-    current = now or datetime.now(timezone.utc)
+    current = now or datetime.now(UTC)
     agents = load_agents_config(runtime.root)
     state_store = AgentStateStore(runtime.paths["state"] / "agent-state.json")
     rows: list[dict[str, Any]] = []
@@ -746,9 +750,7 @@ def agent_status_payload(runtime: Any, *, now: datetime | None = None) -> dict[s
         next_due_at: str | None = None
         last_run_at = str(entry.get("last_run_at") or "")
         last_dt = _parse_iso(last_run_at)
-        if not agent.enabled:
-            next_due_at = None
-        elif window is None:
+        if not agent.enabled or window is None:
             next_due_at = None
         elif last_dt is None:
             next_due_at = current.isoformat()

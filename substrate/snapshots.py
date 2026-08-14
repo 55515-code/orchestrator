@@ -87,17 +87,14 @@ def _line_is_suspicious(line: str) -> bool:
         return False
     value = match.group(1).strip("\"'")
     lowered = value.lower().rstrip(",;")
-    if value.startswith("${") or value.startswith("${{") or value.startswith("$("):
+    if value.startswith(("${", "${{", "$(")):
         return False  # ${VAR} / ${{ expr }} / $(cmd) reference
     if value.startswith("<") and value.endswith(">"):
         return False  # <password> style placeholder
-    if lowered in BENIGN_VALUES or lowered.startswith("your_") or lowered.startswith("your-"):
+    if lowered in BENIGN_VALUES or lowered.startswith(("your_", "your-")):
         return False  # dictionary word / your_token style placeholder
     if (
-        lowered.startswith("os.environ")
-        or lowered.startswith("os.getenv")
-        or lowered.startswith("process.env")
-        or lowered.startswith("environ")
+        lowered.startswith(("os.environ", "os.getenv", "process.env", "environ"))
     ):
         return False  # reading from the environment, not embedding a secret
     if MASKED_VALUE.match(value):

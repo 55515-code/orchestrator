@@ -6,7 +6,6 @@ import re
 import subprocess
 from pathlib import Path
 
-
 THEME_ROOT = Path.home() / ".config" / "cosmic"
 DEFAULT_OUTPUT = Path.home() / "codespace" / "generated" / "cosmic-wallpapers"
 
@@ -21,13 +20,13 @@ def parse_rgb(path: Path, group: str | None = None, fallback=(0.0, 0.0, 0.0)):
         match = re.search(
             rf"{re.escape(group)}:\s*\(\s*red:\s*([-\d.]+),\s*green:\s*([-\d.]+),\s*blue:\s*([-\d.]+)",
             text,
-            flags=re.S,
+            flags=re.DOTALL,
         )
     else:
         match = re.search(
             r"red:\s*([-\d.]+),\s*green:\s*([-\d.]+),\s*blue:\s*([-\d.]+)",
             text,
-            flags=re.S,
+            flags=re.DOTALL,
         )
     if not match:
         return fallback
@@ -66,9 +65,9 @@ def parse_current_mode():
             )
             if result.returncode != 0:
                 continue
-            match = re.search(r"^\s+(\d+)x(\d+) px, .*?\(preferred, current\)", result.stdout, flags=re.M)
+            match = re.search(r"^\s+(\d+)x(\d+) px, .*?\(preferred, current\)", result.stdout, flags=re.MULTILINE)
             if not match:
-                match = re.search(r"^\s+(\d+)x(\d+) px, .*?\(current\)", result.stdout, flags=re.M)
+                match = re.search(r"^\s+(\d+)x(\d+) px, .*?\(current\)", result.stdout, flags=re.MULTILINE)
             if match:
                 return int(match.group(1)), int(match.group(2))
     return 1920, 1200

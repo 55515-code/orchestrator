@@ -166,7 +166,7 @@ class PipelineEngine:
                             process.wait(),
                             timeout=stage.timeout_seconds,
                         )
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         process.kill()
                         log.write(f"\n[TIMEOUT] Stage timed out after {stage.timeout_seconds}s\n")
                         return False

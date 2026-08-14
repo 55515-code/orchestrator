@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
-
-import pytest
+from datetime import datetime
 
 from substrate.gh_sync import GitHubSyncService, SyncState
 

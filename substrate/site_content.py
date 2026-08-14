@@ -5,7 +5,7 @@ import re
 import shutil
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -38,7 +38,7 @@ def _slugify(text: str) -> str:
 
 
 def _today_iso() -> str:
-    return datetime.now(timezone.utc).date().isoformat()
+    return datetime.now(UTC).date().isoformat()
 
 
 def _collection_dir(site_root: Path, kind: str) -> Path:
@@ -109,7 +109,7 @@ def validate_collection_file(path: Path, kind: str) -> list[str]:
         errors.append("pubDate is required")
     else:
         try:
-            datetime.fromisoformat(str(pub_date).replace("Z", "+00:00"))
+            datetime.fromisoformat(str(pub_date))
         except Exception:
             try:
                 datetime.strptime(str(pub_date), "%Y-%m-%d")
@@ -394,7 +394,7 @@ def queue_approve(
             "kind": kind,
             "slug": resolved_slug,
             "target": str(target.relative_to(site_root)),
-            "at": datetime.now(timezone.utc).isoformat(),
+            "at": datetime.now(UTC).isoformat(),
         }
     )
     _write_queue_state(state, runtime)
@@ -417,7 +417,7 @@ def queue_reject(
             "action": "reject",
             "file": filename,
             "reason": reason,
-            "at": datetime.now(timezone.utc).isoformat(),
+            "at": datetime.now(UTC).isoformat(),
         }
     )
     _write_queue_state(state, runtime)

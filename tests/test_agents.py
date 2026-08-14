@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from substrate.agents import (
@@ -281,7 +281,7 @@ class CadenceTest(unittest.TestCase):
         )
 
     def test_bucket_formats(self) -> None:
-        now = datetime(2026, 8, 8, 9, 30, tzinfo=timezone.utc)
+        now = datetime(2026, 8, 8, 9, 30, tzinfo=UTC)
         self.assertEqual(
             "2026-08-08T09", cadence_bucket(self._agent("hourly"), now=now)
         )
@@ -295,7 +295,7 @@ class CadenceTest(unittest.TestCase):
     def test_due_evaluation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             store = AgentStateStore(Path(tmp) / "agent-state.json")
-            now = datetime(2026, 8, 8, 12, 0, tzinfo=timezone.utc)
+            now = datetime(2026, 8, 8, 12, 0, tzinfo=UTC)
             never_run = self._agent("daily")
             never_run = AgentConfig(
                 id="never-run",

@@ -148,22 +148,22 @@ class ProxyHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt: str, *args: Any) -> None:
         logger.info("%s - %s", self.address_string(), fmt % args)
 
-    def do_GET(self) -> None:  # noqa: N802 - http.server API
+    def do_GET(self) -> None:
         if self.path.rstrip("/") in ("/__status", "/__health"):
             self._send_status()
             return
         self._relay()
 
-    def do_POST(self) -> None:  # noqa: N802
+    def do_POST(self) -> None:
         self._relay()
 
-    def do_PUT(self) -> None:  # noqa: N802
+    def do_PUT(self) -> None:
         self._relay()
 
-    def do_PATCH(self) -> None:  # noqa: N802
+    def do_PATCH(self) -> None:
         self._relay()
 
-    def do_DELETE(self) -> None:  # noqa: N802
+    def do_DELETE(self) -> None:
         self._relay()
 
     def _send_status(self) -> None:
@@ -214,7 +214,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             if isinstance(payload, dict) and isinstance(payload.get("messages"), list):
                 try:
                     normalized, changed, reason = self.proxy.normalize(payload)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     logger.exception("payload normalization failed")
                     return self._send_error(
                         502, f"internal payload normalization failure: {exc}"
@@ -226,7 +226,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
         try:
             self._forward(host, port, headers, body)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("upstream relay to %s failed", host)
             with self.proxy._lock:
                 self.proxy.failed_requests += 1

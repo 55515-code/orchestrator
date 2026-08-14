@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
 from prometheus_client import CollectorRegistry
 
 from substrate.dashboard import DashboardMetrics, create_dashboard_router

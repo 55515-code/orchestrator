@@ -9,16 +9,16 @@ from typing import Any
 
 from .base import (
     RenderEngine,
+    RenderFailed,
     RenderRequest,
     RenderResult,
     RenderUnavailable,
-    RenderFailed,
-    unavailable,
     apply_memory_strategy,
-    ensure_scratch_env,
-    write_images,
-    resize_for_engine,
     detect_gpu,
+    ensure_scratch_env,
+    resize_for_engine,
+    unavailable,
+    write_images,
 )
 
 
@@ -267,10 +267,10 @@ class Flux1DevGGUFEngine(LocalDiffusersEngine):
 
         nf4 = None
         try:
-            from transformers import T5EncoderModel
-            from transformers import BitsAndBytesConfig as TBnB
             from diffusers import BitsAndBytesConfig as DBnB
-            nf4 = dict(load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16)
+            from transformers import BitsAndBytesConfig as TBnB
+            from transformers import T5EncoderModel
+            nf4 = {"load_in_4bit": True, "bnb_4bit_quant_type": "nf4", "bnb_4bit_compute_dtype": torch.bfloat16}
             tr = FluxTransformer2DModel.from_pretrained(
                 "black-forest-labs/FLUX.1-dev",
                 subfolder="transformer",

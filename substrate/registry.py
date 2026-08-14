@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -122,7 +122,7 @@ class SubstrateRuntime:
     def inspect_repository(self, repo: RepositoryConfig) -> dict[str, Any]:
         repo_path = (self.root / repo.path).resolve()
         snapshot: dict[str, Any] = {
-            "scanned_at": datetime.now(timezone.utc).isoformat(),
+            "scanned_at": datetime.now(UTC).isoformat(),
             "repo_slug": repo.slug,
             "repo_path": str(repo_path),
             "is_git_repo": False,

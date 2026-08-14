@@ -205,7 +205,7 @@ class Proxy:
             )
             await asyncio.wait_for(proc.wait(), timeout=KILO_HEALTH_TIMEOUT)
             return proc.returncode == 0
-        except (OSError, asyncio.TimeoutError):
+        except (TimeoutError, OSError):
             return False
 
     async def ollama_healthy(self) -> bool:
@@ -222,7 +222,7 @@ class Proxy:
         try:
             response = await self.client.get(f"{self.ollama_base}/api/tags", timeout=OLLAMA_HEALTH_TIMEOUT)
             return response.status_code == 200
-        except (httpx.HTTPError, asyncio.TimeoutError):
+        except (TimeoutError, httpx.HTTPError):
             return False
 
     def is_local_model(self, model: str) -> bool:
@@ -234,15 +234,13 @@ class Proxy:
     def normalize_kilo_model(self, model: str) -> str:
         normalized = model.strip().lower()
         for prefix in ("kilo-proxy/", "kilo/", "ollama/"):
-            if normalized.startswith(prefix):
-                normalized = normalized[len(prefix):]
+            normalized = normalized.removeprefix(prefix)
         return normalized
 
     def normalize_ollama_model(self, model: str) -> str:
         normalized = model.strip().lower()
         for prefix in ("ollama/", "kilo-proxy/", "kilo/"):
-            if normalized.startswith(prefix):
-                normalized = normalized[len(prefix):]
+            normalized = normalized.removeprefix(prefix)
         if normalized in OLLAMA_MODEL_IDS:
             return normalized
         return self.ollama_model
@@ -332,7 +330,7 @@ class Proxy:
                     if not content:
                         raise ProxyBackendError(f"kilo returned an empty response: {stderr.strip() or 'no output'}")
                     return content
-        except asyncio.TimeoutError:
+        except TimeoutError:
             if proc is not None and proc.returncode is None:
                 proc.kill()
                 await proc.wait()

@@ -6,10 +6,9 @@ import os
 import platform
 import re
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
-
 
 from . import _utils
 from .registry import SubstrateRuntime
@@ -546,7 +545,7 @@ def _checksum_path(path: Path) -> str:
             rel = child.relative_to(path).as_posix().encode("utf-8")
             digest.update(rel)
             if child.is_symlink():
-                digest.update(f"symlink:{os.readlink(child)}".encode("utf-8"))
+                digest.update(f"symlink:{os.readlink(child)}".encode())
                 continue
             digest.update(_sha256_file(child).encode("utf-8"))
         return digest.hexdigest()
@@ -590,7 +589,7 @@ def _entry_metadata(
         "is_symlink": path.is_symlink(),
         "size_bytes": stat_result.st_size,
         "modified_at": datetime.fromtimestamp(
-            stat_result.st_mtime, tz=timezone.utc
+            stat_result.st_mtime, tz=UTC
         ).isoformat(),
         "checksum": _checksum_path(path),
         "backup_count": int(existing.get("backup_count", 0)) if existing else 0,
@@ -1011,7 +1010,7 @@ def backup_config_sync(
         profile_ids=profile_ids,
     )
 
-    backup_root = _backup_base_path(runtime) / datetime.now(timezone.utc).strftime(
+    backup_root = _backup_base_path(runtime) / datetime.now(UTC).strftime(
         "%Y%m%d-%H%M%SZ"
     )
     backup_root.mkdir(parents=True, exist_ok=True)
@@ -1232,7 +1231,7 @@ def deploy_config_sync(
         line_endings_mode=normalized_line_endings,
         conversion_mode=normalized_conversion,
     )
-    deploy_root = _deploy_base_path(runtime) / datetime.now(timezone.utc).strftime(
+    deploy_root = _deploy_base_path(runtime) / datetime.now(UTC).strftime(
         "%Y%m%d-%H%M%SZ"
     )
     deploy_root.mkdir(parents=True, exist_ok=True)

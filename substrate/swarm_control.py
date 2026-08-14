@@ -24,7 +24,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -256,7 +256,7 @@ def _request(
         else _NoRedirectHandler()
     )
     try:
-        with opener.open(req, timeout=timeout) as resp:  # noqa: S310
+        with opener.open(req, timeout=timeout) as resp:
             if read_limit is not None:
                 body = resp.read(read_limit).decode("utf-8", errors="replace")
             else:
@@ -401,7 +401,7 @@ def _visible_text(html: str) -> str:
     Block-level element boundaries become newlines so distinct UI text blocks
     are assessed individually instead of being concatenated into one run-on.
     """
-    stripped = re.sub(r"<(script|style)[^>]*>.*?</\\1>", " ", html, flags=re.S | re.I)
+    stripped = re.sub(r"<(script|style)[^>]*>.*?</\\1>", " ", html, flags=re.DOTALL | re.IGNORECASE)
     stripped = re.sub(r"<(br|/p|/li|/div|/h[1-6]|/section|/header|/footer|/aside|/button|/span)[^>]*>", "\n", stripped)
     stripped = re.sub(r"<[^>]+>", " ", stripped)
     stripped = re.sub(r"&[a-zA-Z#0-9]+;", " ", stripped)
@@ -522,7 +522,7 @@ def _synthesize_feedback(
             "state": state,
             "evidence": evidence,
             "latency_ms": result.get("latency_ms"),
-            "reported_at": datetime.now(timezone.utc).isoformat(),
+            "reported_at": datetime.now(UTC).isoformat(),
         })
     for check in qualitative:
         if check["ok"]:
@@ -534,7 +534,7 @@ def _synthesize_feedback(
             "probe": check["id"],
             "state": "broken" if "nav-" in check["id"] else "unintuitive",
             "evidence": check["note"],
-            "reported_at": datetime.now(timezone.utc).isoformat(),
+            "reported_at": datetime.now(UTC).isoformat(),
         })
     return feedback
 
@@ -619,7 +619,7 @@ def run_qa_triage(feedback: list[dict[str, Any]]) -> dict[str, Any]:
 
     issues.sort(key=lambda i: (SEVERITY_ORDER.get(i["severity"], 9), -i["report_count"]))
     return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "total_issues": len(issues),
         "by_severity": {
             severity: sum(1 for i in issues if i["severity"] == severity)
@@ -676,7 +676,7 @@ def run_user_simulation(
         }
 
     snapshot = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "base_url": base_url,
         "personas_ran": [p["id"] for p in active_personas],
         "total_feedback_items": len(all_feedback),
@@ -721,7 +721,7 @@ def emit_work_items(triage: dict[str, Any]) -> dict[str, Any]:
                 f"no regression in core probes for {issue['feature']}",
             ],
         })
-    queue = {"generated_at": datetime.now(timezone.utc).isoformat(),
+    queue = {"generated_at": datetime.now(UTC).isoformat(),
              "items": work_items}
     ensure_state_dir()
     (SATE_DIR / "work-items.json").write_text(
@@ -757,7 +757,7 @@ def run_iteration_loop(
     result = {"iterations": iterations,
               "converged": iterations[-1]["critical"] == 0 and iterations[-1]["high"] == 0
               if iterations else False,
-              "generated_at": datetime.now(timezone.utc).isoformat()}
+              "generated_at": datetime.now(UTC).isoformat()}
     ensure_state_dir()
     (SATE_DIR / "iteration-loop.json").write_text(
         json.dumps(result, indent=2, ensure_ascii=False)
@@ -782,7 +782,7 @@ def smoke_tests(base_url: str = DEFAULT_BASE_URL) -> dict[str, Any]:
     passed = sum(1 for r in results if r["ok"])
     failed = len(results) - passed
     return {
-        "ran_at": datetime.now(timezone.utc).isoformat(),
+        "ran_at": datetime.now(UTC).isoformat(),
         "total": len(results),
         "passed": passed,
         "failed": failed,
@@ -829,7 +829,7 @@ def deploy_production(base_url: str = DEFAULT_BASE_URL) -> dict[str, Any]:
     monitoring["ok"] = all(c["pass"] for c in monitoring["checks"])
 
     deployment = {
-        "deployed_at": datetime.now(timezone.utc).isoformat(),
+        "deployed_at": datetime.now(UTC).isoformat(),
         "smoke": smoke,
         "service": service,
         "monitoring": monitoring,

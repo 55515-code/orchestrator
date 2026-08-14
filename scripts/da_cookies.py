@@ -8,7 +8,6 @@ key from the OS keyring, and writes a JSON file for the publisher script.
 from __future__ import annotations
 
 import argparse
-import base64
 import json
 import shutil
 import sqlite3

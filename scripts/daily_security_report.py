@@ -26,7 +26,7 @@ import ssl
 import subprocess
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 CODESPACE = Path(os.environ.get("SUBSTRATE_ROOT", "/home/ahron/codespace"))
@@ -78,12 +78,12 @@ SECRET_PATTERNS = [
     re.compile(r"postgres(ql)?://[^\s@:]+:[^\s@]+@"),
     re.compile(r"redis://[^\s@:]+:[^\s@]+@"),
     re.compile(r"mongodb(\+srv)?://[^\s@:]+:[^\s@]+@"),
-    re.compile(r"\b(token|password|api[_-]?key|secret)\s*[=:]\s*['\"]?[A-Za-z0-9_\-]{16,}['\"]?", re.I),
+    re.compile(r"\b(token|password|api[_-]?key|secret)\s*[=:]\s*['\"]?[A-Za-z0-9_\-]{16,}['\"]?", re.IGNORECASE),
 ]
 
 PLACEHOLDER_RE = re.compile(
     r"(your|example|sample|placeholder|xxx+|<[^>]*>|changeme|demo|test)[_-]?|\.{2,}|\*{2,}",
-    re.I,
+    re.IGNORECASE,
 )
 
 TIMEOUT = 8
@@ -163,7 +163,7 @@ def system_section() -> list[str]:
     updates = run(["checkupdates"]).splitlines()
     if updates and not updates[0].startswith("(") and "::" not in updates[0]:
         lines.append(f"- Pending OS updates: {len(updates)}")
-        lines.append(f"  {', '.join(sorted(set(u.split()[0] for u in updates if u.split()))[:12])}")
+        lines.append(f"  {', '.join(sorted({u.split()[0] for u in updates if u.split()})[:12])}")
     else:
         lines.append("- Pending OS updates: 0 (or checkupdates unavailable)")
 
@@ -277,7 +277,7 @@ def tls_expiry(host: str, port: int = 443) -> str:
             with ctx.wrap_socket(sock, server_hostname=host) as tls:
                 cert = tls.getpeercert()
         not_after = datetime.strptime(cert["notAfter"], "%b %d %H:%M:%S %Y %Z")
-        days = (not_after.replace(tzinfo=timezone.utc) - datetime.now(timezone.utc)).days
+        days = (not_after.replace(tzinfo=UTC) - datetime.now(UTC)).days
         return f"{days}d"
     except Exception as e:
         return f"err:{type(e).__name__}"
@@ -333,7 +333,7 @@ def github_repo_section() -> list[str]:
 
 def compose(state: dict) -> str:
     sections = [system_section(), code_section(state), site_section(), github_repo_section()]
-    now = datetime.now(timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M %Z")
+    now = datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M %Z")
     header = [
         f"Substrate Daily Security Report - {now}",
         f"Host: {socket.gethostname()}",

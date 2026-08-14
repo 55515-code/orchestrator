@@ -124,15 +124,15 @@ def _normalize_strip(
         return (
             messages,
             True,
-            f"conversation had no user turn; appended placeholder user message "
-            f"(role=user, content={placeholder!r})",
+            (f"conversation had no user turn; appended placeholder user message "
+            f"(role=user, content={placeholder!r})"),
         )
 
     return (
         messages,
         True,
-        f"stripped {stripped} trailing assistant message(s) "
-        f"(ends with role={messages[-1].get('role')!r})",
+        (f"stripped {stripped} trailing assistant message(s) "
+        f"(ends with role={messages[-1].get('role')!r})"),
     )
 
 

@@ -81,7 +81,7 @@ def drive_login(email: str, password: str, twofa: str | None) -> tuple[bool, str
 
     def wait_for(patterns: list[str], label: str, send: str | None = None) -> bool:
         try:
-            idx = child.expect(patterns, timeout=60)
+            child.expect(patterns, timeout=60)
             transcript.append(child.before or "")
             transcript.append(child.after or "")
             if send is not None:
@@ -185,7 +185,7 @@ def main() -> int:
         return 2
     password = pw_path.read_text().strip().splitlines()[0]
 
-    print(f"[1/4] Stopping bridge daemon ...")
+    print("[1/4] Stopping bridge daemon ...")
     stop_bridge()
     try:
         print(f"[2/4] Driving interactive login for {args.email} ...")

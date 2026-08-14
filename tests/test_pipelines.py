@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -82,7 +82,7 @@ class TestPipelineModels:
             pipeline_name="ci-pipeline",
             status=PipelineStatus.PENDING,
             trigger=TriggerType.MANUAL,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         assert run.id == "test-run-1"
         assert run.status == PipelineStatus.PENDING
@@ -90,8 +90,8 @@ class TestPipelineModels:
 
     def test_pipeline_run_duration(self):
         """Test calculating run duration."""
-        started = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        completed = datetime(2024, 1, 1, 12, 5, 0, tzinfo=timezone.utc)
+        started = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        completed = datetime(2024, 1, 1, 12, 5, 0, tzinfo=UTC)
         run = PipelineRun(
             id="test-run",
             pipeline_name="test",
@@ -109,7 +109,7 @@ class TestPipelineModels:
             pipeline_name="test",
             status=PipelineStatus.RUNNING,
             trigger=TriggerType.MANUAL,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
         )
         assert run.duration_seconds is None
 
@@ -264,7 +264,7 @@ class TestPipelineEngine:
         registry.register(pipeline)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            engine = PipelineEngine(
+            PipelineEngine(
                 registry=registry,
                 workdir=Path(tmpdir),
                 artifacts_dir=Path(tmpdir) / "artifacts",

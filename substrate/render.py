@@ -9,18 +9,17 @@ from typing import Any
 from . import _utils
 from .cache_store import CacheStore
 from .registry import SubstrateRuntime
+from .reliability import ProviderFailoverHook
 from .render_engines.base import (
+    QUALITY_TIERS,
+    SPEED_TIERS,
     EngineSpec,
     RenderRequest,
     RenderUnavailable,
     detect_gpu,
     ensure_scratch_env,
     load_engine,
-    QUALITY_TIERS,
-    SPEED_TIERS,
 )
-from .reliability import ProviderFailoverHook
-
 
 # ---------------------------------------------------------------------------
 # Catalog
@@ -111,9 +110,7 @@ def select_engine(
             return False
         if spec.kind == "hosted_api" and not allow_hosted:
             return False
-        if spec.cost_per_image_usd * request.num_images > max_cost:
-            return False
-        return True
+        return not spec.cost_per_image_usd * request.num_images > max_cost
 
     def _rank(spec: EngineSpec) -> tuple[int, int, float]:
         q = QUALITY_TIERS.index(spec.quality_tier) if spec.quality_tier in QUALITY_TIERS else -1
@@ -154,7 +151,7 @@ def select_engine(
                 continue
             try:
                 engine = load_engine(spec)
-                ok, reason = engine.availability(gpu=gpu)
+                ok, _reason = engine.availability(gpu=gpu)
                 if ok:
                     return spec
             except Exception:
@@ -229,7 +226,7 @@ def render_dispatch(
     run_type = "render"
     if result.status == "success":
         try:
-            from .learning import record_execution  # noqa: PLC0415
+            from .learning import record_execution
             record_execution(
                 runtime,
                 run_type=run_type,
@@ -269,7 +266,7 @@ def render_dispatch(
 
     failed = result
     try:
-        from .learning import record_execution  # noqa: PLC0415
+        from .learning import record_execution
         record_execution(
             runtime,
             run_type=run_type,
@@ -335,7 +332,7 @@ def _render_cache_key(spec: EngineSpec, request: RenderRequest) -> str:
 
 
 def json_dumps(payload: Any, **kwargs: Any) -> str:
-    import json  # noqa: PLC0415
+    import json
     return json.dumps(payload, **kwargs)
 
 

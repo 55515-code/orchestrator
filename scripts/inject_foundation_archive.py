@@ -17,9 +17,9 @@ import tarfile
 import tempfile
 import urllib.parse
 import urllib.request
-from urllib.error import URLError
 import zipfile
 from pathlib import Path
+from urllib.error import URLError
 
 EXCLUDED_NAMES = {
     ".git",
@@ -54,7 +54,7 @@ def _extract_archive(archive: Path, destination: Path) -> Path:
             zf.extractall(destination)
         return destination
 
-    if any(s in suffixes for s in {".tar", ".gz", ".bz2", ".xz", ".tgz"}):
+    if any(s in suffixes for s in (".tar", ".gz", ".bz2", ".xz", ".tgz")):
         with tarfile.open(archive) as tf:
             tf.extractall(destination)
         return destination

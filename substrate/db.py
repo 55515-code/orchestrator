@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -164,7 +164,7 @@ class OrchestratorDB:
             connection.commit()
 
     def _now(self) -> str:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     def _as_json(self, payload: dict[str, Any] | None) -> str | None:
         if payload is None:
@@ -420,7 +420,7 @@ class OrchestratorDB:
         return projects
 
     def count_fresh_sources(self, freshness_days: int) -> int:
-        threshold = datetime.now(timezone.utc) - timedelta(days=freshness_days)
+        threshold = datetime.now(UTC) - timedelta(days=freshness_days)
         with self._connect() as connection:
             row = connection.execute(
                 """

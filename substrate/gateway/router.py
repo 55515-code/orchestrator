@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .manager import GatewayManager
 from .models import Conversation, InboundMessage, OutboundMessage
@@ -99,7 +100,7 @@ class MessageRouter:
             
         except Exception as e:
             logger.error(f"Error handling command {command}: {e}")
-            return f"Error executing command: {str(e)}"
+            return f"Error executing command: {e!s}"
     
     async def _handle_chat(self, message: InboundMessage, conversation: Conversation) -> str:
         """Handle a regular chat message.

@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -159,7 +159,7 @@ def _community_sim(runtime: Any, agent: Any) -> dict[str, Any]:
     sim_dir = runtime.paths["research"] / "community-sim"
     sim_dir.mkdir(parents=True, exist_ok=True)
     cycle_index = len(list(sim_dir.glob("*.json")))
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     try:
         result = run_community_cycle(
             runtime,
@@ -190,7 +190,7 @@ def _community_sim(runtime: Any, agent: Any) -> dict[str, Any]:
 
 def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> dict[str, Any]:
     _ = orchestrator, directive
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     outputs: list[str] = []
     actions: list[dict[str, Any]] = []
 

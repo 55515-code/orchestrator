@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from substrate.credentials import CredentialStore  # noqa: E402
+from substrate.credentials import CredentialStore
 
 DEFAULT_EMAIL = "ahronzombi@protonmail.com"
 CRED_SERVICE = "proton-mail"
@@ -114,7 +114,7 @@ def full_login(email: str, password: str) -> tuple[bool, str]:
 
     def send_after(patterns: list[str], label: str, value: str | None = None, timeout: float = 60) -> bool:
         try:
-            idx = child.expect(patterns, timeout=timeout)
+            child.expect(patterns, timeout=timeout)
             transcript.append((child.before or "")[-200:])
             transcript.append(child.after or "")
             if value is not None:

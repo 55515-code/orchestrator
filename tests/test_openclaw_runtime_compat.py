@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import pytest
 from importlib import import_module
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
+
+import pytest
 
 
 def test_sitecustomize_restores_legacy_cmdop_timeout_alias() -> None:

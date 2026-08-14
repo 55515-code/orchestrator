@@ -176,11 +176,10 @@ class RenderRequest:
             raise ValueError("RenderRequest.steps must be >= 1 when provided.")
         if self.guidance is not None and self.guidance < 0:
             raise ValueError("RenderRequest.guidance must be >= 0 when provided.")
-        if self.mode in {"image_to_image", "edit", "inpaint", "upscale"}:
-            if self.source_image is None:
-                raise ValueError(
-                    f"RenderRequest.mode '{self.mode}' requires a source_image."
-                )
+        if self.mode in {"image_to_image", "edit", "inpaint", "upscale"} and self.source_image is None:
+            raise ValueError(
+                f"RenderRequest.mode '{self.mode}' requires a source_image."
+            )
         for ref in self.style_refs:
             if not isinstance(ref, Path):
                 raise ValueError("RenderRequest.style_refs must contain Path entries.")
@@ -603,7 +602,7 @@ def detect_gpu() -> dict[str, Any]:
 
 def _detect_gpu_torch() -> dict[str, Any] | None:
     try:
-        import torch  # noqa: PLC0415  (lazy: optional heavy dependency)
+        import torch
     except Exception:  # noqa: BLE001  - ImportError or broken CUDA init
         return None
     try:
@@ -754,7 +753,7 @@ def resize_for_engine(image: Any, max_pixels: int, multiple_of: int = 16) -> Any
         raise ValueError("multiple_of must be >= 1")
 
     try:
-        from PIL import Image as PILImage  # noqa: PLC0415  (lazy: optional dependency)
+        from PIL import Image as PILImage
     except ImportError as exc:
         raise unavailable("pillow", f"install pillow: {exc}") from exc
 

@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +58,7 @@ TAILSCALE_BIN = shutil.which("tailscale") or "/usr/bin/tailscale"
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def run(cmd: list[str], *, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -87,7 +87,7 @@ def _is_port_open(host: str, port: int, timeout: float = 2.0) -> bool:
 def _http_ok(path: str = "/health", timeout: int = 4) -> tuple[bool, str]:
     url = f"http://{PANEL_HOST}:{PANEL_PORT}{path}"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
             return resp.status == 200, f"{resp.status} {url}"
     except Exception as exc:  # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"

@@ -7,10 +7,9 @@ import shutil
 import socket
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
 
 _COMMAND_TIMEOUT_SECONDS = 8
 
@@ -50,7 +49,7 @@ def _detect_nvidia_gpu() -> dict[str, Any]:
     if not nvidia_smi:
         return gpu_info
     raw = run_text([nvidia_smi, "--query-gpu=index,name,memory.total,memory.used,memory.free,utilization.gpu", "--format=csv,noheader,nounits"], timeout_seconds=10)
-    if raw.startswith("error") or raw.startswith("unavailable") or raw.startswith("timeout"):
+    if raw.startswith(("error", "unavailable", "timeout")):
         gpu_info["error"] = raw
         return gpu_info
     gpus = []
@@ -88,13 +87,13 @@ def _detect_amd_gpu() -> dict[str, Any]:
     if not rocm_smi:
         return gpu_info
     raw = run_text([rocm_smi, "--showallinfo", "--csv"], timeout_seconds=10)
-    if raw.startswith("error") or raw.startswith("unavailable") or raw.startswith("timeout"):
+    if raw.startswith(("error", "unavailable", "timeout")):
         gpu_info["error"] = raw
         return gpu_info
     gpus = []
     for line in raw.splitlines():
         line = line.strip()
-        if not line or line.startswith("GPU") or line.startswith("Device"):
+        if not line or line.startswith(("GPU", "Device")):
             continue
         parts = [p.strip() for p in line.split(",")]
         if len(parts) < 6:
@@ -230,7 +229,7 @@ def _detect_memory() -> dict[str, Any]:
 
 def write_probe(out_file: Path) -> None:
     out_file.parent.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     host = socket.gethostname()
     user = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
 
@@ -353,7 +352,7 @@ def write_probe(out_file: Path) -> None:
         sections.append(f"  Chip: {apple.get('chip')}")
         sections.append(f"  Cores: {apple.get('physical_cores')}")
         sections.append(f"  Performance cores: {apple.get('performance_cores')}")
-        sections.append(f"  RAM: {_format_bytes((apple.get('memory_bytes') or 0))}")
+        sections.append(f"  RAM: {_format_bytes(apple.get('memory_bytes') or 0)}")
         sections.append("```")
         sections.append("")
 

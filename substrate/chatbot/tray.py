@@ -22,7 +22,7 @@ os.environ.setdefault("PYSTRAY_BACKEND", "appindicator")
 logger = logging.getLogger(__name__)
 
 
-def _make_icon_image() -> "Any":
+def _make_icon_image() -> Any:
     """Generate a simple chat-bubble tray icon using Pillow."""
     from PIL import Image, ImageDraw
 
@@ -137,7 +137,7 @@ class ChatbotTray:
     def open_panel(self) -> None:
         webbrowser.open("http://127.0.0.1:8090/")
 
-    def toggle_paused(self, icon: "Any") -> None:
+    def toggle_paused(self, icon: Any) -> None:
         self._paused = not self._paused
         if self._paused:
             icon.notify("Chatbot paused: new tasks will be queued", "Substrate Chat")
@@ -145,10 +145,10 @@ class ChatbotTray:
             icon.notify("Chatbot resumed", "Substrate Chat")
         self._refresh_menu(icon)
 
-    def quit(self, icon: "Any") -> None:
+    def quit(self, icon: Any) -> None:
         icon.stop()
 
-    def _refresh_menu(self, icon: "Any") -> None:
+    def _refresh_menu(self, icon: Any) -> None:
         try:
             icon.update_menu()
         except Exception:  # noqa: BLE001
@@ -185,9 +185,9 @@ class ChatbotTray:
         )
         icon.run()
 
-    def _notify_status(self, icon: "Any") -> None:
+    def _notify_status(self, icon: Any) -> None:
         icon.notify(self.status_text(), "Substrate Chat")
 
-    def _notify_agent_status(self, icon: "Any") -> None:
+    def _notify_agent_status(self, icon: Any) -> None:
         text = self.show_agent_status()
         icon.notify(text[:200] or "no agent output", "Substrate Agent Status")

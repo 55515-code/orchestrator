@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -98,7 +98,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
     _ = orchestrator, directive
     repo = runtime.resolve_repo(agent.repo_slug)
     site_root = (runtime.root / repo.path).resolve()
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     outputs: list[str] = []
     actions: list[dict[str, Any]] = []
 

@@ -38,7 +38,7 @@ def main() -> int:
         return 2
 
     try:
-        from huggingface_hub import InferenceClient  # noqa: E402
+        from huggingface_hub import InferenceClient
     except ImportError:
         print("ERROR: huggingface_hub not installed. Run: uv pip install huggingface_hub")
         return 2

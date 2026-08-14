@@ -6,9 +6,10 @@ import random
 import threading
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Literal, Protocol, TypeVar
+from typing import Any, Literal, Protocol, TypeVar
 
 from . import _utils
 
@@ -191,7 +192,7 @@ def decide_restart_action(
     )
 
 
-def execute_with_retry(
+def execute_with_retry[T](
     operation: Callable[[], T],
     *,
     policy: RetryPolicy,
@@ -203,7 +204,7 @@ def execute_with_retry(
     for attempt in range(1, policy.max_attempts + 1):
         try:
             return operation()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             classification = classifier(exc)
             if attempt >= policy.max_attempts:
                 raise

@@ -1,0 +1,12 @@
+{
+  "job_id": "851af4e8-4d02-425d-be0e-f8ee4f58cecb",
+  "received_at": "2026-08-13T23:27:00-04:00",
+  "source": "proton_mail_webhook",
+  "email": {
+    "from": "EarnIn <noreply@transactions.earnin.com>",
+    "to": "ahronzombi@gmail.com",
+    "subject": "Balance Shield auto-transfer failed",
+    "date": "Thu, 13 Aug 2026 20:54:33 +0000",
+    "summary": "EarnIn Balance Shield auto-transfer of $100 failed because available earnings were insufficient. User is advised to try a manual cashout in the app."
+  }
+}

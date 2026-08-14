@@ -5,12 +5,12 @@ Provides REST API and Prometheus metrics exposition for the dashboard.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, Response
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 
 from .collectors import MultiNodeCollector
 from .metrics import get_metrics_registry

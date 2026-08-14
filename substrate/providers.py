@@ -8,7 +8,6 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
-
 FREE_FIRST_PROVIDER_ORDER = (
     "local",
     "roo-router",

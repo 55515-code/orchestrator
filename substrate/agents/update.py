@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +85,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
     repo = runtime.resolve_repo(agent.repo_slug)
     repo_path = (runtime.root / repo.path).resolve()
     policy = runtime.workspace.policy
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     outputs: list[str] = []
     actions: list[dict[str, Any]] = []
 
@@ -177,7 +177,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
             (path.stat().st_mtime for path in docs_dir.rglob("*.md")),
             default=0.0,
         )
-        docs_fresh = (datetime.now(timezone.utc).timestamp() - newest) < 90 * 86400
+        docs_fresh = (datetime.now(UTC).timestamp() - newest) < 90 * 86400
     actions.append(
         {
             "action": "docs-refresh",
@@ -263,8 +263,8 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
                 "",
                 f"- Branch: `{branch_name}`",
                 f"- Commit allowed: `{allowed}` ({reason})",
-                f"- Test detail: `{test_detail.get('reason')}` "
-                f"(returncode={test_detail.get('returncode')}, attempts={test_detail.get('attempts')})",
+                (f"- Test detail: `{test_detail.get('reason')}` "
+                f"(returncode={test_detail.get('returncode')}, attempts={test_detail.get('attempts')})"),
                 "",
                 "## stderr tail",
                 "",

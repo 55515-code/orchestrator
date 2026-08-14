@@ -45,8 +45,7 @@ import json
 import re
 import secrets
 import smtplib
-import string
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -99,11 +98,18 @@ SMTP_PORT = 1025
 IMAP_HOST = "127.0.0.1"
 IMAP_PORT = 1143
 
+# Bridge v3 requires SMTP AUTH with the per-account password it generates.
+# That password lives in the OS keyring (secret-service), labeled:
+#   service=substrate-credentials account=proton-bridge-smtp
+# It can also be supplied via config:  smtp.username / smtp.password
+KEYRING_SERVICE = "substrate-credentials"
+KEYRING_ACCOUNT = "proton-bridge-smtp"
+
 CODE_RE = re.compile(rf"\b[{CODE_ALPHABET}]{{{CODE_LEN}}}\b")
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +215,7 @@ def _code_valid(channel_cfg: dict[str, Any], code: str) -> tuple[bool, str]:
     if expires:
         try:
             expiry = datetime.fromisoformat(expires)
-            if datetime.now(timezone.utc) > expiry:
+            if datetime.now(UTC) > expiry:
                 return False, "verification code expired"
         except ValueError:
             pass
@@ -219,6 +225,28 @@ def _code_valid(channel_cfg: dict[str, Any], code: str) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # Backends
 # ---------------------------------------------------------------------------
+
+
+def _bridge_smtp_password() -> str:
+    """Read the Proton Mail Bridge SMTP password from the OS keyring.
+
+    Falls back to the operator config (``approval_lane.json`` ->
+    ``smtp.password``) when secret-tool is unavailable (e.g. headless
+    containers). Never logs or echoes the secret.
+    """
+    try:
+        import subprocess
+        out = subprocess.run(
+            ["secret-tool", "lookup", "service", KEYRING_SERVICE,
+             "account", KEYRING_ACCOUNT],
+            capture_output=True, text=True, timeout=5,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except Exception:
+        pass
+    cfg = _load_operator_config()
+    return (cfg.get("smtp") or {}).get("password") or ""
 
 
 def email_backend_send(
@@ -248,6 +276,7 @@ def email_backend_send(
         "{body}"
     )
     last = ""
+    password = _bridge_smtp_password()
     for frm in from_candidates:
         if not frm:
             continue
@@ -259,6 +288,13 @@ def email_backend_send(
                 conn.ehlo()
             except smtplib.SMTPException:
                 pass  # relay may not offer STARTTLS in some builds
+            if password:
+                try:
+                    conn.login(frm, password)
+                except smtplib.SMTPAuthenticationError:
+                    last = f"from={frm} bridge SMTP auth rejected (check keyring proton-bridge-smtp)"
+                    conn.quit()
+                    continue
             conn.sendmail(
                 frm,
                 [to],
@@ -295,13 +331,13 @@ def sms_backend_send(channel_cfg: dict[str, Any], to: str, body: str) -> tuple[b
     if not provider:
         return (
             False,
-            "no SMS provider configured for this channel; add provider credentials "
-            f"in {CONFIG_PATH} (channels.{channel_cfg.get('key', 'sms:<number>')}.provider)",
+            ("no SMS provider configured for this channel; add provider credentials "
+            f"in {CONFIG_PATH} (channels.{channel_cfg.get('key', 'sms:<number>')}.provider)"),
         )
     return (
         False,
-        f"SMS provider '{provider}' is registered but not implemented; "
-        "implement provider delivery in substrate/approvals.py sms_backend_send()",
+        (f"SMS provider '{provider}' is registered but not implemented; "
+        "implement provider delivery in substrate/approvals.py sms_backend_send()"),
     )
 
 
@@ -405,7 +441,7 @@ def send_test_message(runtime: Any, channel: str) -> dict[str, Any]:
     code = new_code()
     channel_cfg["verification_code"] = code
     channel_cfg["code_expires_at"] = (
-        datetime.now(timezone.utc) + timedelta(minutes=CODE_TTL_MINUTES)
+        datetime.now(UTC) + timedelta(minutes=CODE_TTL_MINUTES)
     ).isoformat(timespec="seconds")
     channel_cfg["verify_attempts"] = 0
     channel_cfg["status"] = "probe-sent"
@@ -413,7 +449,7 @@ def send_test_message(runtime: Any, channel: str) -> dict[str, Any]:
     channel_cfg["last_error"] = ""
 
     label = channel_cfg.get("label", channel)
-    address = channel_cfg.get("address", "")
+    channel_cfg.get("address", "")
     body = (
         f"Substrate approval lane test message ({label}).\n\n"
         f"Verification code: {code}\n\n"
@@ -533,7 +569,7 @@ def request_approval(
         "channel": target,
         "code": new_code(),
         "code_expires_at": (
-            datetime.now(timezone.utc) + timedelta(minutes=CODE_TTL_MINUTES)
+            datetime.now(UTC) + timedelta(minutes=CODE_TTL_MINUTES)
         ).isoformat(timespec="seconds"),
         "status": "pending",
         "decision": None,
@@ -593,7 +629,7 @@ def resolve_approval(
     expires = approval.get("code_expires_at")
     if expires:
         try:
-            if datetime.now(timezone.utc) > datetime.fromisoformat(expires):
+            if datetime.now(UTC) > datetime.fromisoformat(expires):
                 approval["status"] = "expired"
                 save_lane(runtime, lane)
                 return {"ok": False, "detail": "approval code expired"}
@@ -637,9 +673,10 @@ def poll_for_replies(runtime: Any) -> list[dict[str, Any]]:
     """Poll the verified channel's mailbox for coded replies.
 
     Reads IMAP credentials from the operator config (``~/.config/substrate/
-    approval_lane.json`` -> ``imap: {host, port, username, password}``). The
-    Proton Mail Bridge advertises IMAP on 127.0.0.1:1143 but currently loads no
-    account, so polling reports that precisely instead of fabricating results.
+    approval_lane.json`` -> ``imap: {host, port, username, password}``), falling
+    back to the Proton Mail Bridge account (ahronzombi@protonmail.com) and the
+    bridge password from the OS keyring (service=substrate-credentials,
+    account=proton-bridge-smtp).
     """
     lane = load_lane(runtime)
     primary = lane.get("primary")
@@ -651,11 +688,14 @@ def poll_for_replies(runtime: Any) -> list[dict[str, Any]]:
         return results
 
     cfg = _imap_config()
-    if not cfg.get("username") or not cfg.get("password"):
+    username = cfg.get("username", "") or EMAIL_FROM_CANDIDATES[0]
+    password = cfg.get("password", "") or _bridge_smtp_password()
+    if not username or not password:
         results.append({
             "ok": False,
             "detail": "IMAP credentials not configured; add imap.username/"
-                      "imap.password to " + str(CONFIG_PATH),
+                      "imap.password to " + str(CONFIG_PATH) +
+                      " (or keyring proton-bridge-smtp)",
         })
         return results
 
@@ -664,7 +704,7 @@ def poll_for_replies(runtime: Any) -> list[dict[str, Any]]:
     try:
         conn = imaplib.IMAP4(host, port)
         conn.starttls()
-        conn.login(cfg["username"], cfg["password"])
+        conn.login(username, password)
         conn.select("INBOX")
         typ, data = conn.search(None, "UNSEEN")
         if typ != "OK":
@@ -811,7 +851,7 @@ def _code_expired(channel_cfg: dict[str, Any]) -> bool:
     if not expires:
         return False
     try:
-        return datetime.now(timezone.utc) > datetime.fromisoformat(expires)
+        return datetime.now(UTC) > datetime.fromisoformat(expires)
     except ValueError:
         return False
 

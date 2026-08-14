@@ -78,7 +78,7 @@ def repo(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def runtime(tmp_path: Path, repo: Path) -> "object":
+def runtime(tmp_path: Path, repo: Path) -> object:
     """A minimal fake runtime exposing repositories()/resolve_repo()."""
     from types import SimpleNamespace
 
@@ -275,7 +275,7 @@ def test_nested_directories(engine: SnapshotEngine, repo: Path) -> None:
     }
     # tree object at src is a real subtree with mode 040000
     raw = git(repo, "ls-tree", SNAPSHOT_BRANCH)
-    src_line = [ln for ln in raw.splitlines() if ln.endswith("\tsrc")][0]
+    src_line = next(ln for ln in raw.splitlines() if ln.endswith("\tsrc"))
     assert src_line.startswith("040000 tree")
     # verify content via archive
     import tarfile

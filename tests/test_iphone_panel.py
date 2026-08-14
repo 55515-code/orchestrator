@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-import substrate.iphone_panel as iphone_panel
+from substrate import iphone_panel
 from substrate.web import app
 
 CLIENT_KWARGS = {"base_url": "http://127.0.0.1:8090"}

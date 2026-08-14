@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -73,7 +73,7 @@ def read_context(paths: list[str]) -> str:
 
 def build_model(provider: str, model: str):
     if provider == "local":
-        pass  # using local router
+        # using local router
 
         return None  # delegated to local roo-router
     if provider == "anthropic":
@@ -161,7 +161,7 @@ def run_chain(
     model: str,
     dry_run: bool,
 ) -> Path:
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     run_dir = Path("memory") / "runs" / timestamp
     run_dir.mkdir(parents=True, exist_ok=True)
 

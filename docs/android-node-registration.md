@@ -1,7 +1,140 @@
 # Register an Android OpenClaw CLI as a Worker + Developer Node
 
+> **SIMPLEST NO-ROOT PATH — read this first.** See
+> "Simplest no-root boot setup" below. Summary: bind the gateway to the tailnet
+> once, pair the phone once, then a 2-line Termux:Boot script with **no flags**
+> is all you need forever. No root, no tunnel, no systemd.
+
+
 Target gateway: `cachyos-x8664` (this machine)
 Generated: 2026-08-13
+
+## Simplest no-root boot setup (recommended)
+
+Three things make this simple, all verified in the installed package:
+
+1. **`node run` persists its connection.** `ensureNodeHostConfig()` writes
+   `nodeId`, `token`, `displayName`, and `gateway` (host/port/tls/contextPath)
+   to `~/.openclaw/node.json` at mode `0600`
+   (`dist/config-jZ1Rj9dH.js`). On later runs, host falls back to
+   `config?.gateway?.host` and port to `config?.gateway?.port`
+   (`dist/node-cli-DSAz3X0B.js:2546,2552`).
+   **=> after the first successful pairing, plain `openclaw node run` reconnects
+   with no flags and no token in the script.**
+2. **Termux home is resolved natively.** `resolveTermuxHome()` detects
+   `PREFIX=.../com.termux/files/usr` + `ANDROID_DATA` and resolves
+   `$PREFIX/../home` (`dist/home-dir-CJKEsOtx.js`), so `~/.openclaw/` works
+   without `OPENCLAW_HOME`.
+3. **The CLI node host has no `wss://` requirement.** That restriction is an
+   Android *app* WebView policy. The Termux CLI can speak plain `ws://` to a
+   tailnet IP — so no TLS, no Tailscale Serve, no tunnel.
+
+### Step 1 (once, on the CachyOS box): make the gateway reachable
+
+Currently `gateway.bind = loopback`, so the phone cannot reach it at all.
+Valid values in this build: `loopback`, `lan`, `tailnet`, `tailscale`.
+Use `tailnet` — reachable from your phone, never exposed to the LAN or internet:
+
+```bash
+openclaw config set gateway.bind tailnet
+openclaw gateway restart
+openclaw config get gateway.auth.token   # copy to phone once, by hand
+```
+
+### Step 2 (once, on the phone): install + first pairing
+
+```bash
+pkg install -y nodejs-lts
+npm install -g openclaw
+
+export OPENCLAW_GATEWAY_TOKEN="<token from step 1>"
+openclaw node run --host 100.117.132.49 --port 8090 --display-name "Ahron Android"
+```
+
+Leave it running and approve on the CachyOS box:
+
+```bash
+openclaw devices list
+openclaw devices approve <requestId>
+openclaw nodes status --connected
+```
+
+Once it shows connected, Ctrl-C it. `~/.openclaw/node.json` now holds the node
+id, token, and gateway address.
+
+### Step 3 (once, on the phone): the boot script
+
+You already have Termux:Boot working. Just add one more script — do **not**
+replace or overwrite your existing `~/.termux/boot/` files:
+
+```bash
+mkdir -p ~/.termux/boot
+cat > ~/.termux/boot/50-openclaw-node.sh <<'EOF'
+#!/data/data/com.termux/files/usr/bin/sh
+termux-wake-lock
+exec openclaw node run >> "$HOME/.openclaw/node-boot.log" 2>&1
+EOF
+chmod +x ~/.termux/boot/50-openclaw-node.sh
+```
+
+That's the whole thing. No flags, no token in the file, no root.
+
+The numeric prefix controls ordering if you have other boot scripts. Verify you
+are not clobbering anything first with `ls -la ~/.termux/boot/`.
+
+### Step 4: keep Android from killing it
+
+This is the only genuinely fiddly part, and it is Android's fault, not
+OpenClaw's:
+
+- Settings > Apps > Termux > Battery > **Unrestricted**
+- `termux-wake-lock` (already in the boot script above)
+- Keep the Termux notification visible; don't swipe it away
+
+If the node still dies while the screen is off, that is Android Doze killing
+Termux — the fix is the battery exemption above, not an OpenClaw setting.
+
+### Step 5: verify after a reboot
+
+On the CachyOS box:
+
+```bash
+openclaw nodes status --connected
+```
+
+On the phone, if it did not come up:
+
+```bash
+cat ~/.openclaw/node-boot.log
+```
+
+### Optional: auto-restart on crash
+
+`node run` is a foreground process; if it exits, nothing restarts it until the
+next reboot. A supervisor loop keeps it up without root:
+
+```sh
+#!/data/data/com.termux/files/usr/bin/sh
+termux-wake-lock
+while :; do
+  openclaw node run >> "$HOME/.openclaw/node-boot.log" 2>&1
+  sleep 15
+done
+```
+
+That is strictly better than `openclaw node install`, which cannot work on
+Android at all (see section 6).
+
+### Rollback
+
+```bash
+rm ~/.termux/boot/50-openclaw-node.sh          # on the phone
+openclaw nodes remove --node "Ahron Android"   # on the gateway
+openclaw config set gateway.bind loopback      # if you want to re-close it
+openclaw gateway restart
+```
+
+---
 
 ## 0. Facts about this gateway (verified, not assumed)
 

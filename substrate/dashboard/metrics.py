@@ -6,7 +6,6 @@ All metrics follow Prometheus naming conventions and best practices.
 
 from __future__ import annotations
 
-
 from prometheus_client import (
     CollectorRegistry,
     Counter,

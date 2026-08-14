@@ -3,19 +3,16 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-import yaml
 
 from substrate.render_engines.base import (
+    QUALITY_TIERS,
+    SPEED_TIERS,
     EngineSpec,
     RenderRequest,
-    RenderUnavailable,
     detect_gpu,
     ensure_scratch_env,
     tier_rank,
-    QUALITY_TIERS,
-    SPEED_TIERS,
 )
-
 
 # ---------------------------------------------------------------------------
 # Tier helpers
@@ -175,7 +172,7 @@ def test_hosted_engine_present_key_is_available(monkeypatch: pytest.MonkeyPatch)
         "requires": [],
     })
     engine = OpenAIGPTImageEngine(spec)
-    ok, reason = engine.availability()
+    ok, _reason = engine.availability()
     assert ok is True
 
 
@@ -209,8 +206,8 @@ def test_local_engine_missing_deps_is_retryable(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_render_catalog_loads_defaults(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    from substrate.render import render_catalog_payload
     from substrate.registry import SubstrateRuntime
+    from substrate.render import render_catalog_payload
 
     monkeypatch.chdir(tmp_path)
     (tmp_path / "render_profiles.yaml").write_text(_MINIMAL_YAML)

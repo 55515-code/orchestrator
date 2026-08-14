@@ -5,7 +5,7 @@ import logging
 import os
 import threading
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +36,7 @@ class ChainKeyPair:
     chain_id: str
     private_key_pem: bytes
     public_key_pem: bytes
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def private_key(self):
         return serialization.load_pem_private_key(self.private_key_pem, password=None)
@@ -134,7 +134,7 @@ class EncryptedChainContext:
     keypair: ChainKeyPair
     peer_public_keys: dict[str, bytes] = field(default_factory=dict)
     key_rotation_interval_seconds: int = 3600
-    _last_rotation: float = field(default_factory=lambda: datetime.now(timezone.utc).timestamp())
+    _last_rotation: float = field(default_factory=lambda: datetime.now(UTC).timestamp())
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def register_peer(self, peer_id: str, public_key_pem: bytes) -> None:
@@ -142,11 +142,11 @@ class EncryptedChainContext:
 
     def rotate_key(self) -> ChainKeyPair:
         self.keypair = generate_chain_keypair(self.chain_id)
-        self._last_rotation = datetime.now(timezone.utc).timestamp()
+        self._last_rotation = datetime.now(UTC).timestamp()
         return self.keypair
 
     def maybe_rotate(self) -> None:
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         if now - self._last_rotation >= self.key_rotation_interval_seconds:
             self.rotate_key()
 
@@ -218,7 +218,7 @@ class EncryptedChainRegistry:
                     k: v.encode("utf-8") for k, v in data.get("peer_public_keys", {}).items()
                 },
                 key_rotation_interval_seconds=data.get("key_rotation_interval_seconds", 3600),
-                _last_rotation=data.get("last_rotation", datetime.now(timezone.utc).timestamp()),
+                _last_rotation=data.get("last_rotation", datetime.now(UTC).timestamp()),
             )
             self._contexts[chain_id] = context
             return context

@@ -6,7 +6,7 @@ import pickle
 import sqlite3
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +90,7 @@ class CacheStore:
 
     @staticmethod
     def _now_iso() -> str:
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     @staticmethod
     def _parse_iso(value: str | None) -> datetime | None:
@@ -117,9 +117,7 @@ class CacheStore:
         if row is None:
             return False
         expires_at = self._parse_iso(row[0])
-        if expires_at is not None and datetime.now(timezone.utc) > expires_at:
-            return False
-        return True
+        return not (expires_at is not None and datetime.now(UTC) > expires_at)
 
     def get(self, key: str) -> Any | None:
         """Return the cached value for ``key`` or None if missing/expired."""
@@ -131,9 +129,8 @@ class CacheStore:
         if row is None:
             return None
         blob_path, expires_at = row
-        if expires_at is not None:
-            if datetime.now(timezone.utc) > self._parse_iso(expires_at):
-                return None
+        if expires_at is not None and datetime.now(UTC) > self._parse_iso(expires_at):
+            return None
         path = Path(blob_path)
         if not path.is_absolute():
             path = self.root / path
@@ -160,7 +157,7 @@ class CacheStore:
         if row is None:
             return None
         summary, expires_at = row
-        if expires_at is not None and datetime.now(timezone.utc) > self._parse_iso(expires_at):
+        if expires_at is not None and datetime.now(UTC) > self._parse_iso(expires_at):
             return None
         return summary
 
@@ -185,7 +182,7 @@ class CacheStore:
         expires_at = None
         if ttl_seconds is not None:
             expires_at = datetime.fromtimestamp(
-                time.time() + ttl_seconds, tz=timezone.utc
+                time.time() + ttl_seconds, tz=UTC
             ).isoformat()
         tags_str = self._tags_to_str(tags)
         with self._connect() as conn:
@@ -246,7 +243,7 @@ class CacheStore:
             params.extend(f"%{tag}%" for tag in tag_list)
         if older_than_days is not None:
             cutoff = datetime.fromtimestamp(
-                time.time() - older_than_days * 86400, tz=timezone.utc
+                time.time() - older_than_days * 86400, tz=UTC
             ).isoformat()
             conditions.append("created_at < ?")
             params.append(cutoff)
@@ -289,7 +286,7 @@ class CacheStore:
         removed_old = []
         if max_age_days is not None and max_age_days >= 0:
             cutoff = datetime.fromtimestamp(
-                time.time() - max_age_days * 86400, tz=timezone.utc
+                time.time() - max_age_days * 86400, tz=UTC
             ).isoformat()
             with self._connect() as conn:
                 old_rows = conn.execute(

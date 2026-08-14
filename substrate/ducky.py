@@ -274,8 +274,8 @@ class DuckyPayloadEngine:
         if repo_slug:
             lines.extend(
                 [
-                    "- `uv run python scripts/substrate_cli.py run-chain "
-                    f'--repo {repo_slug} --objective "Recovery check" --stage local --dry-run`',
+                    ("- `uv run python scripts/substrate_cli.py run-chain "
+                    f'--repo {repo_slug} --objective "Recovery check" --stage local --dry-run`'),
                 ]
             )
         lines.append("")

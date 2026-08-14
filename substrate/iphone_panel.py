@@ -24,7 +24,7 @@ import json
 import os
 import shutil
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -106,7 +106,7 @@ async def run_automation(name: str, request: Request) -> dict[str, Any]:
     if prompt:
         argv.append(prompt)
 
-    started_at = datetime.now(timezone.utc).isoformat()
+    started_at = datetime.now(UTC).isoformat()
     try:
         completed = subprocess.run(
             argv,
@@ -129,7 +129,7 @@ async def run_automation(name: str, request: Request) -> dict[str, Any]:
         "ok": rc == 0 and error is None,
         "action": name,
         "started_at": started_at,
-        "finished_at": datetime.now(timezone.utc).isoformat(),
+        "finished_at": datetime.now(UTC).isoformat(),
         "returncode": rc,
         "stdout": stdout[-8000:],
         "stderr": stderr[-4000:],
@@ -143,7 +143,7 @@ async def run_automation(name: str, request: Request) -> dict[str, Any]:
 
 def _gather_system_snapshot() -> dict[str, Any]:
     snap: dict[str, Any] = {
-        "ts": datetime.now(timezone.utc).isoformat(),
+        "ts": datetime.now(UTC).isoformat(),
     }
     if psutil is not None:
         snap["cpu_percent"] = psutil.cpu_percent(interval=None)

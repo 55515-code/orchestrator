@@ -9,7 +9,7 @@ serialization formats or timestamp precision.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,7 @@ import yaml
 
 def utc_now() -> str:
     """Return the current UTC time as an ISO-8601 string."""
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def utc_now_iso() -> str:
@@ -86,7 +86,7 @@ def percentile(values: list[float], q: float) -> float:
     if not 0.0 <= q <= 1.0:
         raise ValueError("percentile q must be between 0.0 and 1.0")
     ordered = sorted(values)
-    index = int(round(q * (len(ordered) - 1)))
+    index = round(q * (len(ordered) - 1))
     return float(ordered[index])
 
 

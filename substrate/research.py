@@ -7,9 +7,10 @@ import logging
 import re
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import yaml
 
@@ -516,7 +517,7 @@ def refresh_upstreams(runtime: SubstrateRuntime) -> list[dict[str, Any]]:
     upstreams_file = runtime.paths["upstreams"]
     projects = _load_upstreams(upstreams_file)
     refreshed: list[dict[str, Any]] = []
-    checked_at = datetime.now(timezone.utc).isoformat()
+    checked_at = datetime.now(UTC).isoformat()
 
     for project in projects:
         repo_url = str(project["repo_url"])

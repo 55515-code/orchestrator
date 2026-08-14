@@ -7,7 +7,7 @@ Tier 0 autonomy: writes notes only, never mutates code. Satisfies the
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,7 @@ def _write_note(path: Path, lines: list[str]) -> None:
 def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> dict[str, Any]:
     _ = orchestrator, directive
     repo = runtime.resolve_repo(agent.repo_slug)
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     outputs: list[str] = []
     actions: list[dict[str, Any]] = []
 

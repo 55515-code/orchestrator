@@ -7,7 +7,7 @@ import time
 import traceback
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -16,14 +16,15 @@ import yaml
 from langchain_core.prompts import ChatPromptTemplate
 
 from .cache_store import CacheStore
-from .environment import platform_key
-from .learning import record_execution
-from .models import TaskConfig
 from .encrypted_chain import (
     EncryptedChainContext,
     EncryptedChainRegistry,
 )
+from .environment import platform_key
+from .learning import record_execution
+from .models import TaskConfig
 from .providers import DEFAULT_PROVIDER_MODELS, FREE_FIRST_PROVIDER_ORDER, build_model, models_for_hardware
+from .registry import SubstrateRuntime
 from .reliability import (
     CheckpointStore,
     ExecutionTarget,
@@ -36,7 +37,7 @@ from .reliability import (
     execute_with_retry,
     make_idempotency_key,
 )
-from .registry import SubstrateRuntime
+from .research import run_openclaw_research_assist, source_facts_ready
 from .resource_orchestration import (
     ElasticScaleHooks,
     HardwareProfile,
@@ -45,9 +46,7 @@ from .resource_orchestration import (
     hardware_profile_from_probe,
     scheduler_from_chain_defaults,
 )
-from .research import run_openclaw_research_assist, source_facts_ready
 from .task_cache import TaskCache
-
 
 _BOUNDED_VALIDATION_HINTS = (
     "probe",
@@ -95,7 +94,7 @@ def _p95(values: list[float]) -> float:
     if not values:
         return 0.0
     ordered = sorted(values)
-    index = int(round(0.95 * (len(ordered) - 1)))
+    index = round(0.95 * (len(ordered) - 1))
     return float(ordered[index])
 
 
@@ -375,9 +374,7 @@ class Orchestrator:
             "adoption_policy": "learn_and_adapt_never_trust_or_copy",
         }
         level = "info"
-        if status in {"rejected", "blocked"}:
-            level = "warning"
-        elif status.startswith("degraded"):
+        if status in {"rejected", "blocked"} or status.startswith("degraded"):
             level = "warning"
         self.runtime.db.add_event(
             run_id=run_id,
@@ -483,7 +480,7 @@ class Orchestrator:
                         tags={"ai_call", current_target.provider, current_target.model, step_id},
                     )
                 return response, current_target
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 failure = classify_failure(exc)
                 self._checkpoint_store.create_checkpoint(
                     run_id=run_id,
@@ -747,7 +744,7 @@ class Orchestrator:
         )
         self._assert_mutation_policy(mode)
         self._assert_restricted_terms(
-            " ".join([objective, chain_path]),
+            f"{objective} {chain_path}",
             context="chain objective/path",
         )
 
@@ -790,7 +787,7 @@ class Orchestrator:
             scale_hooks=self._scale_hooks,
             hardware_profile=hardware_profile,
         )
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         run_dir = self.runtime.paths["memory"] / "runs" / f"{timestamp}-{run_id[:8]}"
         run_dir.mkdir(parents=True, exist_ok=True)
         chain_command = [
@@ -1079,7 +1076,7 @@ class Orchestrator:
                         self._checkpoint_store.create_checkpoint(
                             run_id=run_id,
                             scope="recovery",
-                            status=f"openclaw_{str(openclaw_result.get('status') or 'unknown')}",
+                            status=f"openclaw_{openclaw_result.get('status') or 'unknown'!s}",
                             stage=stage,
                             step_id=step_id,
                             idempotency_key=idempotency_key,
@@ -1281,7 +1278,7 @@ class Orchestrator:
                 stdout=json.dumps(summary, ensure_ascii=False),
                 artifact=str(run_dir),
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.runtime.db.add_event(
                 run_id=run_id,
                 level="error",
@@ -1486,7 +1483,7 @@ class Orchestrator:
             )
         if execution_timeout_seconds is not None and execution_timeout_seconds <= 0:
             raise ValueError("execution_timeout_seconds must be > 0 when provided.")
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         run_id = run_id or self._new_run_id()
         command_env["SUBSTRATE_RUN_ID"] = run_id
         log_dir = self.runtime.paths["memory"] / "task-runs"

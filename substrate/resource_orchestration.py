@@ -64,7 +64,7 @@ class HardwareProfile:
     tags: list[str] = field(default_factory=list)
 
     def has_gpu(self) -> bool:
-        return self.gpu_vram_total_mb > 0 or any(a.startswith("nvidia:") or a.startswith("amd:") for a in self.accelerators)
+        return self.gpu_vram_total_mb > 0 or any(a.startswith(("nvidia:", "amd:")) for a in self.accelerators)
 
     def has_npu(self) -> bool:
         return self.npu_available or any(a.startswith("npu:") for a in self.accelerators)

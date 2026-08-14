@@ -33,8 +33,8 @@ def main() -> int:
     args = p.parse_args()
 
     try:
-        import torch  # noqa
-        from diffusers import StableDiffusionInstructPix2PixPipeline  # noqa
+        import torch
+        from diffusers import StableDiffusionInstructPix2PixPipeline
         from PIL import Image
     except ImportError as e:
         print(f"Missing dependency: {e}")

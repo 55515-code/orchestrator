@@ -24,7 +24,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -137,7 +137,7 @@ class CompatibilityIssue:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _parse_version(raw: str) -> tuple[int, ...]:
@@ -843,7 +843,7 @@ def create_snapshot(
     source_path = Path(source)
     root_path = Path(snapshot_root)
     if label is None:
-        label = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        label = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     destination = root_path / f"{source_path.name}-{label}"
     command = ["btrfs", "subvolume", "snapshot"]
     if read_only:

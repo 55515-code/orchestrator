@@ -1,21 +1,18 @@
 """Verification tests for decentralized governance substrate components."""
 
-import pytest
 from substrate.decentralized_governance import (
     DIGNITY_STACK_LAYERS,
-    ConsensusProposal,
-    ConsensusCoordinationRole,
-    GovernanceVoteRecord,
-    CooperativeCharter,
-    IndigenousDataGovernanceRecord,
-    FederationCovenant,
-    LiberationStackDeployment,
     ConstraintSet,
-    PolicyOracle,
-    MutualCreditPosition,
+    CooperativeCharter,
     EcologicalBudgetConstraint,
-    register_decentralized_governance_standard,
+    FederationCovenant,
+    GovernanceVoteRecord,
+    IndigenousDataGovernanceRecord,
+    LiberationStackDeployment,
+    MutualCreditPosition,
+    PolicyOracle,
     compute_consensus_result,
+    register_decentralized_governance_standard,
 )
 
 

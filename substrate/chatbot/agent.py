@@ -13,9 +13,11 @@ import shlex
 import subprocess
 import threading
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .config import ChatbotConfig
 
@@ -35,7 +37,7 @@ class AgentTask:
     created_at: str = ""
     started_at: str = ""
     finished_at: str = ""
-    events: "queue.Queue[dict[str, Any] | str]" = field(
+    events: queue.Queue[dict[str, Any] | str] = field(
         default_factory=queue.Queue
     )
 
@@ -55,9 +57,9 @@ class AgentTask:
 
 
 def _utc_iso() -> str:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _event_type(event: dict[str, Any]) -> str:

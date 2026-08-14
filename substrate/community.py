@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import json
-import shutil
 import statistics
-import subprocess
 import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from random import Random
 from typing import Any
@@ -198,11 +196,11 @@ def _build_model(provider: str, model: str):
 
 
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _iso_date_from_now(days: int) -> str:
-    return (datetime.now(timezone.utc) + timedelta(days=days)).date().isoformat()
+    return (datetime.now(UTC) + timedelta(days=days)).date().isoformat()
 
 
 def _median(values: list[float]) -> float:
@@ -215,7 +213,7 @@ def _p95(values: list[float]) -> float:
     if not values:
         return 0.0
     sorted_values = sorted(values)
-    index = int(round((len(sorted_values) - 1) * 0.95))
+    index = round((len(sorted_values) - 1) * 0.95)
     return float(sorted_values[index])
 
 
@@ -239,7 +237,7 @@ def _scale_cohorts(
 
     raw_targets = [count * scale for _, count in cohorts]
     floored = [int(value) for value in raw_targets]
-    target_total = max(1, int(round(sum(raw_targets))))
+    target_total = max(1, round(sum(raw_targets)))
     remainder = target_total - sum(floored)
 
     fractional_order = sorted(
@@ -904,7 +902,7 @@ def _aggregate_pr_throughput(actor_sessions: list[dict[str, Any]]) -> dict[str, 
         if actor.get("role_type") == "developer"
     )
     opened = developer_signal_total + 14
-    stale_prs = max(int(round(statistics.mean(stale_values) * 4)), 1) if stale_values else 1
+    stale_prs = max(round(statistics.mean(stale_values) * 4), 1) if stale_values else 1
     merged = max(int(opened * 0.42) - int(stale_prs * 0.15), 1)
     closed_without_merge = max(opened - merged - stale_prs, 0)
 
@@ -1448,7 +1446,7 @@ def run_community_cycle(
     base_seed = seed if seed is not None else 7331
     model_name = agent_model or DEFAULT_PROVIDER_MODELS[agent_provider]
     run_id = uuid.uuid4().hex
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     run_dir = (
         runtime.paths["memory"]
         / "community-sim"
@@ -1720,7 +1718,7 @@ def run_community_cycle(
             classify_as_test=True,
         )
         return result
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         runtime.db.add_event(
             run_id=run_id,
             level="error",

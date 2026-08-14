@@ -5,9 +5,8 @@ import argparse
 import hashlib
 import json
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-
 
 DEFAULT_INCLUDE = [
     ".env.example",
@@ -108,7 +107,7 @@ def sha256(path: Path) -> str:
 def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%SZ")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%SZ")
     output_dir = (root / args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_name = f"{args.name_prefix}-{timestamp}.zip"
@@ -133,7 +132,7 @@ def main() -> int:
 
     manifest = {
         "name": args.name_prefix,
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
         "workspace_root": str(root),
         "artifact": zip_name,
         "file_count": len(files),

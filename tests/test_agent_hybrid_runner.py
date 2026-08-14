@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
-
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "agent_hybrid_runner.py"
 SPEC = importlib.util.spec_from_file_location("agent_hybrid_runner", MODULE_PATH)
 assert SPEC and SPEC.loader
@@ -19,21 +18,7 @@ def test_bounded_loop_count_is_clamped() -> None:
 
 
 def test_parse_publish_markers_reads_expected_fields() -> None:
-    text = "\n".join(
-        [
-            "AGENT_PUBLISH_ACTION=merged",
-            "AGENT_PUBLISH_OK=true",
-            "AGENT_PUBLISH_BRANCH=agent/swarm-abc",
-            "AGENT_PUBLISH_PR_NUMBER=42",
-            "AGENT_PUBLISH_PR_URL=https://github.com/owner/repo/pull/42",
-            "AGENT_PUBLISH_MERGE_ATTEMPTED=true",
-            "AGENT_PUBLISH_MERGED=true",
-            "AGENT_PUBLISH_MERGE_ATTEMPTS=2",
-            "AGENT_PUBLISH_REBASE_OK=true",
-            "AGENT_PUBLISH_PUSH_OK=true",
-            "AGENT_PUBLISH_MESSAGE=done",
-        ]
-    )
+    text = "AGENT_PUBLISH_ACTION=merged\nAGENT_PUBLISH_OK=true\nAGENT_PUBLISH_BRANCH=agent/swarm-abc\nAGENT_PUBLISH_PR_NUMBER=42\nAGENT_PUBLISH_PR_URL=https://github.com/owner/repo/pull/42\nAGENT_PUBLISH_MERGE_ATTEMPTED=true\nAGENT_PUBLISH_MERGED=true\nAGENT_PUBLISH_MERGE_ATTEMPTS=2\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=done"
     parsed = RUNNER.parse_publish_markers(text)
     assert parsed["action"] == "merged"
     assert parsed["ok"] is True
@@ -75,21 +60,7 @@ def test_invoke_publish_parses_mocked_marker_output(monkeypatch, tmp_path: Path)
             "return_code": 0,
             "ok": True,
             "duration_seconds": 0.01,
-            "stdout_tail": "\n".join(
-                [
-                    "AGENT_PUBLISH_ACTION=pr_updated",
-                    "AGENT_PUBLISH_OK=true",
-                    "AGENT_PUBLISH_BRANCH=agent/swarm-20260403-abcd",
-                    "AGENT_PUBLISH_PR_NUMBER=99",
-                    "AGENT_PUBLISH_PR_URL=https://example/pull/99",
-                    "AGENT_PUBLISH_MERGE_ATTEMPTED=false",
-                    "AGENT_PUBLISH_MERGED=false",
-                    "AGENT_PUBLISH_MERGE_ATTEMPTS=0",
-                    "AGENT_PUBLISH_REBASE_OK=true",
-                    "AGENT_PUBLISH_PUSH_OK=true",
-                    "AGENT_PUBLISH_MESSAGE=ok",
-                ]
-            ),
+            "stdout_tail": "AGENT_PUBLISH_ACTION=pr_updated\nAGENT_PUBLISH_OK=true\nAGENT_PUBLISH_BRANCH=agent/swarm-20260403-abcd\nAGENT_PUBLISH_PR_NUMBER=99\nAGENT_PUBLISH_PR_URL=https://example/pull/99\nAGENT_PUBLISH_MERGE_ATTEMPTED=false\nAGENT_PUBLISH_MERGED=false\nAGENT_PUBLISH_MERGE_ATTEMPTS=0\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=ok",
             "stderr_tail": "",
         }
 

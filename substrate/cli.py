@@ -6,10 +6,10 @@ import shlex
 import shutil
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Sequence
 
 from .agents import (
     AgentConfigError,
@@ -18,6 +18,8 @@ from .agents import (
     run_agent,
     run_agent_cycle,
 )
+from .cache_store import CacheStore
+from .community import run_community_cycle
 from .config_sync import (
     CONFIG_SYNC_TARGET_ENVS,
     backup_config_sync,
@@ -25,8 +27,6 @@ from .config_sync import (
     plan_config_sync,
     scan_config_sync,
 )
-from .cache_store import CacheStore
-from .community import run_community_cycle
 from .ducky import DuckyPayloadEngine
 from .integrations import (
     connect_integration,
@@ -37,15 +37,28 @@ from .integrations import (
 from .learning import learning_payload, record_execution, record_resolution_note
 from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
-from .providers import SUPPORTED_PROVIDERS
 from .prefill_proxy import (
     DEFAULT_HOST as DEFAULT_PROXY_HOST,
+)
+from .prefill_proxy import (
     DEFAULT_PORT as DEFAULT_PROXY_PORT,
+)
+from .prefill_proxy import (
     serve_forever,
     start_daemon,
     status_daemon,
     stop_daemon,
 )
+from .providers import SUPPORTED_PROVIDERS
+from .registry import SubstrateRuntime
+from .render import (
+    render_catalog_payload,
+    render_dispatch,
+    render_telemetry_payload,
+)
+from .render_engines.base import RenderRequest, RenderUnavailable
+from .research import refresh_upstreams
+from .standards import standards_payload
 from .swarm_control import (
     DEFAULT_BASE_URL,
     deploy_production,
@@ -56,15 +69,6 @@ from .swarm_control import (
     smoke_tests,
     swarm_status,
 )
-from .registry import SubstrateRuntime
-from .research import refresh_upstreams
-from .render import (
-    render_catalog_payload,
-    render_dispatch,
-    render_telemetry_payload,
-)
-from .render_engines.base import RenderRequest, RenderUnavailable
-from .standards import standards_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
 
 ALLOWED_CHAIN_PROVIDERS = set(SUPPORTED_PROVIDERS)
@@ -139,7 +143,7 @@ def _detect_access_tools() -> dict[str, str | None]:
 
 
 def _default_utc_date() -> str:
-    return datetime.now(timezone.utc).date().isoformat()
+    return datetime.now(UTC).date().isoformat()
 
 
 def _build_discount_swarm_plan(
@@ -1077,7 +1081,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "poll",
         help="Poll the verified channel's mailbox for coded replies.",
     )
-    approval_lane_watch = approval_lane_sub.add_parser(
+    approval_lane_sub.add_parser(
         "watch",
         help="Run one autonomous watch pass (retry delivery, poll replies, "
         "auto-verify, confirm primary). Used by the background loop/timer.",

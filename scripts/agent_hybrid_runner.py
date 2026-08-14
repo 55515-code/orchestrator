@@ -7,13 +7,13 @@ import os
 import shlex
 import subprocess
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def parse_bool(raw: str) -> bool:
@@ -687,7 +687,7 @@ def main() -> int:
 
     current_head = run_command(["git", "rev-parse", "--short", "HEAD"], cwd=root, timeout_seconds=30)
     short_head = str(current_head.get("stdout_tail", "")).strip() or "head"
-    default_session_id = f"{datetime.now(timezone.utc).strftime('%Y%m%d')}-{short_head}"
+    default_session_id = f"{datetime.now(UTC).strftime('%Y%m%d')}-{short_head}"
     session_id = sanitize_token(args.session_id or default_session_id)
 
     started_at = utc_now_iso()

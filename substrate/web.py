@@ -13,7 +13,7 @@ import traceback
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import Any
@@ -252,10 +252,10 @@ app = FastAPI(
     version="0.2.0",
     lifespan=_lifespan,
 )
-TEMPLATES = Jinja2Templates(directory=str((RUNTIME.root / "substrate" / "templates")))
+TEMPLATES = Jinja2Templates(directory=str(RUNTIME.root / "substrate" / "templates"))
 app.mount(
     "/static",
-    StaticFiles(directory=str((RUNTIME.root / "substrate" / "static"))),
+    StaticFiles(directory=str(RUNTIME.root / "substrate" / "static")),
     name="static",
 )
 
@@ -503,7 +503,7 @@ def _config_files_index() -> list[dict[str, Any]]:
             "exists": path.exists(),
             "size": path.stat().st_size if path.exists() else 0,
             "modified_at": (
-                datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat()
+                datetime.fromtimestamp(path.stat().st_mtime, UTC).isoformat()
                 if path.exists()
                 else None
             ),
@@ -696,13 +696,13 @@ def _tailnet_self_hosts() -> set[str]:
             )
             if out.returncode == 0:
                 data = json.loads(out.stdout)
-                for mount in (data.get("Web") or {}).keys():
+                for mount in (data.get("Web") or {}):
                     host, sep, port = str(mount).partition(":")
                     if host:
                         base_names.add(host.strip().lower())
                     if sep and port:
                         serve_ports.add(port.strip())
-                serve_ports.update(str(p) for p in (data.get("TCP") or {}).keys())
+                serve_ports.update(str(p) for p in (data.get("TCP") or {}))
         except Exception:  # noqa: BLE001
             pass
 
@@ -1671,7 +1671,7 @@ async def stream_metrics():
                         }
                         for run in runs[:5]
                     ],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
 
                 yield f"data: {json.dumps(payload)}\n\n"
@@ -1987,7 +1987,7 @@ async def send_whatsapp_test(request: Request):
         )
     try:
         result = await plugin.send_text(to, message)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         append_log(RUNTIME.root, "send", f"send failed to {to}: {exc}")
         raise HTTPException(status_code=502, detail=f"Send failed: {exc}") from exc
     append_log(RUNTIME.root, "send", f"test message sent to {to}")
@@ -2069,7 +2069,7 @@ def api_system_metrics() -> dict[str, Any]:
         "repositories": metrics.get("repositories_total", 0),
         "sources": metrics.get("sources_total", 0),
     }
-    snap["timestamp"] = datetime.now(timezone.utc).isoformat()
+    snap["timestamp"] = datetime.now(UTC).isoformat()
     return snap
 
 
@@ -2095,7 +2095,7 @@ async def api_config_files_save(request: Request) -> dict[str, Any]:
     """Save an edited workspace config file with YAML validation + atomic write."""
     try:
         body = await request.json()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         raise HTTPException(status_code=400, detail="Invalid JSON body.") from exc
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Invalid JSON body.")
@@ -2205,7 +2205,7 @@ def api_run_cancel(run_id: str) -> dict[str, Any]:
 # Legacy ops panel endpoints and API routes above.
 # The root "/" redirects to the legacy dashboard which provides the full
 # operational overview (repositories, runs, standards, tooling, integrations).
-from starlette.responses import RedirectResponse  # noqa: E402
+from starlette.responses import RedirectResponse
 
 # Include dashboard and pipelines routers
 dashboard_router = create_dashboard_router(
@@ -2217,7 +2217,7 @@ app.include_router(dashboard_router)
 app.include_router(pipelines_router)
 
 # iPhone webapp panel extensions (automations + live system stream). Additive.
-from .iphone_panel import router as iphone_panel_router  # noqa: E402
+from .iphone_panel import router as iphone_panel_router
 
 app.include_router(iphone_panel_router)
 

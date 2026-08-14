@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from datetime import UTC
 from pathlib import Path
 from typing import Any
 
@@ -185,13 +186,13 @@ class ChatbotApp:
                 event_type = item.get("type") or "event"
                 yield f"event: {event_type}\ndata: {payload}\n\n"
             else:
-                yield f"data: {str(item)}\n\n"
+                yield f"data: {item!s}\n\n"
 
 
 def _utc_iso() -> str:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def create_app(

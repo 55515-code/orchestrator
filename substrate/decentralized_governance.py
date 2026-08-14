@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 # ------------------------------------------------------------------
@@ -115,7 +115,7 @@ class GovernanceVoteRecord:
     vote: Literal["approve", "reject", "abstain", "block"]
     weight: float = 1.0  # never derived from capital contribution
     reason_visible_to_collective: bool = True
-    timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp_utc: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def enforce_one_member_one_voice(self, capital_contribution_amount: float = 0.0) -> None:
         """Explicit decoupling: capital amount never modifies vote weight."""
@@ -315,7 +315,7 @@ class FederationCovenant:
     def is_covenantal(self) -> bool:
         return len(self.shared_norms) > 0
 
-    def can_federate_with(self, other: "FederationCovenant") -> bool:
+    def can_federate_with(self, other: FederationCovenant) -> bool:
         """Federation requires overlapping shared norms (not identical, but compatible)."""
         overlap = set(self.shared_norms).intersection(set(other.shared_norms))
         return len(overlap) > 0
@@ -330,7 +330,7 @@ class FederatedDiplomacyEvent:
     action: Literal["federate", "defederate", "limit", "filter_content"]
     justification: str
     audit_log_path: str = ""
-    timestamp_utc: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp_utc: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def is_governance_action(self) -> bool:
         return self.action in ("federate", "defederate", "limit")

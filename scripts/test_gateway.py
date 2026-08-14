@@ -77,8 +77,8 @@ async def test_webhook_verification(manager):
     
     # Test valid signature
     payload = b'{"test": "data"}'
-    import hmac
     import hashlib
+    import hmac
     
     app_secret = os.getenv("WHATSAPP_APP_SECRET", "test-secret")
     expected_signature = "sha256=" + hmac.new(

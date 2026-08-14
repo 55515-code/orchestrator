@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,7 +67,7 @@ def main() -> None:
     cycle_name = latest_dir.name
     report_path = latest_dir / "cycle_report.md"
     report_content = parse_report(report_path)
-    updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    updated_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     OUTPUT_HTML.write_text(
         generate_html(report_content, cycle_name, updated_at),

@@ -5,8 +5,6 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import pytest
-
 from substrate import approvals
 from substrate.approvals import (
     CODE_ALPHABET,
@@ -21,7 +19,6 @@ from substrate.approvals import (
     request_approval,
     resolve_approval,
     send_test_message,
-    sms_backend_send,
     verify_channel,
     watch_once,
 )
@@ -213,7 +210,7 @@ def test_resolve_approval_wrong_code(tmp_path: Path) -> None:
     lane = load_lane(runtime)
     code = lane["channels"]["email"]["verification_code"]
     verify_channel(runtime, "email", code)
-    result = request_approval(runtime, subject="deploy")
+    request_approval(runtime, subject="deploy")
     lane = load_lane(runtime)
     pending = lane["pending_approvals"][0]
     wrong = ("A" if pending["code"][0] != "A" else "B") + pending["code"][1:]
@@ -229,7 +226,7 @@ def test_resolve_approval_deny(tmp_path: Path) -> None:
         send_test_message(runtime, "email")
     lane = load_lane(runtime)
     verify_channel(runtime, "email", lane["channels"]["email"]["verification_code"])
-    result = request_approval(runtime, subject="deploy")
+    request_approval(runtime, subject="deploy")
     lane = load_lane(runtime)
     pending = lane["pending_approvals"][0]
     resolved = resolve_approval(runtime, pending["id"], pending["code"], "deny")
@@ -270,7 +267,7 @@ def test_poll_without_verified_channel(tmp_path: Path) -> None:
 
 
 def test_email_backend_send_connection_error() -> None:
-    ok, used, detail = email_backend_send(
+    ok, _used, detail = email_backend_send(
         "test@example.com", "s", "b", host="127.0.0.1", port=1
     )
     assert ok is False

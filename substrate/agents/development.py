@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -211,7 +211,7 @@ def _find_test_command(repo: Any) -> tuple[list[str] | None, str | None]:
 
 
 def _write_report(runtime: Any, repo_slug: str, name: str, lines: list[str]) -> Path:
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     directory = runtime.paths["research"] / repo_slug
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / f"{date_str}-{name}.md"
@@ -223,7 +223,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
     repo = runtime.resolve_repo(agent.repo_slug)
     repo_path = (runtime.root / repo.path).resolve()
     policy = runtime.workspace.policy
-    date_str = datetime.now(timezone.utc).date().isoformat()
+    date_str = datetime.now(UTC).date().isoformat()
     outputs: list[str] = []
     actions: list[dict[str, Any]] = []
 
@@ -418,8 +418,8 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
             f"- Backlog item: `{item.get('title')}` ({item_source})",
             f"- Branch: `{branch_name}`",
             f"- Commit allowed: `{allowed}` ({reason})",
-            f"- Test detail: `{test_detail.get('reason')}` "
-            f"(returncode={test_detail.get('returncode')}, attempts={test_detail.get('attempts')})",
+            (f"- Test detail: `{test_detail.get('reason')}` "
+            f"(returncode={test_detail.get('returncode')}, attempts={test_detail.get('attempts')})"),
             "",
             "## stderr tail",
             "",

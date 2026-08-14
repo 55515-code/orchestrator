@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
-
 from substrate import btrfs
 from substrate.btrfs import (
     CompatibilityIssue,
@@ -13,7 +11,6 @@ from substrate.btrfs import (
     MountOptions,
     _parse_version,
     apply_nodatacow,
-    btrfs_progs_version,
     compatibility_report,
     create_snapshot,
     detect_btrfs,
@@ -27,7 +24,6 @@ from substrate.btrfs import (
     subvolume_layout,
     tool_available,
 )
-
 
 # ---------------------------------------------------------------------------
 # Version parsing and helpers
@@ -113,7 +109,7 @@ def test_mount_options_nodatacow_variant() -> None:
 
 
 def test_detect_btrfs_falls_back_gracefully(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(btrfs, "_read_mounts", lambda: [])
+    monkeypatch.setattr(btrfs, "_read_mounts", list)
     result = detect_btrfs(tmp_path)
     assert result["is_btrfs"] is False
     assert result["fstype"] is None

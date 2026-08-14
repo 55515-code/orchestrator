@@ -6,17 +6,17 @@ with the Kilo agent from the desktop panel. Kilo runs in autonomous mode
 existing permission configuration.
 """
 
+from .agent import AgentTask, KiloAgent
 from .app import ChatbotApp, create_app
-from .agent import KiloAgent, AgentTask
 from .config import ChatbotConfig, state_dir, workspace_root
-from .store import ChatStore, ChatMessage
+from .store import ChatMessage, ChatStore
 
 __all__ = [
     "AgentTask",
-    "ChatbotApp",
-    "ChatbotConfig",
     "ChatMessage",
     "ChatStore",
+    "ChatbotApp",
+    "ChatbotConfig",
     "KiloAgent",
     "create_app",
     "state_dir",

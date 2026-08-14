@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from substrate.models import PolicyConfig, WorkspaceConfig
+from substrate.models import PolicyConfig
 from substrate.orchestrator import Orchestrator
 from substrate.registry import SubstrateRuntime
 

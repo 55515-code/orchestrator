@@ -11,10 +11,10 @@ from typing import Any
 
 from .base import (
     RenderEngine,
+    RenderFailed,
     RenderRequest,
     RenderResult,
     RenderUnavailable,
-    RenderFailed,
     unavailable,
     write_images,
 )
@@ -30,7 +30,7 @@ class HostedAPIEngine(RenderEngine):
 
     def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         try:
-            import httpx  # noqa: PLC0415
+            import httpx
         except ImportError as exc:
             raise unavailable(self.spec.id, f"missing httpx: {exc}") from exc
 
@@ -57,7 +57,7 @@ class HostedAPIEngine(RenderEngine):
 
     def _download(self, url: str) -> bytes:
         try:
-            import httpx  # noqa: PLC0415
+            import httpx
         except ImportError as exc:
             raise unavailable(self.spec.id, f"missing httpx: {exc}") from exc
         try:
@@ -69,7 +69,7 @@ class HostedAPIEngine(RenderEngine):
             raise RenderFailed(f"{self.spec.id}: download failed: {exc}") from exc
 
     def _save(self, images: list[bytes], output: Path) -> list[Path]:
-        from PIL import Image as PILImage  # noqa: PLC0415
+        from PIL import Image as PILImage
 
         pil_images = []
         for blob in images:
@@ -167,7 +167,7 @@ class OpenAIGPTImageEngine(HostedAPIEngine):
 
     def _execute_edit(self, payload: dict[str, Any]) -> dict[str, Any]:
         try:
-            import httpx  # noqa: PLC0415
+            import httpx
         except ImportError as exc:
             raise unavailable(self.spec.id, f"missing httpx: {exc}") from exc
         key = os.environ.get(self.spec.api_key_env or "", "")
@@ -227,7 +227,7 @@ class ReveEngine(HostedAPIEngine):
 
     def _parse_response(self, raw: dict[str, Any]) -> list[bytes]:
         for key in ("data", "images", "result"):
-            if key in raw and raw[key]:
+            if raw.get(key):
                 first = raw[key][0]
                 if isinstance(first, dict):
                     if "url" in first:

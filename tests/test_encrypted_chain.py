@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import json
-import threading
 import unittest
 from pathlib import Path
 
 from substrate.encrypted_chain import (
-    ChainKeyPair,
     DecryptionError,
     EncryptedChainContext,
     EncryptedChainRegistry,
@@ -145,7 +142,6 @@ class TestEncryptedChainRegistry(unittest.TestCase):
 
 
 import tempfile
-
 
 if __name__ == "__main__":
     unittest.main()

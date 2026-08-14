@@ -20,7 +20,7 @@ import socket
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -98,7 +98,7 @@ TIMERS = [
 
 
 def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def run(cmd: list[str], *, check: bool = False, capture: bool = True) -> subprocess.CompletedProcess:
@@ -253,10 +253,10 @@ def check_agent_cycle() -> dict[str, Any]:
             result["active"] = data.get("enabled", False)
             last_run_ms = data.get("state", {}).get("lastRunAtMs")
             if last_run_ms:
-                last_run_dt = datetime.fromtimestamp(last_run_ms / 1000, tz=timezone.utc)
+                last_run_dt = datetime.fromtimestamp(last_run_ms / 1000, tz=UTC)
                 result["last_run"] = last_run_dt.isoformat()
                 # Consider recent if within the last 15 minutes (job runs every 5 min)
-                now = datetime.now(tz=timezone.utc)
+                now = datetime.now(tz=UTC)
                 if (now - last_run_dt).total_seconds() < 900:
                     result["recent"] = True
             result["action"] = f"openclaw_cron:{data.get('state', {}).get('lastRunStatus', 'unknown')}"

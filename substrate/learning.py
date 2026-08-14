@@ -47,7 +47,7 @@ def _error_signature(command_key: str, error_text: str) -> str:
     normalized = UUID_TOKEN_RE.sub("<uuid>", normalized)
     normalized = NUMERIC_TOKEN_RE.sub("<n>", normalized)
     digest = hashlib.sha256(
-        f"{command_key}|{normalized[:800]}".encode("utf-8")
+        f"{command_key}|{normalized[:800]}".encode()
     ).hexdigest()
     return digest[:16]
 
