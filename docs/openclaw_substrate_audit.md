@@ -267,3 +267,41 @@ Ollama has `nomic-embed-text` installed locally. Wire OpenClaw memory/search emb
 
 ### 11.4 Identity personalization (P3)
 Fill `~/codespace/IDENTITY.md` / `USER.md` (operator's choice); not invented by automation.
+
+### 12.0 2026-08-13 — kilo-proxy removed; OpenClaw now uses the official Kilo Gateway directly
+
+**Decision (research-based):** The custom `kilo-proxy` service (OpenAI shim → `kilo run`
+CLI with hand-rolled Ollama fallback) was redundant. Kilo's official **AI Gateway**
+(`https://api.kilo.ai/api/gateway`) is an OpenAI-compatible endpoint (verified: `/models`
+returns the full catalog; `/chat/completions` returns clean `content` for
+`kilo-auto/free`, `kilo-auto/balanced`, `anthropic/claude-opus-5`) and OpenClaw supports
+native `fallbacks`, so the proxy's routing logic is replaced by standard config.
+
+**Changes applied (all validated):**
+- `~/.openclaw/openclaw.json`: provider `kilo-proxy` → `kilo` (baseUrl
+  `https://api.kilo.ai/api/gateway`, apiKey = Kilo OAuth access token from
+  `~/.local/share/kilo/auth.json`); `agents.defaults.model.primary` →
+  `kilo/kilo-auto/free`; native fallbacks `ollama/llama3.1:8b`, `ollama/qwen2.5-coder:7b`
+  preserved; `plugins.bundledDiscovery="compat"` (doctor migration); 10 unconfigured
+  provider plugins disabled (comfy, copilot-proxy, minimax, mistral, novita, nvidia,
+  openai, openrouter, xiaomi, meta).
+- `kilo-proxy.service` removed (stopped, disabled, unit deleted; port 4097 free).
+- `scripts/ensure_agency.py`: dropped `kilo-proxy.service` from the required-units list.
+- Agent session state migrated: `models.json` cache and `sessions/sessions.json` index —
+  provider refs `kilo-proxy` → `kilo`, stale `kilo/`-prefixed model ids normalized to
+  the new catalog (backups: `models.json.bak`, `sessions.json.bak`).
+
+**Validation:** `openclaw doctor` → 0 errors; gateway healthz 200;
+`openclaw agent --agent main -m "Reply with exactly: OPENCLAW_OK"` → `status: ok`,
+provider `kilo`, model `anthropic/claude-opus-5` (15.4k input tokens, 200k context).
+
+**Rollback:** restore the removed provider block (`models.providers.kilo-proxy`) and
+`agents.defaults.model.primary=kilo-proxy/kilo-auto/free` in `openclaw.json`, restore
+`kilo-proxy.service`, re-add the `ensure_agency.py` entry, and restore
+`models.json`/`sessions.json` from the `.bak` files above.
+
+**Remaining follow-ups (unchanged):** 11.1 SecretRefs migration for
+`gateway.auth.token` + `models.providers.kilo.apiKey` (interactive wizard; file is
+mode 600 in the meantime); 11.2 `commands.ownerAllowFrom` (needs the operator's
+WhatsApp id once the channel is linked); WhatsApp channel still awaiting phone-side
+linking.

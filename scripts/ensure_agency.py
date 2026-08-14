@@ -48,7 +48,6 @@ TTYD_PORT = 8765
 # systemd, to avoid duplicate scheduling.
 UNITS: list[tuple[str, bool]] = [
     ("kilo-remote.service", True),
-    ("kilo-proxy.service", True),
     ("openclaw-gateway.service", True),
     ("substrate-lister.service", True),
     ("substrate-chatbot.service", True),
