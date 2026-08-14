@@ -46,6 +46,9 @@ OPENCLAW_AGENT_CYCLE_JOB_ID = "69997515-7b90-4ddc-95f3-488a1b36d3d9"
 # Services we care about (systemd --user units)
 # openclaw-gateway is the primary UI on 8090; substrate-panel.service is
 # intentionally retired to avoid port conflicts.
+# kilo-proxy.service is retired (2026-08-13): the unit was removed after an
+# unbounded-memory failure (17.5G peak, SIGKILL) and OpenClaw does not route
+# models through it -- no 4097/kilo-proxy refs remain in openclaw.json.
 SERVICES = [
     {
         "name": "kilo-remote",
@@ -53,15 +56,6 @@ SERVICES = [
         "type": "simple",
         "required": True,
         "description": "Persistent Kilo remote session (mobile control)",
-    },
-    {
-        "name": "kilo-proxy",
-        "unit": "kilo-proxy.service",
-        "type": "simple",
-        "required": True,
-        "description": "Kilo OpenAI-compatible proxy (cloud-first, Ollama fallback)",
-        "port": 4097,
-        "host": "127.0.0.1",
     },
     {
         "name": "openclaw-gateway",
