@@ -19,28 +19,38 @@ def _rotate(pts, center, ang):
 # ---------------------------------------------------------------- individual marks
 
 def _fish(draw, cx, cy, scale, color, rot):
-    """Tiny fish glyph: body + tail fin + eye. ~8-9× line width long."""
-    L = 9.0 * scale
-    half = L / 2
-    body_h = L * 0.32
-    # body polygon
-    top = [(cx + half * 0.75, cy - body_h * 0.9),
-           (cx - half * 0.55, cy - body_h * 0.55),
-           (cx - half, cy - body_h * 0.15),
-           (cx - half, cy + body_h * 0.15),
-           (cx - half * 0.55, cy + body_h * 0.55),
-           (cx + half * 0.75, cy + body_h * 0.9)]
-    draw.polygon(_rotate(top, (cx, cy), rot), fill=color)
-    # tail fin
-    fin = [(cx - half * 0.9, cy - body_h * 0.1),
-           (cx - half * 1.35, cy - body_h * 0.55),
-           (cx - half * 1.3, cy + body_h * 0.55),
-           (cx - half * 0.9, cy + body_h * 0.1)]
-    draw.polygon(_rotate(fin, (cx, cy), rot), fill=color)
-    # eye
-    eye = _rotate([(cx + half * 0.25, cy)], (cx, cy), rot)[0]
-    r = 0.7 * scale
-    draw.ellipse([eye[0] - r, eye[1] - r, eye[0] + r, eye[1] + r], fill=(0, 0, 0))
+    """Fish glyph measured from the reference: a curved luminous ribbon
+    (comma stroke) with a bright head dot and tapering tail.
+
+    Reference anatomy (top fish, ~90px long):
+      - head at left (x≈446), tail at right (x≈507-533)
+      - body = single curved stroke, ~25px tall at mid, tapering
+      - gentle downward curve (top fish), upward curve (bottom fish)
+    """
+    L = 9.0 * scale  # length in px (scale 9 → 81px, matches ~90px fish)
+    # cubic bezier: head (left) → control below → tail (right, up)
+    import math
+    head = (cx - L * 0.5, cy)
+    tail = (cx + L * 0.5, cy - L * 0.08)
+    c1 = (cx - L * 0.1, cy + L * 0.20)   # belly dips down
+    c2 = (cx + L * 0.2, cy + L * 0.16)
+    n = 28
+    body = []
+    for k in range(n):
+        t = k / (n - 1)
+        u = 1 - t
+        bx = u**3 * head[0] + 3*u**2*t * c1[0] + 3*u*t**2 * c2[0] + t**3 * tail[0]
+        by = u**3 * head[1] + 3*u**2*t * c1[1] + 3*u*t**2 * c2[1] + t**3 * tail[1]
+        body.append((bx, by))
+    # tapering stroke: thick at head, thin at tail (head ~2px, tail ~0.7px)
+    for k in range(n - 1):
+        t = k / (n - 1)
+        w = max(1, int((1.9 - 1.0 * t) * scale))
+        draw.line([body[k], body[k + 1]], fill=color, width=w)
+    # head dot
+    hr = 0.4 * scale
+    draw.ellipse([head[0] - hr, head[1] - hr, head[0] + hr, head[1] + hr],
+                 fill=color)
 
 
 def _spark(draw, cx, cy, scale, color, rot):
@@ -227,9 +237,14 @@ def _ripple(draw, cx, cy, scale, color, rot):
 
 
 def _bubble(draw, cx, cy, scale, color, rot):
-    """Tiny bubble ring."""
-    r = 1.2 * scale
-    draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=1)
+    """Tiny bubble ring (bright ring + faint interior)."""
+    r = 1.7 * scale
+    w = max(1, int(1.1 * scale))
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=w)
+    # faint interior glow
+    ri = r * 0.45
+    draw.ellipse([cx - ri, cy - ri, cx + ri, cy + ri],
+                 fill=tuple(int(c * 0.35) for c in color))
 
 
 # ---------------------------------------------------------------- registry

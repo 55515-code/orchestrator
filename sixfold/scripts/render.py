@@ -5,7 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from geometry.elements import ELEMENTS  # noqa: E402
-from rendering.renderer import render_symbol, render_transparent, svg_export  # noqa: E402
+from rendering.photometric import render_symbol, render_transparent  # noqa: E402
+from rendering.renderer import svg_export  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[1] / "output"
 

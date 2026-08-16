@@ -1,0 +1,21 @@
+{
+  "horizon": {"y": 545.0, "x0": 143.0, "x1": 1311.0},
+  "tips": {"left": [272.0, 545.0], "right": [1150.0, 545.0]},
+  "lens": {
+    "top_apex": [740.0, 523.0],
+    "bottom_apex": [740.0, 562.0]
+  },
+  "arcs": {
+    "left_top":    {"cx": 458.0, "cy": 541.0, "R": 184.0},
+    "left_bottom": {"cx": 457.0, "cy": 514.0, "R": 202.0},
+    "right_top":   {"cx": 1016.0, "cy": 556.0, "R": 184.0},
+    "right_bottom":{"cx": 1015.0, "cy": 581.0, "R": 141.0}
+  },
+  "arc_join": {
+    "left_top_to_lens": [563.5, 390.3],
+    "left_bottom_to_lens": [558.0, 688.9],
+    "right_top_to_lens": [910.5, 405.3],
+    "right_bottom_to_lens": [955.4, 708.8]
+  },
+  "canvas": [1448, 1086]
+}

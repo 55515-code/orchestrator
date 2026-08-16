@@ -70,58 +70,69 @@ def _teardrop(center, tip_x, r=195.0, n=70):
 def water():
     C = hex_to_rgb("82DDF8")       # luminous cyan core (measured ~117,212,244)
     D = hex_to_rgb("5BB8E2")       # dimmer cyan (fish/horizon ~92,188,226)
-    B = hex_to_rgb("1E8FC8")       # bubbles
+    B = hex_to_rgb("6BC4EA")       # bubbles (measured bright ~107,199,230)
     G = hex_to_rgb("023161")       # deep glow hue (measured glow 2,49,97 → darker)
     A = hex_to_rgb("12315C")       # atmosphere hue (measured 0.3,17.6,38.8 → scaled)
 
-    # ---- measured vesica geometry (design/lobe-geometry.json) ----
-    # two filled ellipses, inner edges meeting at x=720 (the lens)
+    # ---- measured vesica geometry (design/vesica-geometry.json) ----
+    # The reference is built from FOUR CIRCLE ARCS + a horizon line:
+    #   horizon: y=545, x=143..1311 (bright line)
+    #   left_top arc:    C(458,541) R=184, from tip (272,545) up over the
+    #     top to (563,390), then a diagonal down to top lens apex (740,523)
+    #   left_bottom arc: C(457,514) R=202, from (558,689) to tip
+    #   right_top arc:   C(1016,556) R=184, from lens-side (910,405) to
+    #     tip (1150,545)
+    #   right_bottom arc:C(1015,581) R=141, from tip to (955,709)
+    #   lens side: top apex (740,523) → bottom apex (740,562)
     import json
     from pathlib import Path as FsPath
     geo = json.loads(FsPath(__file__).resolve().parents[2].joinpath(
-        "design", "lobe-geometry.json").read_text())
-    L = geo["left_ellipse"]
-    R = geo["right_ellipse"]
-    lcx, lcy, lrx, lry = L["cx"], L["cy"], L["rx"], L["ry"]
-    rcx, rcy, rrx, rry = R["cx"], R["cy"], R["rx"], R["ry"]
+        "design", "vesica-geometry.json").read_text())
 
-    def ellipse_poly(cx, cy, rx, ry, n=120):
-        return [(cx + rx * math.cos(a), cy + ry * math.sin(a))
-                for a in [2 * math.pi * k / n for k in range(n)]]
-
-    left_poly = ellipse_poly(lcx, lcy, lrx, lry)
-    right_poly = ellipse_poly(rcx, rcy, rrx, rry)
-
-    # fill: translucent luminous cyan, alpha stronger toward the lens
-    fills = [
-        (left_poly, (20, 90, 160), 0.28),
-        (right_poly, (20, 90, 160), 0.28),
-    ]
-
-    # inset outline strokes: bright arcs along each ellipse, ~15-30px inside
-    # top arc: angle 90°→-90° (via 0°), bottom arc: -90°→90°
-    def arc(cx, cy, rx, ry, a0, a1, n=80, inset=22):
-        return [(cx + (rx - inset) * math.cos(a), cy + (ry - inset) * math.sin(a))
+    def circle_arc(cx, cy, R, a0, a1, n=44):
+        """Arc from angle a0 to a1 (degrees), screen coords (y-down)."""
+        return [(cx + R * math.cos(math.radians(a)),
+                 cy + R * math.sin(math.radians(a)))
                 for a in np_linspace(a0, a1, n)]
 
     import numpy as np
     def np_linspace(a0, a1, n):
         return list(np.linspace(a0, a1, n))
 
-    # left lobe: top arc from left tip (π) to inner top (0), bottom arc from
-    # inner bottom (0... actually 2π) back to left tip (π)
-    # ellipse angles: 0 = right, π/2 = down (image y+)
-    # left lobe tip is at angle π (left side), inner edge at angle 0 (right side)
-    l_top = arc(lcx, lcy, lrx, lry, math.pi, 0, n=70, inset=24)
-    l_bot = arc(lcx, lcy, lrx, lry, math.tau, math.pi, n=70, inset=24)
-    l_top.reverse()  # keep continuity
-    l_path = l_top + l_bot[1:]
+    TIPL = geo["tips"]["left"]
+    TIPR = geo["tips"]["right"]
+    TA = geo["lens"]["top_apex"]
+    BA = geo["lens"]["bottom_apex"]
+    A = geo["arcs"]
+    J = geo["arc_join"]
 
-    # right lobe: tip at angle 0 (right side), inner edge at angle π (left)
-    r_top = arc(rcx, rcy, rrx, rry, math.pi, 0, n=70, inset=24)
-    r_bot = arc(rcx, rcy, rrx, rry, math.tau, math.pi, n=70, inset=24)
-    r_top.reverse()
-    r_path = r_top + r_bot[1:]
+    # Left lobe path: tip → left_top arc → diagonal to top apex → lens side
+    # → diagonal to bottom join → left_bottom arc → back to tip
+    # left_top arc from tip (angle 180°) to join (563,390):
+    lt_ang = math.degrees(math.atan2(J["left_top_to_lens"][1] - A["left_top"]["cy"],
+                                     J["left_top_to_lens"][0] - A["left_top"]["cx"]))
+    l_top = circle_arc(A["left_top"]["cx"], A["left_top"]["cy"],
+                       A["left_top"]["R"], 180, lt_ang)
+    # left_bottom arc: from join (558,689) back to tip (272,545)
+    #   angle of join = atan2(689-514, 558-457) = atan2(175, 101) = 60°
+    lb_ang = math.degrees(math.atan2(J["left_bottom_to_lens"][1] - A["left_bottom"]["cy"],
+                                     J["left_bottom_to_lens"][0] - A["left_bottom"]["cx"]))
+    l_bot = circle_arc(A["left_bottom"]["cx"], A["left_bottom"]["cy"],
+                       A["left_bottom"]["R"], lb_ang, 180)
+    l_path = l_top + [TA, BA] + l_bot
+
+    # right lobe path: top apex → diagonal to right_top join → right_top
+    # arc to tip (angle 0°) → right_bottom arc back to join → diagonal to
+    # bottom apex
+    rt_ang = math.degrees(math.atan2(J["right_top_to_lens"][1] - A["right_top"]["cy"],
+                                     J["right_top_to_lens"][0] - A["right_top"]["cx"]))
+    r_top = circle_arc(A["right_top"]["cx"], A["right_top"]["cy"],
+                       A["right_top"]["R"], rt_ang, 0)
+    rb_ang = math.degrees(math.atan2(J["right_bottom_to_lens"][1] - A["right_bottom"]["cy"],
+                                     J["right_bottom_to_lens"][0] - A["right_bottom"]["cx"]))
+    r_bot = circle_arc(A["right_bottom"]["cx"], A["right_bottom"]["cy"],
+                       A["right_bottom"]["R"], 0, rb_ang)
+    r_path = [TA] + r_top + r_bot[1:] + [BA]
 
     paths = [
         Path(l_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
@@ -132,15 +143,16 @@ def water():
 
     # fish: measured bbox upper-left (442,347)-(533,382) → center (487,364)
     #              lower-right (953,686)-(1040,722) → center (996,704)
-    fl = Mark(487, 364, kind="fish", scale=9.0, color=D, rot=-0.42)
-    fr = Mark(996, 704, kind="fish", scale=9.0, color=D, rot=-2.72)
+    fl = Mark(487, 364, kind="fish", scale=9.0, color=D, rot=0.0)
+    fr = Mark(996, 704, kind="fish", scale=9.0, color=D, rot=0.0)
 
-    # bubbles: small clusters trailing the fish
+    # bubbles: small bright rings trailing the fish (measured: ring at
+    # (445,334) r≈4.4px peak 235; second at (452,341))
     bubbles = [
-        Mark(444, 333, kind="bubble", scale=2.0, color=B),
-        Mark(452, 341, kind="bubble", scale=1.4, color=B),
-        Mark(1052, 689, kind="bubble", scale=1.5, color=B),
-        Mark(1069, 700, kind="bubble", scale=2.1, color=B),
+        Mark(445, 334, kind="bubble", scale=2.6, color=B),
+        Mark(454, 341, kind="bubble", scale=1.8, color=B),
+        Mark(1052, 689, kind="bubble", scale=2.2, color=B),
+        Mark(1069, 700, kind="bubble", scale=2.6, color=B),
     ]
 
     # horizon: two dashes under each lobe + reflection dashes below
@@ -155,7 +167,7 @@ def water():
         name="water",
         paths=paths,
         marks=[fl, fr] + bubbles + horizon_marks,
-        fills=fills,
+        fills=[],
         lens_band=(493, 963, 540, 30, 150),   # measured bright horizon band
         lens_strip=(740, 480, 620, 16, 110),  # measured lens hot vertical
         width=W, height=H,
