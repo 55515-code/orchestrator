@@ -42,10 +42,10 @@ def _fish(draw, cx, cy, scale, color, rot):
         bx = u**3 * head[0] + 3*u**2*t * c1[0] + 3*u*t**2 * c2[0] + t**3 * tail[0]
         by = u**3 * head[1] + 3*u**2*t * c1[1] + 3*u*t**2 * c2[1] + t**3 * tail[1]
         body.append((bx, by))
-    # thin tapering stroke: ~3px at head → ~1.5px at tail (scale 9)
+    # thin tapering stroke: ~4px at head → ~2px at tail (scale 9)
     for k in range(n - 1):
         t = k / (n - 1)
-        w = max(1, int((0.34 - 0.18 * t) * scale))
+        w = max(1, int((0.5 - 0.22 * t) * scale))
         draw.line([body[k], body[k + 1]], fill=color, width=w)
     # head dot (bright, ~3px)
     hr = 0.45 * scale

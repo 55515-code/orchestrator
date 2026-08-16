@@ -25,20 +25,22 @@ from .core import Symbol
 from .marks import MARK_DRAWERS
 
 DEFAULTS = dict(
-    band_peak=52.0,        # luminous band peak (near horizon)
-    band_half=80.0,        # gaussian sigma of the band falloff (y)
+    band_peak=54.0,        # luminous band peak (near horizon)
+    band_half=95.0,        # gaussian sigma of the band falloff (y)
     band_gamma=1.2,        # horizontal falloff power (toward tips)
-    arc_w=4,               # arc stroke width px
+    arc_w=3,               # arc stroke width px
     arc_lum=1.0,           # arc brightness multiplier
-    horizon_lum=200.0,     # horizon line peak
-    hz_sigma=2.5,          # horizon vertical gaussian sigma
-    atm_peak=18.0,
+    arc_glow=0.3,          # arc halo screen blend strength
+    horizon_lum=185.0,     # horizon line peak
+    hz_sigma=1.8,          # horizon vertical gaussian sigma
+    atm_peak=16.0,
     atm_sigma=360.0,
     glow_stack=((3.0, 0.5), (9.0, 0.3), (22.0, 0.15), (48.0, 0.06)),
-    lens_spot=60.0,
+    lens_spot=55.0,
     lens_sigma=60.0,
-    tip_spot=18.0,
-    tip_sigma=30.0,
+    tip_spot=14.0,
+    tip_sigma=34.0,
+    hz_glow=((3.0, 0.8), (9.0, 0.1)),
     tone_gamma=0.94,
     tone_cap=250.0,
 )
@@ -98,8 +100,8 @@ def _render_symbol(sym, scale, params):
 
     # ---- 2. atmosphere (broad faint field, 0-20 lum)
     if params["atm_peak"] > 0:
-        d = np.sqrt((xx - 725 * S) ** 2 + (yy - 541 * S) ** 2)
-        v = params["atm_peak"] * np.exp(-0.5 * (d / (params["atm_sigma"] * S)) ** 2)
+        d = np.sqrt(((xx - 725 * S) / 360) ** 2 + ((yy - 541 * S) / 240) ** 2)
+        v = params["atm_peak"] * np.exp(-0.5 * d ** 2)
         img[..., 0] += v * 5 / 255.0
         img[..., 1] += v * 40 / 255.0
         img[..., 2] += v * 90 / 255.0
@@ -120,6 +122,54 @@ def _render_symbol(sym, scale, params):
         ls = np.stack([lv * 0.8, lv * 0.95, lv], axis=-1)
         base = 1 - (1 - base / 255.0) * (1 - ls / 255.0)
         base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
+    if params.get("lens_glow", 0) > 0:
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        gv = params["lens_glow"] * np.exp(-0.5 * (dg / (params.get("lens_glow_sigma", 100) * S)) ** 2)
+        gs = np.stack([gv * 0.8, gv * 0.95, gv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - gs / 255.0)
+        base *= 255.0
     # tip glows: bright convergence points at the vesica tips (measured:
     # the tips are bright ~200 lum points where arcs + horizon meet)
     if params.get("tip_spot", 0) > 0:
@@ -139,12 +189,16 @@ def _render_symbol(sym, scale, params):
     hz_h = np.minimum(hz_h, np.clip((1311 * S - xx) / (1311 * S - 143 * S), 0, 1))
     # horizontal profile: bright center (lens), slightly dimmer tails
     # measured: center (x=720) ~204 mean, tails (x=300/1100) ~93-99,
-    # far tips (x=200/1250) ~83-87 — a gentle dome
-    hz_h = 0.45 + 0.55 * hz_h ** 1.2
+    # far tips (x=200/1250) ~83-87 — a gentle dome peaking at the lens
+    hz_h = 0.70 + 0.30 * np.clip(1 - np.abs(xx - 740 * S) / (600 * S), 0, 1) ** 1.2
     hz_h = np.where(hz_xmask, hz_h, 0.0)
     hz = hz_v * hz_h * params["horizon_lum"]
     hz_img = Image.fromarray(np.clip(
-        np.stack([hz * 0.75, hz * 0.95, hz], axis=-1), 0, 255).astype(np.uint8))
+        np.stack([hz * 0.9, hz * 1.0, hz * 1.0], axis=-1), 0, 255).astype(np.uint8))
+    # sharp horizon first (bright thin line), then soft glow
+    hz_arr = np.asarray(hz_img, dtype=np.float32)
+    base = 1 - (1 - base / 255.0) * (1 - hz_arr / 255.0)
+    base *= 255.0
     hz_glow = params.get("hz_glow", ((3.0, 0.8), (9.0, 0.4)))
     for sigma, mult in hz_glow:
         b = hz_img.filter(ImageFilter.GaussianBlur(sigma * S))
@@ -152,13 +206,18 @@ def _render_symbol(sym, scale, params):
         base = 1 - (1 - base / 255.0) * (1 - b_arr)
         base *= 255.0
     base = np.clip(base, 0, 255)
+    import os
+    if os.environ.get("SIXFOLD_DEBUG"):
+        print(f"after hz stage center lum: "
+              f"{0.2126*base[545,740,0]+0.7152*base[545,740,1]+0.0722*base[545,740,2]:.0f}")
 
     # ---- 6. arc strokes + marks (core layer, bright & sharp)
     core_img = Image.new("RGB", (W, H), (0, 0, 0))
     cd = ImageDraw.Draw(core_img)
     for p in sym.paths:
         pts = [(x * S, y * S) for x, y in p.points]
-        cd.line(pts, fill=(215, 255, 255),
+        al = params.get("arc_lum", 1.0)
+        cd.line(pts, fill=(int(215 * min(al, 1.2)), 255, 255),
                 width=max(1, int(params["arc_w"] * S)), joint="curve")
     # arc glow: tight (the reference arcs have ~2-4px halos)
     arc_glow = core_img.filter(ImageFilter.GaussianBlur(
@@ -173,7 +232,7 @@ def _render_symbol(sym, scale, params):
             if m.kind in ("ripple",):
                 mc = m.color
             elif m.kind == "bubble":
-                mc = tuple(int(c * 0.6) for c in m.color)
+                mc = tuple(int(c * 1.0) for c in m.color)
             elif m.kind == "fish":
                 mc = tuple(int(c * 1.25) for c in m.color)
             else:
