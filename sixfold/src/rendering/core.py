@@ -48,6 +48,7 @@ class Path:
     color: tuple = (130, 221, 248)
     glow: float = 9.0          # glow radius px
     glow_strength: float = 1.0
+    glow_color: tuple | None = None   # deep glow hue; None → derived
     loop: bool = False
     fade_ends: bool = False    # AIR: extremities dissolve into darkness
     name: str = ""
@@ -74,11 +75,18 @@ class Symbol:
     width: int = 1448
     height: int = 1086
     background: tuple = (0, 0, 0)
-    atmosphere: tuple = (5, 10, 20)   # faint corner wash
+    atmosphere: tuple | None = (5, 10, 20)   # deep atmosphere hue or None
+    atmosphere_peak: float = 70.0    # peak luminance of atmosphere field
+    atmosphere_sigma: float = 320.0  # gaussian sigma px (at scale 1.0)
     horizon: float | None = None      # y position (canvas coords) or None
     horizon_color: tuple = (90, 160, 200)
     horizon_glow: float = 6.0
     reflections: list = field(default_factory=list)  # (y, length, alpha)
+    glow_stack: list = field(default_factory=lambda: [
+        (3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09)])
+    core_boost: float = 0.55        # mix of path colors toward white
+    tone_gamma: float = 1.0         # tone curve exponent
+    tone_cap: float = 250.0         # highlight roll-off ceiling
 
     def canvas_center(self):
         return self.width / 2, self.height / 2

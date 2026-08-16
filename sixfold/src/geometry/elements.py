@@ -71,6 +71,8 @@ def water():
     C = hex_to_rgb("82DDF8")       # luminous cyan core (measured ~117,212,244)
     D = hex_to_rgb("5BB8E2")       # dimmer cyan (fish/horizon ~92,188,226)
     B = hex_to_rgb("1E8FC8")       # bubbles
+    G = hex_to_rgb("023161")       # deep glow hue (measured glow 2,49,97 → darker)
+    A = hex_to_rgb("12315C")       # atmosphere hue (measured 0.3,17.6,38.8 → scaled)
     # lobes: left center (485,545) tip (215,545); right center (995,545) tip (1235,545)
     left = _teardrop((485, 545), 215)
     right = _teardrop((995, 545), 1235)
@@ -82,8 +84,10 @@ def water():
     right = catmull_rom(right, samples=420)
 
     paths = [
-        Path(left, width=2.2, color=C, glow=9.0, glow_strength=0.95, name="lobe-left"),
-        Path(right, width=2.2, color=C, glow=9.0, glow_strength=0.95, name="lobe-right"),
+        Path(left, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-left"),
+        Path(right, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-right"),
     ]
 
     # fish: measured bbox upper-left (442,347)-(533,382) → center (487,364)
@@ -115,7 +119,13 @@ def water():
         marks=[fl, fr] + bubbles + horizon_marks,
         width=W, height=H,
         background=(0, 0, 0),
-        atmosphere=None,
+        atmosphere=A,
+        atmosphere_peak=70.0,
+        atmosphere_sigma=330.0,
+        glow_stack=[(3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09)],
+        core_boost=0.85,
+        tone_gamma=1.0,
+        tone_cap=250.0,
         horizon=None,
     )
 
@@ -206,7 +216,13 @@ def fire():
         marks=marks,
         width=W, height=H,
         background=(0, 0, 0),
-        atmosphere=(16, 6, 4),          # faint ember warmth
+        atmosphere=(28, 8, 2),          # faint ember warmth
+        atmosphere_peak=60.0,
+        atmosphere_sigma=300.0,
+        glow_stack=[(3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09)],
+        core_boost=0.80,
+        tone_gamma=1.0,
+        tone_cap=250.0,
         horizon=None,
     )
 
