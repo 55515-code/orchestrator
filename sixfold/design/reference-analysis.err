@@ -1,0 +1,15 @@
+Traceback (most recent call last):
+  File "/home/ahron/codespace/sixfold/src/evaluation/ollama_vision.py", line 41, in <module>
+    print(ask(args.image, prompt, model=args.model, max_tokens=args.max_tokens))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ahron/codespace/sixfold/src/evaluation/ollama_vision.py", line 19, in ask
+    proc = subprocess.run(
+           ^^^^^^^^^^^^^^^
+  File "/home/ahron/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ahron/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/home/ahron/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+OSError: [Errno 7] Argument list too long: 'curl'

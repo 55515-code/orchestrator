@@ -1,0 +1,76 @@
+{
+  "canvas": {
+    "width": 1448,
+    "height": 1086,
+    "aspect": 1.3333
+  },
+  "line_core_threshold": 0.6,
+  "glow_threshold": 0.12,
+  "atmos_threshold": 0.03,
+  "symbol_bbox_core": {
+    "x0": 173,
+    "y0": 329,
+    "x1": 1285,
+    "y1": 722,
+    "w": 1113,
+    "h": 394,
+    "cx": 729.0,
+    "cy": 525.5
+  },
+  "symbol_bbox_glow": {
+    "x0": 47,
+    "y0": 329,
+    "x1": 1398,
+    "y1": 723,
+    "w": 1352,
+    "h": 395,
+    "cx": 722.5,
+    "cy": 526.0
+  },
+  "symbol_bbox_atmos": {
+    "x0": 8,
+    "y0": 298,
+    "x1": 1440,
+    "y1": 792,
+    "w": 1433,
+    "h": 495,
+    "cx": 724.0,
+    "cy": 545.0
+  },
+  "negative_space_pct": 78.35,
+  "line_weight_px": 2.75,
+  "line_weight_median_px": 2.0,
+  "dominant_core_color": [
+    129.5,
+    221.4,
+    247.8
+  ],
+  "dominant_glow_color": [
+    37.7,
+    101.0,
+    144.4
+  ],
+  "background_color": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "global_max_luminance": 250.11019897460938,
+  "horizon_y": 545,
+  "horizon_relative": 0.5018,
+  "center": {
+    "cx": 0.5034530386740331,
+    "cy": 0.48388581952117865
+  },
+  "symmetry_iou": 0.2769,
+  "micro_component_count": 28,
+  "micro_mass_fraction": 0.27669,
+  "glow_radius_px": 8.96,
+  "luminance_quantiles": {
+    "q1": 0.0,
+    "q5": 0.0,
+    "q50": 0.3569999933242798,
+    "q90": 16.4768009185791,
+    "q99": 133.83982849121094
+  }
+}

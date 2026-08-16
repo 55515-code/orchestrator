@@ -1,0 +1,16 @@
+You are analyzing a reference artwork that establishes the visual grammar for a series of elemental symbols. This is "Symbol I: WATER" — an infinity-like form on a dark field with fish and reflections.
+
+Describe with precision, as a designer would, focusing on things a computer vision pipeline cannot easily extract:
+
+1. LINE CHARACTER: exact quality of the luminous line — is it uniform width, does it taper, is it a single continuous stroke? How does it cross itself at the center (the crossing geometry)?
+2. HORIZON: describe the horizontal water line — where it sits relative to the infinity form, whether it passes through the symbol, its length vs the symbol width.
+3. FISH: describe each fish's position relative to the trajectory (which lobe/arm of the curve), orientation, size relative to the line width, and how it "belongs" to the path rather than sitting on top of it.
+4. REFLECTIONS/RIPPLES: how many, where, how long relative to the symbol, their vertical arrangement.
+5. ATMOSPHERE/GLOW: character of the light — is it a halo, gradient falloff, directional illumination? Where is the brightest region?
+6. NEGATIVE SPACE: how much of the canvas is empty, and does the empty space feel balanced?
+7. COMPOSITION: exact placement of the symbol on the canvas (center? slightly high? low?), margins.
+8. BUBBLES: where, how many, sizes.
+9. THE FEELING: what makes this read as "water" without any literal water illustration? What is the conceptual compression (infinity as geometry + movement + horizon + environment + narrative)?
+10. Any imperfection or asymmetry you notice (deliberate irregularities).
+
+Be specific and quantitative where possible (proportions relative to canvas, relative sizes). This output will be used as the canonical design brief for five sibling symbols.
