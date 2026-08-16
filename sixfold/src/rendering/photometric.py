@@ -226,6 +226,17 @@ def _render_symbol(sym, scale, params):
         params.get("arc_glow", 0.3)
     base = 1 - (1 - base / 255.0) * (1 - ag_arr)
     base *= 255.0
+    # wide outer halo, weighted away from the lens (the ref's arc halos
+    # are strong at the tips and fade toward the lens)
+    if params.get("arc_glow2", 0) > 0:
+        ag2 = core_img.filter(ImageFilter.GaussianBlur(
+            params.get("arc_glow2_sigma", 10) * S))
+        ag2_arr = np.asarray(ag2, dtype=np.float32) / 255.0 * params["arc_glow2"]
+        dg = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        ag2_arr = ag2_arr * (dg / (400.0 * S)) ** params.get("arc_glow2_pow", 0.7)
+        ag2_arr = np.clip(ag2_arr, 0, 1)
+        base = 1 - (1 - base / 255.0) * (1 - ag2_arr)
+        base *= 255.0
     for m in sym.marks:
         drawer = MARK_DRAWERS.get(m.kind)
         if drawer:

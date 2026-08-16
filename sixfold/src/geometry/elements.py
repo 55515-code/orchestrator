@@ -106,8 +106,8 @@ def water():
     l_top_path = resample(l_top_path, 300)
     l_bot_path = resample(l_bot_path, 300)
 
-    r_top_pts = [tuple(p) for p in SP["right_top"]]
-    r_bot_pts = [tuple(p) for p in SP["right_bottom"]][::-1]
+    r_top_pts = [tuple(p) for p in SP["right_top"]][::-1]
+    r_bot_pts = [tuple(p) for p in SP["right_bottom"]]
     r_top_path = [tuple(TA)] + r_top_pts + [tuple(TIPR)]
     r_bot_path = [tuple(TIPR)] + r_bot_pts + [tuple(BA)]
     r_top_path = resample(r_top_path, 300)
