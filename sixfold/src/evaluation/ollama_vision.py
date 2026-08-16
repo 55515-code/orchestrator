@@ -17,6 +17,7 @@ def ask(image_path, prompt, model=DEFAULT_MODEL, max_tokens=2048, temperature=0.
         "prompt": prompt,
         "images": [img_b64],
         "stream": False,
+        "think": False,
         "options": {"num_predict": max_tokens, "temperature": temperature},
     }).encode()
     req = urllib.request.Request(

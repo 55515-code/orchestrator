@@ -1,0 +1,18 @@
+You are a design critic with a strong eye for visual restraint. You are looking at a comparison image.
+
+LEFT half: the canonical reference artwork "WATER" — a luminous cyan infinity-like form on a near-black field, with a horizon line through the crossing, two tiny fish on the trajectories, small bubbles, reflections below.
+
+RIGHT half: a computational reconstruction attempting to match that same visual grammar.
+
+Evaluate the RIGHT reconstruction as a faithful member of the same family. Score each criterion 0-10:
+
+1. SIMPLICITY (does it stay minimal, or add clutter?)
+2. LINE QUALITY (is the line hairline-precise, uniform, glowing softly rather than neon?)
+3. GEOMETRY MATCH (does the infinity form have the same proportion, crossing, and presence?)
+4. MICRO-NARRATIVE (are the fish/bubbles placed ON the trajectory, tiny, discoverable only on close look?)
+5. ATMOSPHERE (glow restraint, darkness dominance, negative space balance)
+6. FAMILY RESEMBLANCE (would a viewer believe these two images were made by the same artist?)
+
+Then list the TOP 5 concrete differences between left and right that a careful observer would notice (position, size, glow, horizon, fish orientation, etc). Be specific and quantitative.
+
+Finally give a verdict: is the right image a passable member of the family, or does it need specific fixes? List fixes in priority order.
