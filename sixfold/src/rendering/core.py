@@ -72,6 +72,8 @@ class Symbol:
     name: str
     paths: list = field(default_factory=list)
     marks: list = field(default_factory=list)
+    fills: list = field(default_factory=list)  # (points, color, alpha) closed
+                                               # luminous regions
     width: int = 1448
     height: int = 1086
     background: tuple = (0, 0, 0)
@@ -82,8 +84,12 @@ class Symbol:
     horizon_color: tuple = (90, 160, 200)
     horizon_glow: float = 6.0
     reflections: list = field(default_factory=list)  # (y, length, alpha)
+    lens_band: tuple | None = None   # (x0, x1, y, height, lum) bright cross
+                                     # horizon band (measured: 493..963, y=540)
+    lens_strip: tuple | None = None  # (x, y0, y1, width, lum) vertical lens
     glow_stack: list = field(default_factory=lambda: [
-        (3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09)])
+        (3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09),
+        (100.0, 0.05), (180.0, 0.02)])
     core_boost: float = 0.55        # mix of path colors toward white
     tone_gamma: float = 1.0         # tone curve exponent
     tone_cap: float = 250.0         # highlight roll-off ceiling

@@ -66,11 +66,25 @@ def _draw_figure_layer(draw, sym, S, color_fn, width_fn=None):
                m.rot)
 
 
+def _draw_fills(draw, sym, S, color_fn):
+    """Draw luminous translucent regions (the reference's filled lobes)."""
+    for pts, color, alpha in sym.fills:
+        poly = [(x * S, y * S) for x, y in pts]
+        col = color_fn(color) if callable(color_fn) else color
+        if len(poly) >= 3:
+            draw.polygon(poly, fill=col + (int(255 * alpha),))
+
+
 def _glow_source(sym, S, scale_w=4.0):
-    """Deep-color figure layer (thick strokes) used as blur input."""
+    """Deep-color figure layer (fills + thick strokes) used as blur input."""
     W, H = int(sym.width * S), int(sym.height * S)
     layer = Image.new("RGB", (W, H), (0, 0, 0))
     d = ImageDraw.Draw(layer)
+    # fills first (luminous regions)
+    for pts, color, alpha in getattr(sym, "fills", []) or []:
+        poly = [(x * S, y * S) for x, y in pts]
+        if len(poly) >= 3:
+            d.polygon(poly, fill=tuple(int(c * alpha) for c in color))
     for p in sym.paths:
         gcol = p.glow_color or p.color
         pts = [(x * S, y * S) for x, y in p.points]
@@ -124,15 +138,45 @@ def render_symbol(sym: Symbol, scale: float = 1.0) -> Image.Image:
         base_arr = _screen(base_arr, b_arr)
     img = Image.fromarray(np.clip(base_arr * 255, 0, 255).astype(np.uint8))
 
+    # ---------------- 2b. bright lens cross (horizon band + vertical strip)
+    if getattr(sym, "lens_band", None) is not None or getattr(sym, "lens_strip", None) is not None:
+        cross = Image.new("RGB", (W, H), (0, 0, 0))
+        xd = ImageDraw.Draw(cross)
+        if sym.lens_band is not None:
+            x0, x1, y, h, lum = sym.lens_band
+            xd.rectangle([x0 * S, (y - h / 2) * S, x1 * S, (y + h / 2) * S],
+                         fill=(int(lum * 0.75), int(lum * 0.95), int(lum)))
+        if sym.lens_strip is not None:
+            x, y0, y1, w, lum = sym.lens_strip
+            xd.rectangle([(x - w / 2) * S, y0 * S, (x + w / 2) * S, y1 * S],
+                         fill=(int(lum * 0.75), int(lum * 0.95), int(lum)))
+        c1 = cross.filter(ImageFilter.GaussianBlur(max(0.5, 5 * S)))
+        c2 = cross.filter(ImageFilter.GaussianBlur(max(1.0, 14 * S)))
+        for bl in (c1, c2):
+            b_arr = np.asarray(bl, dtype=np.float32) / 255.0
+            base_arr = _screen(base_arr, b_arr)
+        # sharp core of the cross
+        c_arr = np.asarray(cross, dtype=np.float32) / 255.0 * 0.9
+        base_arr = _screen(base_arr, c_arr)
+        img = Image.fromarray(np.clip(base_arr * 255, 0, 255).astype(np.uint8))
+        base_arr = np.asarray(img, dtype=np.float32) / 255.0
+
     # ---------------- 3. sharp core layer
     core_layer = Image.new("RGB", (W, H), (0, 0, 0))
     cd = ImageDraw.Draw(core_layer)
 
     def core_color(p, mark=False):
         if mark:
-            return p
+            return p.color
         return _lerp_c(p.color, sym.core_boost)
 
+    # fills also get a soft luminous presence in the core layer (the fill
+    # luminance mostly comes from the glow stack; here we add a subtle layer)
+    for pts, color, alpha in getattr(sym, "fills", []) or []:
+        poly = [(x * S, y * S) for x, y in pts]
+        if len(poly) >= 3:
+            cd.polygon(poly, fill=tuple(int(c * min(1.0, alpha * 1.8))
+                                        for c in color))
     _draw_figure_layer(cd, sym, S, core_color)
     core_arr = np.asarray(core_layer, dtype=np.float32) / 255.0
     base_arr = np.asarray(img, dtype=np.float32) / 255.0
@@ -157,7 +201,7 @@ def render_transparent(sym: Symbol, scale: float = 1.0) -> Image.Image:
 
     def core_color(p, mark=False):
         if mark:
-            return p
+            return p.color
         return _lerp_c(p.color, sym.core_boost)
 
     for p in sym.paths:

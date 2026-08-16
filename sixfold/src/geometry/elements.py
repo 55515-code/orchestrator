@@ -73,27 +73,65 @@ def water():
     B = hex_to_rgb("1E8FC8")       # bubbles
     G = hex_to_rgb("023161")       # deep glow hue (measured glow 2,49,97 → darker)
     A = hex_to_rgb("12315C")       # atmosphere hue (measured 0.3,17.6,38.8 → scaled)
-    # lobes: left center (485,545) tip (215,545); right center (995,545) tip (1235,545)
-    left = _teardrop((485, 545), 215)
-    right = _teardrop((995, 545), 1235)
 
-    # The reference has a small gap at the crossing: the two lobes' inner ends
-    # meet at x≈700-755 with a lens. We approximate by letting the arcs overlap.
-    # Shift inner ends slightly to create the lens overlap:
-    left = catmull_rom(left, samples=420)
-    right = catmull_rom(right, samples=420)
+    # ---- measured vesica geometry (design/lobe-geometry.json) ----
+    # two filled ellipses, inner edges meeting at x=720 (the lens)
+    import json
+    from pathlib import Path as FsPath
+    geo = json.loads(FsPath(__file__).resolve().parents[2].joinpath(
+        "design", "lobe-geometry.json").read_text())
+    L = geo["left_ellipse"]
+    R = geo["right_ellipse"]
+    lcx, lcy, lrx, lry = L["cx"], L["cy"], L["rx"], L["ry"]
+    rcx, rcy, rrx, rry = R["cx"], R["cy"], R["rx"], R["ry"]
+
+    def ellipse_poly(cx, cy, rx, ry, n=120):
+        return [(cx + rx * math.cos(a), cy + ry * math.sin(a))
+                for a in [2 * math.pi * k / n for k in range(n)]]
+
+    left_poly = ellipse_poly(lcx, lcy, lrx, lry)
+    right_poly = ellipse_poly(rcx, rcy, rrx, rry)
+
+    # fill: translucent luminous cyan, alpha stronger toward the lens
+    fills = [
+        (left_poly, (20, 90, 160), 0.28),
+        (right_poly, (20, 90, 160), 0.28),
+    ]
+
+    # inset outline strokes: bright arcs along each ellipse, ~15-30px inside
+    # top arc: angle 90°→-90° (via 0°), bottom arc: -90°→90°
+    def arc(cx, cy, rx, ry, a0, a1, n=80, inset=22):
+        return [(cx + (rx - inset) * math.cos(a), cy + (ry - inset) * math.sin(a))
+                for a in np_linspace(a0, a1, n)]
+
+    import numpy as np
+    def np_linspace(a0, a1, n):
+        return list(np.linspace(a0, a1, n))
+
+    # left lobe: top arc from left tip (π) to inner top (0), bottom arc from
+    # inner bottom (0... actually 2π) back to left tip (π)
+    # ellipse angles: 0 = right, π/2 = down (image y+)
+    # left lobe tip is at angle π (left side), inner edge at angle 0 (right side)
+    l_top = arc(lcx, lcy, lrx, lry, math.pi, 0, n=70, inset=24)
+    l_bot = arc(lcx, lcy, lrx, lry, math.tau, math.pi, n=70, inset=24)
+    l_top.reverse()  # keep continuity
+    l_path = l_top + l_bot[1:]
+
+    # right lobe: tip at angle 0 (right side), inner edge at angle π (left)
+    r_top = arc(rcx, rcy, rrx, rry, math.pi, 0, n=70, inset=24)
+    r_bot = arc(rcx, rcy, rrx, rry, math.tau, math.pi, n=70, inset=24)
+    r_top.reverse()
+    r_path = r_top + r_bot[1:]
 
     paths = [
-        Path(left, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+        Path(l_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
              glow_color=G, name="lobe-left"),
-        Path(right, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+        Path(r_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
              glow_color=G, name="lobe-right"),
     ]
 
     # fish: measured bbox upper-left (442,347)-(533,382) → center (487,364)
     #              lower-right (953,686)-(1040,722) → center (996,704)
-    # orientation: upper fish faces down-right (rot ~ -0.4 rad → head points down-right)
-    #              lower fish faces up-left (rot ~ pi - 0.4)
     fl = Mark(487, 364, kind="fish", scale=9.0, color=D, rot=-0.42)
     fr = Mark(996, 704, kind="fish", scale=9.0, color=D, rot=-2.72)
 
@@ -117,6 +155,9 @@ def water():
         name="water",
         paths=paths,
         marks=[fl, fr] + bubbles + horizon_marks,
+        fills=fills,
+        lens_band=(493, 963, 540, 30, 150),   # measured bright horizon band
+        lens_strip=(740, 480, 620, 16, 110),  # measured lens hot vertical
         width=W, height=H,
         background=(0, 0, 0),
         atmosphere=A,
