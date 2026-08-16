@@ -29,106 +29,82 @@ def _place(poly, t, off_px):
 #   two fish ~90px long on upper-left / lower-right,
 #   small bubbles, two reflection dashes under each lobe.
 
+def _teardrop(center, tip_x, r=195.0, n=70):
+    """Teardrop loop: circular lobe with a pointed outer tip.
+    Path: crossing → around top → tip → around bottom → crossing."""
+    lcx, lcy = center
+    tip_pt = (tip_x, lcy)
+
+    def tip_blend(pts):
+        """Pull arc points near angle 0 (tip side) toward the pointed tip."""
+        out = []
+        for x, y, ang in pts:
+            closeness = max(0.0, 1 - abs(ang) / (math.pi / 5))
+            if closeness > 0:
+                bx = x + (tip_pt[0] - x) * closeness ** 1.6
+                by = y + (tip_pt[1] - y) * closeness ** 1.6
+                out.append((bx, by))
+            else:
+                out.append((x, y))
+        return out
+
+    # top arc: angle 90° → -90° via 0° (tip at 0°)
+    top = []
+    for k in range(n + 1):
+        t = k / n
+        ang = math.pi / 2 - t * math.pi
+        top.append((lcx + math.cos(ang) * r, lcy - math.sin(ang) * r, ang))
+    top = tip_blend(top)
+
+    # bottom arc: -90° → 90° via 0°
+    bot = []
+    for k in range(n + 1):
+        t = k / n
+        ang = -math.pi / 2 + t * math.pi
+        bot.append((lcx + math.cos(ang) * r, lcy - math.sin(ang) * r, ang))
+    bot = tip_blend(bot)
+
+    return top + bot[1:]
+
+
 def water():
-    cx, cy = W / 2, H / 2
     C = hex_to_rgb("82DDF8")       # luminous cyan core (measured ~117,212,244)
     D = hex_to_rgb("5BB8E2")       # dimmer cyan (fish/horizon ~92,188,226)
     B = hex_to_rgb("1E8FC8")       # bubbles
-    G = hex_to_rgb("2A6FA8")       # glow wash
+    # lobes: left center (485,545) tip (215,545); right center (995,545) tip (1235,545)
+    left = _teardrop((485, 545), 215)
+    right = _teardrop((995, 545), 1235)
 
-    # ---- lobes: teardrop = circle arc + pointed tip ----
-    # Left lobe: center (485, 545), radius ~195; tip at left (215, 545)
-    # Right lobe: center (995, 545), radius ~195; tip at right (1235, 545)
-    # Both meet at crossing zone x≈700-755, y≈525-565
-    def teardrop(center, tip_x, outer=True):
-        """Teardrop loop: circular lobe with a pointed outer tip.
-        Path: crossing → around top → tip → around bottom → crossing."""
-        r = 195.0
-        lcx, lcy = center
-        pts = []
-        # start at inner crossing edge
-        start = (lcx - (r if outer else -r) * 0.0 + (lcx - 20), lcy - 6)
-        # We'll build: from crossing, up the inner side, over the top arc,
-        # out to the tip, back under the bottom arc, up inner side to crossing
-        # inner edge
-        n = 60
-        # top arc: angle from 90° (top) sweeping to 0° (right/tip side)
-        # parametrize: crossing → top → tip
-        top_arc = []
-        for k in range(n + 1):
-            t = k / n
-            # angle from -90 (bottom) ... use: start at top going counterclockwise
-            ang = math.pi / 2 - t * math.pi  # 90° → -90° (via 0° = right = tip)
-            x = lcx + math.cos(ang) * r
-            y = lcy - math.sin(ang) * r
-            top_arc.append((x, y))
-        # tip: pull the 0° point out to the pointed tip
-        tip_pt = (tip_x, lcy)
-        # blend the arc points near angle 0 toward the tip
-        for i, (x, y) in enumerate(top_arc):
-            ang = math.pi / 2 - (i / n) * math.pi
-            # how close to tip angle (0)?
-            closeness = max(0, 1 - abs(ang) / (math.pi / 6))
-            if closeness > 0:
-                bx = x + (tip_pt[0] - x) * closeness ** 1.5
-                by = y + (tip_pt[1] - y) * closeness ** 1.5
-                top_arc[i] = (bx, by)
-        # bottom arc: from tip back to crossing (angle 0 → 90 via -90)
-        bottom_arc = []
-        for k in range(n + 1):
-            t = k / n
-            ang = -math.pi / 2 + t * math.pi  # -90° → 90° (via 0°)
-            x = lcx + math.cos(ang) * r
-            y = lcy - math.sin(ang) * r
-            bottom_arc.append((x, y))
-        for i, (x, y) in enumerate(bottom_arc):
-            ang = -math.pi / 2 + (i / n) * math.pi
-            closeness = max(0, 1 - abs(ang) / (math.pi / 6))
-            if closeness > 0:
-                bx = x + (tip_pt[0] - x) * closeness ** 1.5
-                by = y + (tip_pt[1] - y) * closeness ** 1.5
-                bottom_arc[i] = (bx, by)
-        # assemble: top_arc goes crossing(top) → tip; bottom_arc tip → crossing(bottom)
-        poly = top_arc + bottom_arc[1:]
-        return poly
-
-    # Position lobes: crossing at x≈727; left lobe center ~485, right ~995
-    left = teardrop((485, 545), 215)
-    right = teardrop((995, 545), 1235)
-
-    # Trim the inner ends so the two lobes overlap into a lens crossing:
-    # keep everything; renderer draws both, overlap gives the lens.
-    left = catmull_rom(left, samples=500)
-    right = catmull_rom(right, samples=500)
+    # The reference has a small gap at the crossing: the two lobes' inner ends
+    # meet at x≈700-755 with a lens. We approximate by letting the arcs overlap.
+    # Shift inner ends slightly to create the lens overlap:
+    left = catmull_rom(left, samples=420)
+    right = catmull_rom(right, samples=420)
 
     paths = [
         Path(left, width=2.2, color=C, glow=9.0, glow_strength=0.95, name="lobe-left"),
         Path(right, width=2.2, color=C, glow=9.0, glow_strength=0.95, name="lobe-right"),
     ]
 
-    # ---- fish on trajectories ----
-    # upper-left fish rides the left lobe's top arc, ~90px long
-    # measured: bbox (442,347)-(533,382) → center ~(487, 364)
-    # lower-right fish: (953,686)-(1040,722) → center ~(996, 704)
-    fl = Mark(487, 364, kind="fish", scale=9.0, color=D, rot=-0.35)
-    fr = Mark(996, 704, kind="fish", scale=9.0, color=D, rot=-2.75)
+    # fish: measured bbox upper-left (442,347)-(533,382) → center (487,364)
+    #              lower-right (953,686)-(1040,722) → center (996,704)
+    # orientation: upper fish faces down-right (rot ~ -0.4 rad → head points down-right)
+    #              lower fish faces up-left (rot ~ pi - 0.4)
+    fl = Mark(487, 364, kind="fish", scale=9.0, color=D, rot=-0.42)
+    fr = Mark(996, 704, kind="fish", scale=9.0, color=D, rot=-2.72)
 
-    # bubbles: measured b1 (440,330)-(447,337) small cluster above left fish
-    #          b2 (1047,687)-(1051,691), (1067,702)-(1077,705) below right fish
+    # bubbles: small clusters trailing the fish
     bubbles = [
         Mark(444, 333, kind="bubble", scale=2.0, color=B),
-        Mark(452, 341, kind="bubble", scale=1.5, color=B),
-        Mark(1052, 689, kind="bubble", scale=1.6, color=B),
-        Mark(1069, 700, kind="bubble", scale=2.2, color=B),
+        Mark(452, 341, kind="bubble", scale=1.4, color=B),
+        Mark(1052, 689, kind="bubble", scale=1.5, color=B),
+        Mark(1069, 700, kind="bubble", scale=2.1, color=B),
     ]
 
-    # ---- horizon: two dashes, one under each lobe ----
-    # measured: left dash (338,561)-(594,564); right dash (885,561)-(1116,564)
-    # reflections: (431,584)-(502,585) under left, (956,582)-(1030,583) under right
+    # horizon: two dashes under each lobe + reflection dashes below
     horizon_marks = [
         Mark(466, 563, kind="ripple", scale=9.0, color=D, rot=0),
         Mark(1000, 563, kind="ripple", scale=10.5, color=D, rot=0),
-        # reflection dashes
         Mark(466, 584, kind="ripple", scale=3.2, color=B, rot=0),
         Mark(993, 583, kind="ripple", scale=3.2, color=B, rot=0),
     ]
@@ -136,9 +112,108 @@ def water():
     return Symbol(
         name="water",
         paths=paths,
-        marks=fl, marks2=fr, marks3=bubbles + horizon_marks,
+        marks=[fl, fr] + bubbles + horizon_marks,
         width=W, height=H,
         background=(0, 0, 0),
         atmosphere=None,
         horizon=None,
     )
+
+
+# ================================================================ II — FIRE
+# Rise, ignition, recurrence.
+# Geometry: a single continuous folded-flame loop — enters low, climbs through
+# a waist crossing, opens into a taller loop that folds back on itself and
+# terminates in a near-white hot point. Vertically biased infinity derivative.
+# Micro-narrative: two sparks riding the trajectory, one ember crossing the path.
+# Color: deep ember → orange → narrow near-white hot core.
+
+def fire():
+    cx, cy = W / 2, H / 2
+    EMBER = hex_to_rgb("D84A12")      # deep ember
+    ORANGE = hex_to_rgb("FF7A1A")
+    HOT = hex_to_rgb("FFE8C0")        # near-white core
+
+    # ---- parametric folded flame ----
+    # One continuous curve, parameterized from bottom (t=0) to top (t=1).
+    # Bottom: rises from a point, curves left, crosses at the waist,
+    # opens into the main flame loop, folds at the top into a hot tip.
+    def folded_flame():
+        pts = []
+        n = 500
+        for k in range(n):
+            t = k / (n - 1)
+            # base → waist (t 0→0.45): climb from bottom center-left
+            if t < 0.45:
+                u = t / 0.45
+                x = cx - 60 - 300 * math.sin(u * math.pi * 0.5) * (1 - u * 0.4)
+                y = cy + 330 - 260 * u
+            # waist crossing (t 0.45→0.55): the fold — path crosses itself
+            elif t < 0.55:
+                u = (t - 0.45) / 0.10
+                x = cx - 60 + 120 * u
+                y = cy + 70 - 40 * u
+            # main loop (t 0.55→0.95): opens wide, rises, folds inward
+            else:
+                u = (t - 0.55) / 0.40
+                ang = u * math.tau * 1.0 - math.pi / 2
+                rx = 360 + 60 * u
+                ry = 150 + 110 * u
+                x = cx + 60 + math.cos(ang) * rx * 0.55
+                y = cy - 40 - math.sin(ang) * ry + 60 * (1 - u)
+            pts.append((x, y))
+        # hot tip: the loop's top folds into a sharp point (t 0.95→1)
+        top = pts[-1]
+        tip = (cx + 60, cy - 320)
+        for k in range(60):
+            u = k / 59
+            x = top[0] + (tip[0] - top[0]) * u
+            y = top[1] + (tip[1] - top[1]) * u
+            pts.append((x, y))
+        return pts
+
+    core_path = resample(folded_flame(), 700)
+
+    # color ramp along path: ember → orange → hot
+    def seg(t0, t1, color, width, glow):
+        sub = [p for k, p in enumerate(core_path)
+               if t0 <= k / (len(core_path) - 1) <= t1]
+        if not sub:
+            return None
+        return Path(sub, width=width, color=color, glow=glow, name="flame")
+
+    paths = [
+        seg(0.00, 0.50, EMBER, 2.6, 10.0),
+        seg(0.46, 0.80, ORANGE, 2.1, 9.0),
+        seg(0.76, 1.00, HOT, 1.5, 8.0),
+    ]
+    paths = [p for p in paths if p]
+
+    # sparks on the trajectory + ember crossing near the waist
+    s1 = _place(core_path, 0.30, 14)
+    s2 = _place(core_path, 0.88, 14)
+    ex, ey = _place(core_path, 0.52, -18)
+
+    marks = [
+        Mark(*s1, kind="spark", scale=0.8, color=ORANGE, rot=0.7),
+        Mark(*s2, kind="spark", scale=0.9, color=HOT, rot=-0.4),
+        Mark(ex, ey, kind="ember", scale=0.9, color=ORANGE, rot=0.0),
+    ]
+
+    return Symbol(
+        name="fire",
+        paths=paths,
+        marks=marks,
+        width=W, height=H,
+        background=(0, 0, 0),
+        atmosphere=(16, 6, 4),          # faint ember warmth
+        horizon=None,
+    )
+
+
+# ================================================================ registry
+
+ELEMENTS = {
+    "water": water,
+    "fire": fire,
+}
