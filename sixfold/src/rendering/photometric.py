@@ -25,15 +25,20 @@ from .core import Symbol
 from .marks import MARK_DRAWERS
 
 DEFAULTS = dict(
-    band_peak=48.0,        # luminous band peak (near horizon)
-    band_half=52.0,        # gaussian sigma of the band falloff (y)
+    band_peak=52.0,        # luminous band peak (near horizon)
+    band_half=80.0,        # gaussian sigma of the band falloff (y)
     band_gamma=1.2,        # horizontal falloff power (toward tips)
-    arc_w=5,               # arc stroke width px
+    arc_w=4,               # arc stroke width px
     arc_lum=1.0,           # arc brightness multiplier
-    horizon_lum=160.0,     # horizon line peak
-    atm_peak=20.0,
-    atm_sigma=340.0,
+    horizon_lum=200.0,     # horizon line peak
+    hz_sigma=2.5,          # horizon vertical gaussian sigma
+    atm_peak=18.0,
+    atm_sigma=360.0,
     glow_stack=((3.0, 0.5), (9.0, 0.3), (22.0, 0.15), (48.0, 0.06)),
+    lens_spot=60.0,
+    lens_sigma=60.0,
+    tip_spot=18.0,
+    tip_sigma=30.0,
     tone_gamma=0.94,
     tone_cap=250.0,
 )
@@ -49,22 +54,28 @@ def _load_geometry():
 
 def _luminous_band(W, H, params, geo, S=1.0):
     """Luminous band: bright near the horizon, fading up/down and toward
-    the ellipse tips. Defined inside the ellipse union."""
+    the tips. Defined inside the vesica (union of the two circle lobes)."""
     yy, xx = np.mgrid[0:H, 0:W]
     band = np.zeros((H, W), dtype=np.float32)
-    for e in ("left_ellipse", "right_ellipse"):
-        E = geo[e]
-        m = ((xx - E["cx"] * S) / (E["rx"] * S)) ** 2 + \
-            ((yy - E["cy"] * S) / (E["ry"] * S)) ** 2 <= 1
+    # vesica lobes: use the spline arcs to define the interior. Simplest
+    # robust interior: the union of two circles centered near the splines.
+    # From the measurements: left lobe ≈ circle C(457,540) R≈200;
+    # right lobe ≈ circle C(1013,541) R≈190.
+    circles = [
+        (457.0, 540.0, 200.0),
+        (1013.0, 541.0, 190.0),
+    ]
+    for cx, cy, R in circles:
+        m = ((xx - cx * S) ** 2 + (yy - cy * S) ** 2) <= (R * S) ** 2
         # vertical falloff from horizon
         v = np.exp(-0.5 * ((yy - _HORIZON_Y * S) / (params["band_half"] * S)) ** 2)
         # horizontal falloff toward the outer tips
-        if e == "left_ellipse":
-            h = np.clip((xx - (E["cx"] - E["rx"]) * S) /
-                        ((_LENS_X - (E["cx"] - E["rx"])) * S), 0, 1)
+        if cx < 700:
+            h = np.clip((xx - (cx - R) * S) /
+                        ((_LENS_X - (cx - R)) * S), 0, 1)
         else:
-            h = np.clip(((E["cx"] + E["rx"]) * S - xx) /
-                        (((E["cx"] + E["rx"]) - _LENS_X) * S), 0, 1)
+            h = np.clip(((cx + R) * S - xx) /
+                        (((cx + R) - _LENS_X) * S), 0, 1)
         h = h ** params["band_gamma"]
         band[m] = np.maximum(band[m], params["band_peak"] * v[m] * h[m])
     return band
@@ -77,7 +88,7 @@ def _render_symbol(sym, scale, params):
     yy, xx = np.mgrid[0:H, 0:W]
     geo = _load_geometry()
 
-    # ---- 1. luminous band (the field)
+    # ---- 1. luminous band (the vesica fill, DIM — measured ~10-25 lum)
     band = _luminous_band(W, H, params, geo, S)
     col = np.array([30, 120, 200], dtype=np.float32) / 255.0
     img = np.zeros((H, W, 3), dtype=np.float32)
@@ -85,7 +96,7 @@ def _render_symbol(sym, scale, params):
     img[..., 1] = band * col[1]
     img[..., 2] = band * col[2]
 
-    # ---- 2. atmosphere
+    # ---- 2. atmosphere (broad faint field, 0-20 lum)
     if params["atm_peak"] > 0:
         d = np.sqrt((xx - 725 * S) ** 2 + (yy - 541 * S) ** 2)
         v = params["atm_peak"] * np.exp(-0.5 * (d / (params["atm_sigma"] * S)) ** 2)
@@ -93,7 +104,7 @@ def _render_symbol(sym, scale, params):
         img[..., 1] += v * 40 / 255.0
         img[..., 2] += v * 90 / 255.0
 
-    # ---- 3. glow stack (softens the band into a field)
+    # ---- 3. band glow: blur ONLY the band (broad soft field)
     base = np.clip(img, 0, 255)
     gl = Image.fromarray(np.clip(img, 0, 255).astype(np.uint8))
     for sigma, mult in params["glow_stack"]:
@@ -102,48 +113,69 @@ def _render_symbol(sym, scale, params):
         base = 1 - (1 - base / 255.0) * (1 - b_arr * mult)
         base *= 255.0
 
-    # ---- 4. horizon band (bright thin gaussian line with soft glow)
-    # measured: peak ~238 lum at y=545, gaussian sigma ~14px, bright
-    # across x=250..1230 with tips dimmer (~175 lum)
-    hz_v = np.exp(-0.5 * ((yy - _HORIZON_Y * S) / (14 * S)) ** 2)
-    hz_xmask = (xx >= 250 * S) & (xx <= 1230 * S)
-    hz_h = np.clip((xx - 250 * S) / (1230 * S - 250 * S), 0, 1)
-    hz_h = np.minimum(hz_h, np.clip((1230 * S - xx) / (1230 * S - 250 * S), 0, 1))
-    hz_h = np.where(hz_xmask, 0.72 + 0.28 * hz_h, 0.0)
+    # ---- 4. lens spot + tip glows
+    if params.get("lens_spot", 0) > 0:
+        dl = np.sqrt((xx - 740 * S) ** 2 + (yy - 545 * S) ** 2)
+        lv = params["lens_spot"] * np.exp(-0.5 * (dl / (params.get("lens_sigma", 60) * S)) ** 2)
+        ls = np.stack([lv * 0.8, lv * 0.95, lv], axis=-1)
+        base = 1 - (1 - base / 255.0) * (1 - ls / 255.0)
+        base *= 255.0
+    # tip glows: bright convergence points at the vesica tips (measured:
+    # the tips are bright ~200 lum points where arcs + horizon meet)
+    if params.get("tip_spot", 0) > 0:
+        for tx, ty in ((272.0, 545.0), (1150.0, 545.0)):
+            dt = np.sqrt((xx - tx * S) ** 2 + (yy - ty * S) ** 2)
+            tv = params["tip_spot"] * np.exp(-0.5 * (dt / (params.get("tip_sigma", 28) * S)) ** 2)
+            ts = np.stack([tv * 0.8, tv * 0.95, tv], axis=-1)
+            base = 1 - (1 - base / 255.0) * (1 - ts / 255.0)
+            base *= 255.0
+
+    # ---- 5. horizon band (bright thin gaussian line with soft glow)
+    # measured: peak ~238 lum at y=545, gaussian sigma ~4px, bright
+    # across x=250..1230 with tips dimmer (~55 lum at x=300)
+    hz_v = np.exp(-0.5 * ((yy - _HORIZON_Y * S) / (params["hz_sigma"] * S)) ** 2)
+    hz_xmask = (xx >= 143 * S) & (xx <= 1311 * S)
+    hz_h = np.clip((xx - 143 * S) / (1311 * S - 143 * S), 0, 1)
+    hz_h = np.minimum(hz_h, np.clip((1311 * S - xx) / (1311 * S - 143 * S), 0, 1))
+    # horizontal profile: bright center (lens), slightly dimmer tails
+    # measured: center (x=720) ~204 mean, tails (x=300/1100) ~93-99,
+    # far tips (x=200/1250) ~83-87 — a gentle dome
+    hz_h = 0.45 + 0.55 * hz_h ** 1.2
+    hz_h = np.where(hz_xmask, hz_h, 0.0)
     hz = hz_v * hz_h * params["horizon_lum"]
     hz_img = Image.fromarray(np.clip(
         np.stack([hz * 0.75, hz * 0.95, hz], axis=-1), 0, 255).astype(np.uint8))
-    for sigma, mult in ((3, 0.8), (9, 0.4)):
+    hz_glow = params.get("hz_glow", ((3.0, 0.8), (9.0, 0.4)))
+    for sigma, mult in hz_glow:
         b = hz_img.filter(ImageFilter.GaussianBlur(sigma * S))
         b_arr = np.asarray(b, dtype=np.float32) / 255.0 * mult
         base = 1 - (1 - base / 255.0) * (1 - b_arr)
         base *= 255.0
     base = np.clip(base, 0, 255)
 
-    # ---- 5. arc strokes + marks (core layer)
+    # ---- 6. arc strokes + marks (core layer, bright & sharp)
     core_img = Image.new("RGB", (W, H), (0, 0, 0))
     cd = ImageDraw.Draw(core_img)
     for p in sym.paths:
         pts = [(x * S, y * S) for x, y in p.points]
         cd.line(pts, fill=(215, 255, 255),
                 width=max(1, int(params["arc_w"] * S)), joint="curve")
-    # arc glow: blur the core strokes and screen them in softly
-    arc_glow = core_img.filter(ImageFilter.GaussianBlur(max(1.0, 4 * S)))
+    # arc glow: tight (the reference arcs have ~2-4px halos)
+    arc_glow = core_img.filter(ImageFilter.GaussianBlur(
+        max(1.0, params.get("ag_sigma", 2.0) * S)))
     ag_arr = np.asarray(arc_glow, dtype=np.float32) / 255.0 * \
-        params.get("arc_glow", 0.55)
+        params.get("arc_glow", 0.3)
     base = 1 - (1 - base / 255.0) * (1 - ag_arr)
     base *= 255.0
     for m in sym.marks:
         drawer = MARK_DRAWERS.get(m.kind)
         if drawer:
-            # marks are mid-tone glyphs, not hot cores: dim to ~70% so they
-            # read as living interruptions, not white-hot elements.
-            # bubbles/ripples keep full strength (reference bubbles are
-            # bright rings); fish at 80% (reference fish are bright strokes)
-            if m.kind in ("bubble", "ripple"):
+            if m.kind in ("ripple",):
                 mc = m.color
+            elif m.kind == "bubble":
+                mc = tuple(int(c * 0.6) for c in m.color)
             elif m.kind == "fish":
-                mc = tuple(int(c * 1.0) for c in m.color)
+                mc = tuple(int(c * 1.25) for c in m.color)
             else:
                 mc = tuple(int(c * 0.65) for c in m.color)
             drawer(cd, m.cx * S, m.cy * S, m.scale * S, mc, m.rot)
@@ -151,7 +183,7 @@ def _render_symbol(sym, scale, params):
     base = 1 - (1 - base / 255.0) * (1 - core_arr / 255.0)
     base *= 255.0
 
-    # ---- 6. tone
+    # ---- 7. tone
     x = np.clip(base, 0, 255)
     y = 255.0 * (x / 255.0) ** params["tone_gamma"]
     y = np.minimum(y, params["tone_cap"])

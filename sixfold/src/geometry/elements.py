@@ -75,70 +75,53 @@ def water():
     A = hex_to_rgb("12315C")       # atmosphere hue (measured 0.3,17.6,38.8 → scaled)
 
     # ---- measured vesica geometry (design/vesica-geometry.json) ----
-    # The reference is built from FOUR CIRCLE ARCS + a horizon line:
+    # The reference is built from FOUR SPLINE ARCS traced from the pixel
+    # data + a horizon line:
     #   horizon: y=545, x=143..1311 (bright line)
-    #   left_top arc:    C(458,541) R=184, from tip (272,545) up over the
-    #     top to (563,390), then a diagonal down to top lens apex (740,523)
-    #   left_bottom arc: C(457,514) R=202, from (558,689) to tip
-    #   right_top arc:   C(1016,556) R=184, from lens-side (910,405) to
-    #     tip (1150,545)
-    #   right_bottom arc:C(1015,581) R=141, from tip to (955,709)
+    #   left_top arc:    spline from tip region up over the top to x=660
+    #   left_bottom arc: spline from x=660 under the bottom back to tip
+    #   right_top arc:   spline from x=880 over the top to tip
+    #   right_bottom arc:spline from tip under the bottom to x=880
     #   lens side: top apex (740,523) → bottom apex (740,562)
     import json
     from pathlib import Path as FsPath
     geo = json.loads(FsPath(__file__).resolve().parents[2].joinpath(
         "design", "vesica-geometry.json").read_text())
 
-    def circle_arc(cx, cy, R, a0, a1, n=44):
-        """Arc from angle a0 to a1 (degrees), screen coords (y-down)."""
-        return [(cx + R * math.cos(math.radians(a)),
-                 cy + R * math.sin(math.radians(a)))
-                for a in np_linspace(a0, a1, n)]
-
-    import numpy as np
-    def np_linspace(a0, a1, n):
-        return list(np.linspace(a0, a1, n))
-
     TIPL = geo["tips"]["left"]
     TIPR = geo["tips"]["right"]
     TA = geo["lens"]["top_apex"]
     BA = geo["lens"]["bottom_apex"]
-    A = geo["arcs"]
-    J = geo["arc_join"]
+    SP = geo["splines"]
 
-    # Left lobe path: tip → left_top arc → diagonal to top apex → lens side
-    # → diagonal to bottom join → left_bottom arc → back to tip
-    # left_top arc from tip (angle 180°) to join (563,390):
-    lt_ang = math.degrees(math.atan2(J["left_top_to_lens"][1] - A["left_top"]["cy"],
-                                     J["left_top_to_lens"][0] - A["left_top"]["cx"]))
-    l_top = circle_arc(A["left_top"]["cx"], A["left_top"]["cy"],
-                       A["left_top"]["R"], 180, lt_ang)
-    # left_bottom arc: from join (558,689) back to tip (272,545)
-    #   angle of join = atan2(689-514, 558-457) = atan2(175, 101) = 60°
-    lb_ang = math.degrees(math.atan2(J["left_bottom_to_lens"][1] - A["left_bottom"]["cy"],
-                                     J["left_bottom_to_lens"][0] - A["left_bottom"]["cx"]))
-    l_bot = circle_arc(A["left_bottom"]["cx"], A["left_bottom"]["cy"],
-                       A["left_bottom"]["R"], lb_ang, 180)
-    l_path = l_top + [TA, BA] + l_bot
+    # Build each lobe as TWO paths (the reference has no bright stroke on
+    # the lens side between the apexes — the lens is dark, crossed only by
+    # the horizon):
+    #   top:    tip → left_top spline → diagonal → top apex (740,523)
+    #   bottom: bottom apex (740,562) → diagonal → left_bottom spline → tip
+    l_top_pts = [tuple(p) for p in SP["left_top"]]
+    l_bot_pts = [tuple(p) for p in SP["left_bottom"]][::-1]
+    l_top_path = [tuple(TIPL)] + l_top_pts + [tuple(TA)]
+    l_bot_path = [tuple(BA)] + l_bot_pts + [tuple(TIPL)]
+    l_top_path = resample(l_top_path, 300)
+    l_bot_path = resample(l_bot_path, 300)
 
-    # right lobe path: top apex → diagonal to right_top join → right_top
-    # arc to tip (angle 0°) → right_bottom arc back to join → diagonal to
-    # bottom apex
-    rt_ang = math.degrees(math.atan2(J["right_top_to_lens"][1] - A["right_top"]["cy"],
-                                     J["right_top_to_lens"][0] - A["right_top"]["cx"]))
-    r_top = circle_arc(A["right_top"]["cx"], A["right_top"]["cy"],
-                       A["right_top"]["R"], rt_ang, 0)
-    rb_ang = math.degrees(math.atan2(J["right_bottom_to_lens"][1] - A["right_bottom"]["cy"],
-                                     J["right_bottom_to_lens"][0] - A["right_bottom"]["cx"]))
-    r_bot = circle_arc(A["right_bottom"]["cx"], A["right_bottom"]["cy"],
-                       A["right_bottom"]["R"], 0, rb_ang)
-    r_path = [TA] + r_top + r_bot[1:] + [BA]
+    r_top_pts = [tuple(p) for p in SP["right_top"]]
+    r_bot_pts = [tuple(p) for p in SP["right_bottom"]][::-1]
+    r_top_path = [tuple(TA)] + r_top_pts + [tuple(TIPR)]
+    r_bot_path = [tuple(TIPR)] + r_bot_pts + [tuple(BA)]
+    r_top_path = resample(r_top_path, 300)
+    r_bot_path = resample(r_bot_path, 300)
 
     paths = [
-        Path(l_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
-             glow_color=G, name="lobe-left"),
-        Path(r_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
-             glow_color=G, name="lobe-right"),
+        Path(l_top_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-left-top"),
+        Path(l_bot_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-left-bottom"),
+        Path(r_top_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-right-top"),
+        Path(r_bot_path, width=2.2, color=C, glow=9.0, glow_strength=0.95,
+             glow_color=G, name="lobe-right-bottom"),
     ]
 
     # fish: measured bbox upper-left (442,347)-(533,382) → center (487,364)
@@ -173,9 +156,9 @@ def water():
         width=W, height=H,
         background=(0, 0, 0),
         atmosphere=A,
-        atmosphere_peak=70.0,
-        atmosphere_sigma=330.0,
-        glow_stack=[(3.0, 0.55), (9.0, 0.35), (22.0, 0.18), (48.0, 0.09)],
+        atmosphere_peak=22.0,
+        atmosphere_sigma=340.0,
+        glow_stack=[(3.0, 0.5), (9.0, 0.3), (22.0, 0.15), (48.0, 0.06)],
         core_boost=0.85,
         tone_gamma=1.0,
         tone_cap=250.0,
