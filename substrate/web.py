@@ -58,6 +58,9 @@ from .integrations import (
     integrations_payload,
     set_integration_mode,
 )
+from .vault import delete_secret as vault_delete_secret
+from .vault import put_secret as vault_put_secret
+from .vault import vault_status
 from .iphone_panel import _gather_system_snapshot
 from .learning import learning_payload, record_execution, record_resolution_note
 from .models import OPENCLAW_ALLOWED_DATA_CLASSES
@@ -1155,6 +1158,54 @@ def api_integrations_disconnect(
     return {"ok": True, **result}
 
 
+# --- Secure Vault: secrets never touch plaintext files -----------------------
+@app.get("/api/vault/status")
+def api_vault_status() -> dict[str, Any]:
+    return vault_status(RUNTIME)
+
+
+@app.post("/api/vault/put")
+def api_vault_put(
+    request: Request,
+    service_id: str = Form(...),
+    secret: str = Form(...),
+    auth_method: str = Form(""),
+    access_mode: str = Form("read"),
+    write_directive: str = Form(""),
+) -> dict[str, Any]:
+    _ = request
+    # 500 KiB guard is enforced globally; tighten: raw secret length
+    if len(secret.encode("utf-8")) > 8192:
+        raise HTTPException(status_code=400, detail="Secret exceeds 8 KiB limit.")
+    try:
+        result = vault_put_secret(
+            RUNTIME,
+            service_id=_normalize_slug(service_id, "service_id"),
+            secret=secret,
+            auth_method=auth_method.strip() or None,
+            mode=_validate_access_mode(access_mode),
+            write_directive=write_directive,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, **result}
+
+
+@app.post("/api/vault/delete")
+def api_vault_delete(
+    request: Request,
+    service_id: str = Form(...),
+) -> dict[str, Any]:
+    _ = request
+    try:
+        result = vault_delete_secret(RUNTIME, service_id=_normalize_slug(service_id, "service_id"))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return {"ok": True, **result}
+
+
 @app.get("/api/learning")
 def api_learning(limit: int = 30) -> dict[str, Any]:
     bounded_limit = max(1, min(limit, 200))
@@ -1863,7 +1914,7 @@ async def get_whatsapp_config(request: Request):
     return JSONResponse(
         {
             "phone_number_id": stored.get("phone_number_id", ""),
-            "verify_token": stored.get("verify_token", ""),
+            "verify_token_configured": bool(stored.get("verify_token")),
             "access_token_configured": bool(stored.get("access_token")),
             "app_secret_configured": bool(stored.get("app_secret")),
             "webhook_url": plugin_config.get(
@@ -1879,7 +1930,22 @@ async def get_whatsapp_config(request: Request):
 async def save_whatsapp_config(request: Request):
     """Validate and persist WhatsApp Cloud API credentials, then load the plugin."""
     body = await request.json()
-    config = {key: (body.get(key) or "").strip() for key in WHATSAPP_CONFIG_KEYS}
+    raw = {key: (body.get(key) or "").strip() for key in WHATSAPP_CONFIG_KEYS}
+    # Empty secret fields mean "reuse the existing keyring value" (user left masked placeholder).
+    try:
+        existing = load_config(RUNTIME.root)
+    except Exception:  # noqa: BLE001
+        existing = {}
+    secret_keys = ("access_token", "app_secret", "verify_token")
+    config = {}
+    for key in WHATSAPP_CONFIG_KEYS:
+        if key in secret_keys and not raw.get(key):
+            if existing.get(key):
+                config[key] = existing[key]
+            else:
+                config[key] = ""
+        else:
+            config[key] = raw.get(key, "")
     missing = [field for field in WHATSAPP_REQUIRED if not config[field]]
     if missing:
         raise HTTPException(
@@ -1963,7 +2029,7 @@ async def get_whatsapp_status():
             "connected": connected,
             "status": "connected" if connected else "configured" if stored else "not_configured",
             "phone_number_id": stored.get("phone_number_id", ""),
-            "verify_token": stored.get("verify_token", ""),
+            "verify_token_configured": bool(stored.get("verify_token")),
         }
     )
 

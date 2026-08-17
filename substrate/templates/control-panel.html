@@ -141,6 +141,15 @@
                         </svg>
                         <span>Integrations</span>
                     </a>
+                    <a href="#vault" class="nav-item" data-page="vault" aria-label="Vault — secrets">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            <circle cx="12" cy="16" r="1"/>
+                        </svg>
+                        <span>Vault</span>
+                        <span class="nav-badge" id="vaultBadge" title="Services missing a secret">0</span>
+                    </a>
                     <a href="#whatsapp-setup" class="nav-item" data-page="whatsapp-setup" aria-label="WhatsApp Setup">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
@@ -576,6 +585,27 @@
                         <!-- Populated dynamically -->
                     </div>
                 </div>
+
+                <!-- Vault Page: secure secrets UX (no plaintext at rest) -->
+                <div class="page" id="page-vault" role="region" aria-label="Vault — secrets.">
+                    <div class="page-header">
+                        <h1>Secret Vault</h1>
+                        <p class="page-subtitle">Every integration credential lives in the OS keyring — never in plaintext files, logs, or this page.</p>
+                    </div>
+                    <div class="vault-summary" id="vaultSummary">
+                        <span class="vault-pill">Loading…</span>
+                    </div>
+                    <div class="vault-toolbar">
+                        <input type="search" id="vaultSearch" placeholder="Filter services…" aria-label="Filter vault services." autocomplete="off">
+                        <button class="btn-secondary" id="vaultRefreshBtn" onclick="panel.loadVault()">Refresh</button>
+                    </div>
+                    <div class="vault-grid" id="vaultGrid">
+                        <div class="vault-loading">Loading vault…</div>
+                    </div>
+                </div>
+
+                <!-- Vault modal (created once; reused for store/update) -->
+                <div id="vaultModalRoot"></div>
 
                 <!-- WhatsApp Setup Page -->
                 <div class="page" id="page-whatsapp-setup" role="region" aria-label="WhatsApp setup.">

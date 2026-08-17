@@ -13,6 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from ..credentials import CredentialStore
+
 _LOCK = threading.Lock()
 
 CONFIG_KEYS = (
@@ -25,7 +27,7 @@ CONFIG_KEYS = (
 )
 
 # Keys never returned to the browser.
-SECRET_KEYS = {"access_token", "app_secret"}
+SECRET_KEYS = {"access_token", "app_secret", "verify_token"}
 
 
 def config_path(root: Path) -> Path:
@@ -36,7 +38,49 @@ def log_path(root: Path) -> Path:
     return root / "state" / "gateway-whatsapp.log"
 
 
+def save_config(root: Path, config: dict[str, Any]) -> dict[str, Any]:
+    """Persist a validated plugin config. Returns the stored config.
+
+    Security: secret keys (access_token, app_secret, verify_token) are
+    NEVER written to the JSON state file.  They are routed to the OS
+    keyring via CredentialStore (encrypted-file fallback) and the JSON
+    holds only a ``secret_ref`` pointer like ``keyring:whatsapp:access_token``.
+    """
+    path = config_path(root)
+    secret_keys = {"access_token", "app_secret", "verify_token"}
+    to_keyring = {k: config[k] for k in secret_keys if k in config and config[k]}
+
+    # Persist secrets to the keyring / encrypted file (never plaintext JSON).
+    if to_keyring:
+        store = CredentialStore(root)
+        for key, value in to_keyring.items():
+            store.set_token(f"whatsapp:{key}", value)
+
+    # Non-secret fields plus opaque pointers for the secret fields.
+    stored = {}
+    for key in CONFIG_KEYS:
+        if key in config:
+            if key in secret_keys:
+                if config[key]:
+                    stored[key] = f"keyring:whatsapp:{key}"
+            else:
+                stored[key] = config[key]
+
+    with _LOCK:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(stored, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    append_log(root, "config", f"configuration saved (phone {config.get('phone_number_id', '?')})")
+    return stored
+
+
 def load_config(root: Path) -> dict[str, Any]:
+    """Load config, resolving keyring pointers back to live secrets.
+
+    Returns the fully-resolved config (secrets included) for server-side
+    use.  Never call this for browser responses; use ``public_config``.
+    """
     path = config_path(root)
     if not path.exists():
         return {}
@@ -46,29 +90,32 @@ def load_config(root: Path) -> dict[str, Any]:
         return {}
     if not isinstance(payload, dict):
         return {}
-    return {key: payload[key] for key in CONFIG_KEYS if key in payload}
 
+    result = {key: payload[key] for key in CONFIG_KEYS if key in payload}
 
-def save_config(root: Path, config: dict[str, Any]) -> dict[str, Any]:
-    """Persist a validated plugin config. Returns the stored config."""
-    path = config_path(root)
-    with _LOCK:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        stored = dict(config)
-        path.write_text(
-            json.dumps(stored, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-    append_log(root, "config", f"configuration saved (phone {config.get('phone_number_id', '?')})")
-    return stored
+    # Resolve keyring pointers for secret fields.
+    store = CredentialStore(root)
+    for key in ("access_token", "app_secret", "verify_token"):
+        value = result.get(key)
+        if isinstance(value, str) and value.startswith("keyring:"):
+            resolved = store.get_token(f"whatsapp:{key}")
+            if resolved is not None:
+                result[key] = resolved
+            else:
+                # Pointer exists but secret is gone: drop it so callers
+                # fail closed rather than sending a stale pointer.
+                result.pop(key, None)
+    return result
 
 
 def public_config(root: Path) -> dict[str, Any]:
     """Config with secrets masked, safe to return to the browser."""
     config = load_config(root)
     return {
-        **config,
+        **{k: v for k, v in config.items() if k not in SECRET_KEYS},
         "access_token": bool(config.get("access_token")),
         "app_secret": bool(config.get("app_secret")),
+        "verify_token": bool(config.get("verify_token")),
     }
 
 
