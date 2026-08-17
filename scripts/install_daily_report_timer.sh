@@ -22,6 +22,7 @@ Description=Daily security report generation
 After=network-online.target
 
 [Service]
+Environment=PATH=/home/ahron/.npm-global/bin:/home/ahron/.local/bin:/usr/local/bin:/usr/bin:/bin
 Type=oneshot
 ExecStart=/usr/bin/python3 /home/ahron/codespace/scripts/daily_security_report.py
 Environment=SUBSTRATE_ROOT=/home/ahron/codespace
