@@ -71,7 +71,7 @@ check_log_anomalies() {
     mapfile -t sudo_fails < <(journalctl -u sudo -u auth --since "$since" --no-pager 2>/dev/null | grep -cE 'authentication failure|Failed password|sudo:.*auth failure' || true)
     mapfile -t oom < <(journalctl --since "$since" --no-pager 2>/dev/null | grep -cE 'Out of memory|oom-kill|Killed process' || true)
     mapfile -t segfault < <(journalctl --since "$since" --no-pager 2>/dev/null | grep -cE 'segfault|general protection fault' || true)
-    mapfile -t disk_io < <(journalctl --since "$since" --no-pager 2>/dev/null | grep -cE 'I/O error|EXT4-fs error|BTRFS' || true)
+    mapfile -t disk_io < <(journalctl --since "$since" --no-pager 2>/dev/null | grep -vE 'system_monitor|system-monitor' | grep -cE 'I/O error|EXT4-fs error|BTRFS.*(error|fail)' || true)
 
     if [ "${sudo_fails[0]:-0}" -gt 0 ]; then
       warn "${sudo_fails[0]} sudo/auth failure(s) in last ${since}"

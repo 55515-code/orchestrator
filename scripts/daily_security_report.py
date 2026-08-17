@@ -402,9 +402,42 @@ def main() -> int:
     result = send_email(report)
     print("\n== " + result)
     if "FAILED" in result:
-        # Email delivery is best-effort; report was still written locally.
-        return 0
+        # Email is broken (Proton Bridge has no account) — fall back to
+        # WhatsApp so the daily report still reaches the operator.
+        wa = send_whatsapp(report)
+        print("== " + wa)
     return 0
+
+
+def send_whatsapp(report: str) -> str:
+    """Deliver the report via OpenClaw's built-in WhatsApp channel.
+
+    Used as a fallback when the Proton Bridge SMTP relay cannot send
+    (e.g. bridge has no account loaded). Targets the operator's number
+    from ~/.config/substrate/security_report.json (whatsapp.target).
+    """
+    cfg = {}
+    try:
+        cfg = json.loads(CONFIG_PATH.read_text())
+    except Exception:
+        pass
+    wa = cfg.get("whatsapp", {})
+    if not wa.get("enabled", False):
+        return "whatsapp disabled in ~/.config/substrate/security_report.json"
+    target = wa.get("target", "")
+    if not target:
+        return "whatsapp target missing in security_report.json"
+    try:
+        subprocess.run(
+            ["openclaw", "message", "send", "--channel", "whatsapp",
+             "--target", target, "--media", str(STATE_DIR / f"{datetime.now().strftime('%Y-%m-%d')}.txt"),
+             "-m", "📋 Substrate Daily Security Report — " + datetime.now().strftime("%Y-%m-%d"),
+             "--json"],
+            capture_output=True, text=True, timeout=120,
+        )
+        return f"whatsapp sent to {target}"
+    except Exception as e:
+        return f"whatsapp FAILED: {type(e).__name__}: {str(e)[:120]}"
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ from __future__ import annotations
 import email
 import imaplib
 import json
+import os
 import re
 import subprocess
 from datetime import UTC, datetime, timedelta
@@ -114,6 +115,22 @@ MAX_FETCH = 500
 
 def _bridge_password() -> str:
     """Read the Proton Mail Bridge password from the OS keyring."""
+    env = os.environ.get("PROTON_BRIDGE_PW", "").strip()
+    if env:
+        return env
+    # fallback: credentials file written by scripts/bridge_setup.py
+    for p in (Path.home() / ".config/substrate/credentials.json",
+              Path.home() / ".config/substrate/bridge-credentials.txt"):
+        try:
+            if p.suffix == ".json":
+                data = json.loads(p.read_text())
+                pw = data.get("proton_bridge_pw") or data.get("bridge_password") or ""
+            else:
+                pw = p.read_text().strip().splitlines()[0]
+            if pw:
+                return pw
+        except Exception:
+            pass
     try:
         result = subprocess.run(
             ["secret-tool", "lookup", "service", KEYRING_SERVICE,
