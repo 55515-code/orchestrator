@@ -164,3 +164,13 @@ agents:
     provider: local
     enabled: true
     command: scripts/substrate_cli.py agent-run --role email-manager --repo substrate-core
+
+  - id: maintenance-substrate
+    role: maintenance-agent
+    repo_slug: substrate-core
+    pass: development
+    cadence: daily
+    autonomy_tier: 1
+    provider: local
+    enabled: true
+    command: scripts/substrate_cli.py agent-run --role maintenance-agent --repo substrate-core

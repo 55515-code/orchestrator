@@ -138,7 +138,7 @@ def put_secret(
     The raw `secret` is written ONLY to CredentialStore (keyring).  The JSON
     state file receives only the opaque pointer `keyring:integration:<id>`.
     """
-    from .integrations import _catalog, _service_lookup, _validated_mode, _save_state, _load_state
+    from .integrations import _catalog, _load_state, _save_state, _service_lookup, _validated_mode
 
     if not secret or not secret.strip():
         raise ValueError("Secret value is required.")
@@ -207,7 +207,7 @@ def put_secret(
 
 def delete_secret(runtime: SubstrateRuntime, *, service_id: str) -> dict[str, Any]:
     """Remove a secret from the keyring and disconnect the integration."""
-    from .integrations import _catalog, _service_lookup, _load_state, _save_state
+    from .integrations import _catalog, _load_state, _save_state, _service_lookup
 
     catalog = _catalog(runtime)
     if service_id not in _service_lookup(catalog):

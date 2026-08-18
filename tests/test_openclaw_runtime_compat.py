@@ -7,10 +7,14 @@ import pytest
 
 
 def test_sitecustomize_restores_legacy_cmdop_timeout_alias() -> None:
-    openclaw = import_module("openclaw")
+    try:
+        openclaw = import_module("openclaw")
+    except ModuleNotFoundError:
+        pytest.skip("openclaw package not installed")
+
     if not getattr(openclaw, "_CMDOP_AVAILABLE", False):
         pytest.skip("cmdop not installed")
-    
+
     exceptions = import_module("cmdop.exceptions")
 
     assert hasattr(exceptions, "TimeoutError")
@@ -18,7 +22,11 @@ def test_sitecustomize_restores_legacy_cmdop_timeout_alias() -> None:
 
 
 def test_openclaw_imports_with_compatible_cmdop_line() -> None:
-    openclaw = import_module("openclaw")
+    try:
+        openclaw = import_module("openclaw")
+    except ModuleNotFoundError:
+        pytest.skip("openclaw package not installed")
+
     if not getattr(openclaw, "_CMDOP_AVAILABLE", False):
         pytest.skip("cmdop not installed")
 

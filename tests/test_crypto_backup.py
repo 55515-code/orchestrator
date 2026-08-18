@@ -1,8 +1,6 @@
-from __future__ import annotations
-
+from pathlib import Path
 import tempfile
 import unittest
-from pathlib import Path
 
 from substrate.crypto import WalletManager, backup_wallet_seeds, proton_sync_dir
 
@@ -10,9 +8,25 @@ DIRECTIVE = "human: test backup"
 KEY = b"test-key-material"
 
 
+try:
+    from mnemonic import Mnemonic
+except Exception:  # pragma: no cover - optional crypto extra
+    Mnemonic = None  # type: ignore[assignment,misc]
+
+
+try:
+    from eth_account import Account
+except Exception:  # pragma: no cover - optional crypto extra
+    Account = None  # type: ignore[assignment,misc]
+
+
 class BackupTest(unittest.TestCase):
     def _manager(self, tmp: str) -> WalletManager:
         return WalletManager(Path(tmp), encryption_key=KEY)
+
+    def setUp(self) -> None:
+        if Mnemonic is None or Account is None:
+            self.skipTest("crypto extras not installed")
 
     def test_staged_fallback_when_no_sync_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

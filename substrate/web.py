@@ -58,9 +58,6 @@ from .integrations import (
     integrations_payload,
     set_integration_mode,
 )
-from .vault import delete_secret as vault_delete_secret
-from .vault import put_secret as vault_put_secret
-from .vault import vault_status
 from .iphone_panel import _gather_system_snapshot
 from .learning import learning_payload, record_execution, record_resolution_note
 from .models import OPENCLAW_ALLOWED_DATA_CLASSES
@@ -79,6 +76,9 @@ from .research import diagnose_openclaw, refresh_upstreams
 from .standards import standards_payload
 from .stats import dashboard_payload
 from .tooling import ensure_tool_profile, tooling_snapshot
+from .vault import delete_secret as vault_delete_secret
+from .vault import put_secret as vault_put_secret
+from .vault import vault_status
 
 logger = logging.getLogger(__name__)
 
@@ -238,8 +238,8 @@ async def _lifespan(app: FastAPI):
             logger.info("Gateway initialized successfully")
         else:
             logger.info("Gateway is disabled in configuration")
-    except Exception as e:
-        logger.error(f"Failed to initialize gateway: {e}")
+    except Exception as exc:
+        logger.error("Failed to initialize gateway: %s", exc)
     
     try:
         yield

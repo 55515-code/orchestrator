@@ -31,8 +31,6 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
-from .. import _utils
-
 # ---------------------------------------------------------------------------
 # Configuration constants
 # ---------------------------------------------------------------------------
@@ -167,8 +165,16 @@ class EmailSummary:
     """Lightweight representation of a single email for digest purposes."""
 
     __slots__ = (
-        "uid", "folder", "from_addr", "from_name", "subject",
-        "date", "category", "priority", "list_id", "snippet",
+        "category",
+        "date",
+        "folder",
+        "from_addr",
+        "from_name",
+        "list_id",
+        "priority",
+        "snippet",
+        "subject",
+        "uid",
     )
 
     def __init__(
@@ -626,8 +632,8 @@ async def send_whatsapp_digest(text: str, recipient: str = "") -> dict[str, Any]
         }
 
     try:
-        from ..gateway.plugins.whatsapp import WhatsAppPlugin
         from ..gateway.models import OutboundMessage
+        from ..gateway.plugins.whatsapp import WhatsAppPlugin
 
         plugin = WhatsAppPlugin()
         plugin.initialize({

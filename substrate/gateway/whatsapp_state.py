@@ -48,7 +48,7 @@ def save_config(root: Path, config: dict[str, Any]) -> dict[str, Any]:
     """
     path = config_path(root)
     secret_keys = {"access_token", "app_secret", "verify_token"}
-    to_keyring = {k: config[k] for k in secret_keys if k in config and config[k]}
+    to_keyring = {k: config[k] for k in secret_keys if config.get(k)}
 
     # Persist secrets to the keyring / encrypted file (never plaintext JSON).
     if to_keyring:

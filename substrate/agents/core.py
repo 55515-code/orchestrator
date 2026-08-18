@@ -25,6 +25,7 @@ AGENT_ROLES = frozenset(
         "resource-generator",
         "creative-agent",
         "email-manager",
+        "maintenance-agent",
     }
 )
 VALID_CADENCES = ("hourly", "every_4_hours", "daily", "weekly", "on_demand")
@@ -591,6 +592,7 @@ def run_agent(
     from . import creative as creative_role
     from . import development as development_role
     from . import email_manager as email_manager_role
+    from . import maintenance as maintenance_role
     from . import market_research as market_research_role
     from . import moderation as moderation_role
     from . import research as research_role
@@ -607,6 +609,7 @@ def run_agent(
         "resource-generator": resource_gen_role.run,
         "creative-agent": creative_role.run,
         "email-manager": email_manager_role.run,
+        "maintenance-agent": maintenance_role.run,
     }
     handler = handlers.get(agent.role)
     if handler is None:
