@@ -285,7 +285,8 @@ def _submit(run_id: str, fn, *args, **kwargs) -> None:
             RUN_FUTURES.pop(run_id, None)
         try:
             completed.result()
-        except Exception:
+        except Exception as exc:
+            logger.debug("_cleanup future result failed", exc_info=True)
             # Errors are persisted by orchestrator run records.
             pass
 
@@ -497,7 +498,8 @@ def _config_files_index() -> list[dict[str, Any]]:
             str(entry.get("source_path") or ""): entry
             for entry in sync_payload.get("entries", [])
         }
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("config sync entries lookup failed", exc_info=True)
         entries_by_path = {}
     for relative in CONFIG_FILES_WHITELIST:
         path = _resolve_config_file(relative)
@@ -686,7 +688,8 @@ def _tailnet_self_hosts() -> set[str]:
                     ip = str(addr).split("/")[0].strip().lower()
                     if ip:
                         base_names.add(ip)
-        except Exception:  # noqa: BLE001 - tailscale may be absent or offline
+        except Exception as exc:  # noqa: BLE001 - tailscale may be absent or offline
+            logger.debug("tailscale lookup failed", exc_info=True)
             pass
 
         try:
