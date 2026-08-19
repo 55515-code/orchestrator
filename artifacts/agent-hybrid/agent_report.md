@@ -1,6 +1,6 @@
 # Agent Hybrid Report
 
-- Generated at: 2026-08-19T03:57:58.445338+00:00
+- Generated at: 2026-08-19T03:58:03.913107+00:00
 - Session: `20260819-fb09ab4`
 - Mode: `deep`
 - Loop count: `6`
@@ -20,11 +20,14 @@
 - Loop 4: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
 - Loop 5: 1 command(s) failed during mode 'deep'.
 - Loop 5: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
+- Loop 6: 1 command(s) failed during mode 'deep'.
+- Loop 6: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
 
 ## Deep research findings with sources/risks
 
 - Source anchors reviewed: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
 - Strategic direction reviewed: `docs/security-toolkit-roadmap.md`.
+- Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
@@ -52,13 +55,15 @@
 | 2 | partial_failure | deterministic | 1 | pr_create_failed |
 | 3 | partial_failure | deterministic | 1 | pr_create_failed |
 | 4 | partial_failure | deterministic | 1 | pr_create_failed |
-| 5 | partial_failure | deterministic | 1 | n/a |
+| 5 | partial_failure | deterministic | 1 | pr_create_failed |
+| 6 | partial_failure | deterministic | 1 | n/a |
 
 - Loop 1 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 2 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 3 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 4 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 5 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
+- Loop 6 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
 
@@ -73,6 +78,7 @@
 - Loop 3 executed 3 commands.
 - Loop 4 executed 3 commands.
 - Loop 5 executed 3 commands.
+- Loop 6 executed 3 commands.
 
 ## Compatibility notes
 
@@ -87,7 +93,7 @@
 
 - Current branch: `agent/swarm-20260819-fb09ab4`
 - Target branch: `main`
-- Ahead: `4` | Behind: `0` | Diverged: `False`
+- Ahead: `5` | Behind: `0` | Diverged: `False`
 - PR URL: `n/a`
 - Final merge state: `not_attempted`
 
@@ -102,7 +108,7 @@
   "allow_write": true,
   "session_id": "20260819-fb09ab4",
   "loop_count": 6,
-  "generated_at": "2026-08-19T03:57:58.445338+00:00",
+  "generated_at": "2026-08-19T03:58:03.913107+00:00",
   "started_at": "2026-08-19T03:57:31.102518+00:00",
   "findings": [
     "Loop 1: 1 command(s) failed during mode 'deep'.",
@@ -114,9 +120,12 @@
     "Loop 4: 1 command(s) failed during mode 'deep'.",
     "Loop 4: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)",
     "Loop 5: 1 command(s) failed during mode 'deep'.",
-    "Loop 5: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+    "Loop 5: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)",
+    "Loop 6: 1 command(s) failed during mode 'deep'.",
+    "Loop 6: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
   ],
   "risks": [
+    "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
@@ -191,6 +200,13 @@
       "return_code": 0,
       "duration_seconds": 1.215,
       "loop": 5
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 1.23,
+      "loop": 6
     }
   ],
   "assumptions": [
@@ -673,6 +689,103 @@
           "return_code": 0,
           "duration_seconds": 1.215
         }
+      ],
+      "publish_result": {
+        "action": "pr_create_failed",
+        "ok": false,
+        "branch": "agent/swarm-20260819-fb09ab4",
+        "pr_number": 0,
+        "pr_url": "",
+        "merge_attempted": false,
+        "merged": false,
+        "merge_attempts": 0,
+        "message": "Failed to create PR from rolling branch.",
+        "rebase_ok": true,
+        "push_ok": true,
+        "loop_index": 5
+      }
+    },
+    {
+      "loop_index": 6,
+      "started_at": "2026-08-19T03:58:02.146221+00:00",
+      "generated_at": "2026-08-19T03:58:03.494179+00:00",
+      "route": "deterministic",
+      "cloud_attempted": false,
+      "cloud_success": false,
+      "cloud_note": "Cloud command not configured; skipping cloud route.",
+      "findings": [
+        "1 command(s) failed during mode 'deep'.",
+        "Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+      ],
+      "risks": [
+        "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 1,
+          "ok": false,
+          "duration_seconds": 0.06,
+          "stdout_tail": "  yield f\"data: {json.dumps(payload)}\\n\\n\"\n1732 |                 await asyncio.sleep(2)  # Update every 2 seconds\n1733 |             except Exception as e:\n     |                    ^^^^^^^^^\n1734 |                 print(f\"Error in metrics stream: {e}\")\n1735 |                 await asyncio.sleep(5)\n     |\n\nBLE001 Do not catch blind exception: `Exception`\n    --> substrate/web.py:1804:12\n     |\n1802 |     try:\n1803 |         payload = await request.json()\n1804 |     except Exception as e:\n     |            ^^^^^^^^^\n1805 |         raise HTTPException(status_code=400, detail=f\"Invalid JSON: {e}\")\n     |\n\nBLE001 Do not catch blind exception: `Exception`\n    --> substrate/web.py:1827:16\n     |\n1825 |             else:\n1826 |                 responses.append({\"message_id\": message.message_id, \"status\": \"processed\"})\n1827 |         except Exception as e:\n     |                ^^^^^^^^^\n1828 |             logger.error(f\"Error processing message {message.message_id}: {e}\")\n1829 |             responses.append({\"message_id\": message.message_id, \"status\": \"error\", \"error\": str(e)})\n     |\n\nBLE001 Do not catch blind exception: `Exception`\n    --> substrate/web.py:1847:12\n     |\n1845 |     try:\n1846 |         body = await request.json()\n1847 |     except Exception as e:\n     |            ^^^^^^^^^\n1848 |         raise HTTPException(status_code=400, detail=f\"Invalid JSON: {e}\")\n     |\n\nBLE001 Do not catch blind exception: `Exception`\n    --> substrate/web.py:1861:12\n     |\n1859 |         append_log(RUNTIME.root, \"send\", f\"outbound message to {user_id} via {service_id}\")\n1860 |         return JSONResponse({\"status\": \"sent\", \"result\": result})\n1861 |     except Exception as e:\n     |            ^^^^^^^^^\n1862 |         logger.error(f\"Error sending message: {e}\")\n1863 |         raise HTTPException(status_code=500, detail=f\"Failed to send message: {e}\")\n     |\n\nS110 `try`-`except`-`pass` detected, consider logging the exception\n    --> substrate/web.py:2066:5\n     |\n2064 |       try:\n2065 |           message_id = result[\"messages\"][0][\"id\"]\n2066 | /     except Exception:  # noqa: BLE001\n2067 | |         pass\n     | |____________^\n2068 |       return JSONResponse(\n2069 |           {\"status\": \"success\", \"message\": \"Test message sent\", \"message_id\": message_id}\n     |\n\nI001 [*] Import block is un-sorted or un-formatted\n --> tests/test_crypto_backup.py:1:1\n  |\n1 | / from pathlib import Path\n2 | | import tempfile\n3 | | import unittest\n4 | |\n5 | | from substrate.crypto import WalletManager, backup_wallet_seeds, proton_sync_dir\n  | |________________________________________________________________________________^\n6 |\n7 |   DIRECTIVE = \"human: test backup\"\n  |\nhelp: Organize imports\n  |\n  - from pathlib import Path\n1 | import tempfile\n2 | import unittest\n3 + from pathlib import Path\n4 |\n  |\n\nBLE001 Do not catch blind exception: `Exception`\n  --> tests/test_crypto_backup.py:13:8\n   |\n11 | try:\n12 |     from mnemonic import Mnemonic\n13 | except Exception:  # pragma: no cover - optional crypto extra\n   |        ^^^^^^^^^\n14 |     Mnemonic = None  # type: ignore[assignment,misc]\n   |\n\nBLE001 Do not catch blind exception: `Exception`\n  --> tests/test_crypto_backup.py:19:8\n   |\n17 | try:\n18 |     from eth_account import Account\n19 | except Exception:  # pragma: no cover - optional crypto extra\n   |        ^^^^^^^^^\n20 |     Account = None  # type: ignore[assignment,misc]\n   |\n\nDTZ001 `datetime.datetime()` called without a `tzinfo` argument\n  --> tests/test_gh_sync.py:28:26\n   |\n26 |         \"\"\"Test converting sync state to dictionary.\"\"\"\n27 |         state = SyncState(\n28 |             last_sync_at=datetime(2024, 1, 1, 12, 0, 0),\n   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n29 |             last_commit_sha=\"abc123\",\n30 |             last_tag=\"v1.0.0\",\n   |\nhelp: Pass a `datetime.timezone` object to the `tzinfo` parameter\n\nFound 268 errors.\n[*] 12 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.058,
+          "stdout_tail": "Listing 'substrate'...\nListing 'substrate/agents'...\nListing 'substrate/assets'...\nListing 'substrate/chatbot'...\nListing 'substrate/chatbot/static'...\nListing 'substrate/credentials'...\nListing 'substrate/crypto'...\nListing 'substrate/dashboard'...\nListing 'substrate/gateway'...\nListing 'substrate/gateway/plugins'...\nListing 'substrate/gh_sync'...\nListing 'substrate/monitoring'...\nListing 'substrate/pipelines'...\nListing 'substrate/render_engines'...\nListing 'substrate/resources'...\nListing 'substrate/security'...\nListing 'substrate/static'...\nListing 'substrate/templates'...\nListing 'scripts'...\nListing 'scripts/crypto'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/test_decentralized_governance.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 1.23,
+          "stdout_tail": ".............                                                            [100%]\n13 passed in 0.30s\n",
+          "stderr_tail": ""
+        }
+      ],
+      "failing_count": 1,
+      "loop_status": "partial_failure",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 1.23
+        }
       ]
     }
   ],
@@ -732,6 +845,20 @@
       "rebase_ok": true,
       "push_ok": true,
       "loop_index": 4
+    },
+    {
+      "action": "pr_create_failed",
+      "ok": false,
+      "branch": "agent/swarm-20260819-fb09ab4",
+      "pr_number": 0,
+      "pr_url": "",
+      "merge_attempted": false,
+      "merged": false,
+      "merge_attempts": 0,
+      "message": "Failed to create PR from rolling branch.",
+      "rebase_ok": true,
+      "push_ok": true,
+      "loop_index": 5
     }
   ],
   "final_pr_url": "",
@@ -739,9 +866,9 @@
   "git_context": {
     "current_branch": "agent/swarm-20260819-fb09ab4",
     "target_branch": "main",
-    "head_sha": "3ff2c5750d578fc1b665fb2d04ff1d8356222eff",
+    "head_sha": "544895b0c717724d1277f6dc926658f17731b6e2",
     "target_sha": "fb09ab4869c141482d5000102eb3636aa6a8b3ea",
-    "ahead_count": 4,
+    "ahead_count": 5,
     "behind_count": 0,
     "diverged": false,
     "working_tree_clean_start": true,
@@ -1385,6 +1512,122 @@
       "ok": true,
       "duration_seconds": 0.002,
       "stdout_tail": "4\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.005,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/agent_hybrid_publish.sh",
+        "true",
+        "main",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md",
+        "5",
+        "6",
+        "20260819-fb09ab4",
+        "safe_gate",
+        "1",
+        "false"
+      ],
+      "command_text": "bash scripts/agent_hybrid_publish.sh true main /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md 5 6 20260819-fb09ab4 safe_gate 1 false",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 3.698,
+      "stdout_tail": "M\tartifacts/agent-hybrid/agent_report.md\nM\tartifacts/agent-hybrid/agent_summary.json\nYour branch is up to date with 'origin/agent/swarm-20260819-fb09ab4'.\n[agent/swarm-20260819-fb09ab4 544895b] chore(agent): swarm loop 5/6 session 20260819-fb09ab4\n 2 files changed, 491 insertions(+), 11 deletions(-)\nCurrent branch agent/swarm-20260819-fb09ab4 is up to date.\nbranch 'agent/swarm-20260819-fb09ab4' set up to track 'origin/agent/swarm-20260819-fb09ab4'.\nAGENT_PUBLISH_ACTION=pr_create_failed\nAGENT_PUBLISH_OK=false\nAGENT_PUBLISH_BRANCH=agent/swarm-20260819-fb09ab4\nAGENT_PUBLISH_PR_NUMBER=\nAGENT_PUBLISH_PR_URL=\nAGENT_PUBLISH_MERGE_ATTEMPTED=false\nAGENT_PUBLISH_MERGED=false\nAGENT_PUBLISH_MERGE_ATTEMPTS=0\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=Failed to create PR from rolling branch.\n",
+      "stderr_tail": "From https://github.com/55515-code/orchestrator\n * branch            main       -> FETCH_HEAD\nAlready on 'agent/swarm-20260819-fb09ab4'\nTo https://github.com/55515-code/orchestrator\n   3ff2c57..544895b  agent/swarm-20260819-fb09ab4 -> agent/swarm-20260819-fb09ab4\nscripts/agent_hybrid_publish.sh: line 64: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json\\: No such file or directory\nscripts/agent_hybrid_publish.sh: line 65: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md\\: No such file or directory\npull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)\n"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.401,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "agent/swarm-20260819-fb09ab4\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "544895b0c717724d1277f6dc926658f17731b6e2\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "fb09ab4869c141482d5000102eb3636aa6a8b3ea\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "5\t0\n",
       "stderr_tail": ""
     },
     {
