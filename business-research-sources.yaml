@@ -1,0 +1,35 @@
+version: 1
+
+# Authoritative sources used by the daily business-operations agent.
+# Research is pull-only. The agent records status and content fingerprints; it
+# never posts, purchases, deploys, or contacts anyone.
+sources:
+  - id: nist-csf
+    name: NIST Cybersecurity Framework
+    url: https://www.nist.gov/cyberframework
+    authority: U.S. National Institute of Standards and Technology
+    applies_to: security and risk-management services
+
+  - id: cisa-small-business
+    name: CISA Small and Medium Business Guidance
+    url: https://www.cisa.gov/audiences/small-and-medium-businesses
+    authority: U.S. Cybersecurity and Infrastructure Security Agency
+    applies_to: practical small-business security guidance
+
+  - id: google-structured-data
+    name: Google Search structured-data documentation
+    url: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
+    authority: Google Search Central
+    applies_to: service discovery and search presentation
+
+  - id: cloudflare-workers-observability
+    name: Cloudflare Workers observability documentation
+    url: https://developers.cloudflare.com/workers/observability/
+    authority: Cloudflare
+    applies_to: delivery-worker reliability and transaction telemetry
+
+  - id: owasp-asvs
+    name: OWASP Application Security Verification Standard
+    url: https://owasp.org/www-project-application-security-verification-standard/
+    authority: OWASP Foundation
+    applies_to: application and payment-flow verification
