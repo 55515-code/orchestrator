@@ -277,12 +277,18 @@ def _drive_login(email: str, password: str, totp: str | None) -> tuple[bool, str
             pass
         child.close()
         text = _redact("\n".join(transcript))
+        # Decide success by POSITIVE login signals only. The bridge prints a lot
+        # of benign background noise (sync progress, "Failed to get flags",
+        # "Failed to create API client") that must NOT be treated as failure.
         lowered = text.lower()
-        if "cannot login" in lowered or "failed to" in lowered or "invalid" in lowered:
-            return False, text[-600:]
-        if "incorrect" in lowered and "already logged in" not in lowered:
-            return False, text[-600:]
-        return True, text[-600:]
+        ok = any(s in lowered for s in ("successfully logged in", "logged in",
+                                        "account added", "account connected",
+                                        "already logged in"))
+        # If we saw an explicit interactive 2FA/needs-code prompt without a code,
+        # that is a deterministic failure (could not complete verification).
+        if "two-factor authentication is enabled; a totp code is required" in text:
+            ok = False
+        return ok, text[-600:]
     except Exception as exc:  # noqa: BLE001
         try:
             child.close(force=True)
@@ -310,6 +316,24 @@ def verify_imap(email: str, password: str) -> tuple[bool, str]:
         return ok, f"INBOX select: {typ} ({len(data[0]) if ok and data and data[0] else 'n/a'} messages)"
     except Exception as exc:  # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
+
+
+def wait_imap_registered(email: str, password: str, attempts: int = 10, delay: float = 6.0) -> tuple[bool, str]:
+    """Poll IMAP (bounded) until the bridge has fully registered the account.
+
+    Right after login the daemon may still be finalizing the account; IMAP
+    answers "no such user" briefly. A registered account answers the login
+    cleanly. This is the real acceptance signal and avoids false failures from
+    CLI sync-noise. Bounded: a handful of attempts with a pause, then stop.
+    """
+    last = "not attempted"
+    for i in range(attempts):
+        ok, _ = verify_imap(email, password)
+        if ok:
+            return True, f"IMAP registered after {i + 1} attempt(s)"
+        time.sleep(delay)
+    return False, last
+
 
 
 # ---------------------------------------------------------------------------
@@ -430,28 +454,31 @@ def cmd_connect(email: str | None, totp: str | None, password_file: Path | None)
     ok, detail = _drive_login(email, password, totp)
     _start_bridge()
 
-    if not ok:
-        payload = _fail("login", detail)
+    # The definitive acceptance test is whether the bridge has REGISTERED the
+    # account on IMAP — not whether the noisy CLI printed a clean success line.
+    # The CLI may only have "initiated" the login (and the daemon finalizes it
+    # in the background); poll IMAP (bounded) to confirm registration. A
+    # half-registered or unauthenticated account answers "no such user".
+    _write_state({"status": "running", "stage": "register", "started_at": _now(), "email": _redact(email)})
+    reg_ok, reg_detail = wait_imap_registered(email, password)
+    if not reg_ok:
+        payload = _fail("register", f"Bridge login initiated but the account did not register on IMAP. {reg_detail}")
         _update_integrations_state(email, connected=False)
-        _audit("proton_connect_failed", {"email": _redact(email), "stage": "login"})
-        print(json.dumps({"ok": False, "stage": "login", "detail": detail}, indent=2, ensure_ascii=False))
+        _audit("proton_connect_failed", {"email": _redact(email), "stage": "register"})
+        print(json.dumps({"ok": False, "stage": "register", "detail": detail, "reg_detail": reg_detail}, indent=2, ensure_ascii=False))
         return 1
 
-    _write_state({"status": "running", "stage": "verify", "started_at": _now(), "email": _redact(email)})
-    v_ok, v_detail = verify_imap(email, password)
-
-    stage = "state"
     _write_state({"status": "running", "stage": "state", "started_at": _now(), "email": _redact(email)})
     _write_imap_config(email, password)
     _update_integrations_state(email, connected=True)
-    _audit("proton_connect_success", {"email": _redact(email), "imap_verified": v_ok})
+    _audit("proton_connect_success", {"email": _redact(email), "imap_verified": True})
 
     final = {
-        "status": "ok" if v_ok else "partial",
-        "stage": stage,
+        "status": "ok",
+        "stage": "state",
         "login_ok": True,
-        "imap_verified": v_ok,
-        "imap_detail": _redact(v_detail),
+        "imap_verified": True,
+        "imap_detail": reg_detail,
         "email": _redact(email),
         "detail": detail[-800:],
         "finished_at": _now(),
@@ -459,7 +486,8 @@ def cmd_connect(email: str | None, totp: str | None, password_file: Path | None)
     }
     _write_state(final)
     print(json.dumps(final, indent=2, ensure_ascii=False))
-    return 0 if v_ok else 1
+    return 0
+
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -609,56 +609,91 @@
                         <div class="vault-loading">Loading vault…</div>
                     </div>
 
-                <!-- Proton Page: keyring-backed Proton Mail/Drive setup (no terminal secrets) -->
+                <!-- Proton Page: 3-step setup wizard (keyring-backed; no terminal secrets) -->
                 <div class="page" id="page-proton" role="region" aria-label="Proton — Mail &amp; Drive.">
                     <div class="page-header">
                         <h1>Proton Mail &amp; Drive</h1>
-                        <p class="page-subtitle">Connect Proton Mail via the local Bridge. Credentials are stored only in the OS keyring — never in files, logs, or this page.</p>
+                        <p class="page-subtitle">Give the substrate email agency: sign in once, store credentials in the OS keyring, and connect the local Bridge. No terminal, no plaintext.
+                        </p>
                     </div>
 
-                    <div class="proton-status" id="protonStatus">
-                        <div class="proton-loading">Checking status…</div>
+                    <!-- Step indicator -->
+                    <div class="setup-progress glass">
+                        <div class="progress-steps">
+                            <div class="progress-step active" data-step="1">
+                                <div class="step-number" aria-hidden="true">1</div>
+                                <div class="step-label">Sign in</div>
+                            </div>
+                            <div class="progress-connector" aria-hidden="true"></div>
+                            <div class="progress-step" data-step="2">
+                                <div class="step-number" aria-hidden="true">2</div>
+                                <div class="step-label">Secure store</div>
+                            </div>
+                            <div class="progress-connector" aria-hidden="true"></div>
+                            <div class="progress-step" data-step="3">
+                                <div class="step-number" aria-hidden="true">3</div>
+                                <div class="step-label">Connect &amp; verify</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="proton-layout">
-                        <!-- Action cards -->
+                    <!-- Step 1: Sign in -->
+                    <div class="setup-step" id="proton-step-1">
                         <div class="proton-card glass">
-                            <h3>Email (Mail Bridge)</h3>
-                            <p class="muted">Proton Mail Bridge runs locally and exposes IMAP/SMTP. Authenticate once so the email manager and hook can read safely.</p>
-                            <div class="proton-mail-state" id="protonMailState"></div>
+                            <h3>Step 1 — Your Proton account</h3>
+                            <p class="muted">This stores your credentials securely. They are written only to your OS keyring (SecretService) — never to files, logs, or this page.</p>
                             <div class="form-field">
                                 <label for="protonEmail">Proton email</label>
-                                <input type="text" id="protonEmail" placeholder="you@protonmail.com" autocomplete="username" value="ahronzombi@protonmail.com">
+                                <input type="email" id="protonEmail" placeholder="you@protonmail.com" autocomplete="username" value="ahronzombi@protonmail.com">
                             </div>
                             <div class="form-field">
                                 <label for="protonPassword">Password</label>
                                 <input type="password" id="protonPassword" placeholder="Proton account password" autocomplete="current-password">
                             </div>
                             <div class="form-field">
-                                <label for="protonTotp">2FA code <span class="opt">(optional — reserve for future 2FA)</span></label>
-                                <input type="password" id="protonTotp" placeholder="Leave blank unless 2FA is enabled" autocomplete="one-time-code" inputmode="numeric">
+                                <label for="protonTotp">2FA code <span class="opt">(only if you use two-factor authentication)</span></label>
+                                <input type="password" id="protonTotp" placeholder="6-digit code, if enabled" autocomplete="one-time-code" inputmode="numeric">
+                                <p class="muted opt">Reserved for future 2FA. Leave blank unless prompted by Proton after connecting.</p>
                             </div>
                             <div class="proton-actions">
-                                <button class="btn-primary" id="protonStoreBtn" onclick="panel.protonStore()">Save credentials</button>
-                                <button class="btn-primary" id="protonConnectBtn" onclick="panel.protonConnect()">Connect Bridge</button>
-                                <button class="btn-secondary" id="protonVerifyBtn" onclick="panel.protonVerify()">Verify</button>
-                                <button class="btn-secondary" id="protonTestEmailBtn" onclick="panel.protonTestEmail()">Send test email</button>
-                                <button class="btn-danger" id="protonDisconnectBtn" onclick="panel.protonDisconnect()">Disconnect</button>
+                                <button class="btn-primary" onclick="panel.protonStore()">Save securely &amp; continue</button>
                             </div>
                         </div>
+                    </div>
 
+                    <!-- Step 2: Secure store confirmed -->
+                    <div class="setup-step" id="proton-step-2" style="display:none">
                         <div class="proton-card glass">
-                            <h3>Drive (rclone)</h3>
-                            <p class="muted">Proton Drive has no public write API. Re-authorization needs the interactive rclone browser flow (OAuth + CAPTCHA) handled by you.</p>
-                            <div class="proton-drive-state" id="protonDriveState"></div>
-                        </div>
-
-                        <div class="proton-card glass">
-                            <h3>Last run</h3>
-                            <pre class="proton-log mono" id="protonLastRun">(none yet)</pre>
+                            <h3>Step 2 — Credentials stored securely</h3>
+                            <p class="muted">Your Proton sign-in is now in the OS keyring:</p>
+                            <div class="proton-mail-state" id="protonStoredState"></div>
+                            <p class="muted" style="margin-top:8px">Next, the substrate connects the local Proton Bridge (IMAP/SMTP) using stored credentials and verifies it can read your inbox.</p>
+                            <div class="proton-actions">
+                                <button class="btn-primary" id="protonConnectBtn" onclick="panel.protonConnect()">Connect Bridge</button>
+                                <button class="btn-secondary" onclick="panel.protonBackTo1()">&larr; Back</button>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Step 3: Connect + verify -->
+                    <div class="setup-step" id="proton-step-3" style="display:none">
+                        <div class="proton-card glass">
+                            <h3>Step 3 — Connect &amp; verify</h3>
+                            <p class="muted">The Bridge login runs in the background. Results below update as it completes.</p>
+                            <div class="proton-mail-state" id="protonMailState"></div>
+                            <div class="proton-drive-state" id="protonDriveState"></div>
+                            <pre class="proton-log mono" id="protonLastRun">(not started)</pre>
+                            <div class="proton-actions">
+                                <button class="btn-secondary" id="protonVerifyBtn" onclick="panel.protonVerify()">Verify now</button>
+                                <button class="btn-secondary" id="protonTestEmailBtn" onclick="panel.protonTestEmail()">Send test email</button>
+                                <button class="btn-danger" id="protonDisconnectBtn" onclick="panel.protonDisconnect()">Disconnect</button>
+                                <button class="btn-secondary" onclick="panel.protonBackTo2()">&larr; Back</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status summary (always visible at bottom) -->
+                    <div class="proton-status" id="protonStatus" style="margin-top:16px"></div>
                 </div>
 
                 <!-- Vault modal (created once; reused for store/update) -->

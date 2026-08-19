@@ -997,7 +997,9 @@ class ControlPanel {
                 <div class="vault-card__actions">
                     <button class="btn-primary btn-sm" onclick="panel.openVaultModal('${escapeHtml(s.id)}')">${secured ? 'Rotate' : 'Store secret'}</button>
                     ${secured ? `<button class="btn-secondary btn-sm" onclick="panel.confirmVaultDelete('${escapeHtml(s.id)}')">Remove</button>` : ''}
-                    ${s.login_url ? `<a class="btn-secondary btn-sm" href="${escapeHtml(s.login_url)}" target="_blank" rel="noopener">Get token</a>` : ''}
+                    ${s.id === 'proton_mail' || s.id === 'proton_drive'
+                        ? `<button class="btn-secondary btn-sm" onclick="panel.navigateTo('proton')">Open setup wizard</button>`
+                        : (s.login_url ? `<a class="btn-secondary btn-sm" href="${escapeHtml(s.login_url)}" target="_blank" rel="noopener">Get token</a>` : '')}
                 </div>
             </div>`;
         }).join('');
@@ -1125,6 +1127,10 @@ class ControlPanel {
             const data = await this.fetchAPI('/api/proton/status');
             this._protonData = data;
             this.renderProton(data);
+            // Show the step that matches current state.
+            const stored = !!(data.mail?.email_stored && data.mail?.password_stored);
+            const connected = !!(data.mail?.connected);
+            this._showProtonStep(connected ? 3 : (stored ? 2 : 1));
         } catch (e) {
             statusEl.innerHTML = `<div class="error">Failed to load Proton status: ${escapeHtml(e.message)}</div>`;
         }
@@ -1148,6 +1154,12 @@ class ControlPanel {
         if (mailState) mailState.innerHTML = m.connected
             ? `<span class="pill secured">✓ Bridge account connected (${escapeHtml(m.email || '')})</span>`
             : `<span class="pill missing">Not authenticated — click Connect to re-login via the bridge CLI.</span>`;
+        const storedState = document.getElementById('protonStoredState');
+        if (storedState) storedState.innerHTML = `
+            <span class="pill ${m.email_stored ? 'secured' : 'missing'}">Email: ${m.email_stored ? escapeHtml(m.email || 'stored') : 'not stored'}</span>
+            <span class="pill ${m.password_stored ? 'secured' : 'missing'}">Password: ${m.password_stored ? 'stored in keyring' : 'not stored'}</span>
+            <span class="pill ${m.connected ? 'secured' : 'missing'}">Bridge: ${m.connected ? 'connected' : 'not connected'}</span>
+        `;
         const driveState = document.getElementById('protonDriveState');
         if (driveState) {
             const remotes = (d.remotes || []).map(r => escapeHtml(r.name)).join(', ') || 'none';
@@ -1194,27 +1206,42 @@ class ControlPanel {
         return data;
     }
 
+    async _showProtonStep(n) {
+        for (let i = 1; i <= 3; i++) {
+            const el = document.getElementById(`proton-step-${i}`);
+            if (el) el.style.display = (i === n) ? '' : 'none';
+        }
+        document.querySelectorAll('#page-proton .setup-progress .progress-step').forEach((s, idx) => {
+            s.classList.toggle('active', (idx + 1) === n);
+        });
+    }
+
+    protonBackTo1() { this._showProtonStep(1); }
+    protonBackTo2() { this._showProtonStep(2); }
+
     async protonStore() {
         const { email, password, totp } = await this._protonStoreInputs();
         if (!email || !password) { this.showToast('Email and password are required', 'warning'); return; }
-        const btn = document.getElementById('protonStoreBtn');
+        const btn = event?.target;
         if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
         try {
             await this._protonPost('/api/proton/store', { email, password, totp });
             this._wipeProtonSecrets();
             this.showToast('Credentials stored in the OS keyring', 'success');
+            this._showProtonStep(2);
             await this.loadProton();
         } catch (e) {
             this.showToast('Failed: ' + e.message, 'error');
         } finally {
-            if (btn) { btn.disabled = false; btn.textContent = 'Save credentials'; }
+            if (btn) { btn.disabled = false; btn.textContent = 'Save securely & continue'; }
         }
     }
 
     async protonConnect() {
         const { email } = await this._protonStoreInputs();
-        if (!window.confirm('Start the Proton Bridge re-login now? This runs the local bridge CLI (no secrets are shown).')) return;
-        const btn = document.getElementById('protonConnectBtn');
+        if (!window.confirm('Start the Proton Bridge re-login now? This runs the local bridge CLI using your stored keyring credentials (no secrets are shown).')) return;
+        this._showProtonStep(3);
+        const btn = event?.target || document.getElementById('protonConnectBtn');
         if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
         try {
             await this._protonPost('/api/proton/connect', { email });
