@@ -760,7 +760,13 @@ def _origin_allowed(origin: str) -> bool:
     if not hostname:
         return False
     if hostname in _tailnet_self_hosts():
-        return parsed.scheme == "https"
+        # The tailnet interface (Tailscale/WireGuard) is a private, encrypted
+        # network reachable only by this node's own devices. When the panel is
+        # bound directly to the tailnet IP it is served over plain HTTP (no
+        # tailscale-serve TLS terminator), so allow any scheme for these
+        # trusted origins. A hostile web page's origin can never equal a
+        # Tailscale IP/DNS name, so this stays CSRF-safe.
+        return True
     return parsed.scheme == "http" and hostname in ALLOWED_PANEL_ORIGIN_HOSTS
 
 
