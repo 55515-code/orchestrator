@@ -105,6 +105,7 @@ class ControlPanel {
             'integrations': 'Integrations',
             'vault': 'Vault',
             'whatsapp-setup': 'WhatsApp Setup',
+            'proton': 'Proton Mail & Drive',
             'config': 'Configuration',
             'agents': 'Agents',
             'pipelines': 'Pipelines'
@@ -328,6 +329,9 @@ class ControlPanel {
                     break;
                 case 'vault':
                     await this.loadVault();
+                    break;
+                case 'proton':
+                    await this.loadProton();
                     break;
                 case 'config':
                     await this.loadConfig();
@@ -1109,6 +1113,182 @@ class ControlPanel {
             await this.loadVault();
         } catch (e) {
             this.showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    // --- Proton Mail & Drive setup (keyring-backed; no terminal secrets) ---
+    async loadProton() {
+        const statusEl = document.getElementById('protonStatus');
+        if (!statusEl) return;
+        statusEl.innerHTML = '<div class="proton-loading">Checking status…</div>';
+        try {
+            const data = await this.fetchAPI('/api/proton/status');
+            this._protonData = data;
+            this.renderProton(data);
+        } catch (e) {
+            statusEl.innerHTML = `<div class="error">Failed to load Proton status: ${escapeHtml(e.message)}</div>`;
+        }
+    }
+
+    renderProton(data) {
+        const statusEl = document.getElementById('protonStatus');
+        const m = data.mail || {};
+        const d = data.drive || {};
+        if (statusEl) statusEl.innerHTML = `
+            <div class="proton-status-pills">
+                <span class="vault-pill ${m.bridge_active ? 'ok' : ''}">Bridge: ${m.bridge_active ? 'running' : 'stopped'}</span>
+                <span class="vault-pill ${m.email_stored ? 'ok' : ''}">Email stored: ${m.email_stored ? 'yes' : 'no'}</span>
+                <span class="vault-pill ${m.password_stored ? 'ok' : ''}">Password stored: ${m.password_stored ? 'yes' : 'no'}</span>
+                <span class="vault-pill ${m.connected ? 'ok' : ''}">Connected: ${m.connected ? 'yes' : 'no'}</span>
+                <span class="vault-pill">IMAP: ${escapeHtml(m.imap || '')}</span>
+            </div>
+            <p class="muted" style="margin-top:8px">${escapeHtml(m.note || '')}</p>
+        `;
+        const mailState = document.getElementById('protonMailState');
+        if (mailState) mailState.innerHTML = m.connected
+            ? `<span class="pill secured">✓ Bridge account connected (${escapeHtml(m.email || '')})</span>`
+            : `<span class="pill missing">Not authenticated — click Connect to re-login via the bridge CLI.</span>`;
+        const driveState = document.getElementById('protonDriveState');
+        if (driveState) {
+            const remotes = (d.remotes || []).map(r => escapeHtml(r.name)).join(', ') || 'none';
+            driveState.innerHTML = `<span class="pill ${d.remotes && d.remotes.length ? 'secured' : 'missing'}">Drive remotes: ${remotes}</span>`;
+        }
+        const lastRun = document.getElementById('protonLastRun');
+        if (lastRun) {
+            const lr = data.last_run || {};
+            lastRun.textContent = JSON.stringify(lr, null, 2);
+        }
+    }
+
+    async _protonStoreInputs() {
+        const email = document.getElementById('protonEmail')?.value.trim() || '';
+        const password = document.getElementById('protonPassword')?.value || '';
+        const totp = document.getElementById('protonTotp')?.value || '';
+        return { email, password, totp };
+    }
+
+    async _wipeProtonSecrets() {
+        const pw = document.getElementById('protonPassword');
+        const tp = document.getElementById('protonTotp');
+        if (pw) { pw.value = ''; pw.type = 'text'; pw.value = ''; pw.type = 'password'; }
+        if (tp) { tp.value = ''; tp.type = 'text'; tp.value = ''; tp.type = 'password'; }
+    }
+
+    async _protonPost(endpoint, params) {
+        const body = new URLSearchParams();
+        if (params) {
+            for (const [k, v] of Object.entries(params)) {
+                if (v) body.append(k, v);
+            }
+        }
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': 'Bearer ' + (window.PANEL_AUTH_TOKEN || '')
+            },
+            body: body.toString()
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || data.detail || res.statusText);
+        return data;
+    }
+
+    async protonStore() {
+        const { email, password, totp } = await this._protonStoreInputs();
+        if (!email || !password) { this.showToast('Email and password are required', 'warning'); return; }
+        const btn = document.getElementById('protonStoreBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+        try {
+            await this._protonPost('/api/proton/store', { email, password, totp });
+            this._wipeProtonSecrets();
+            this.showToast('Credentials stored in the OS keyring', 'success');
+            await this.loadProton();
+        } catch (e) {
+            this.showToast('Failed: ' + e.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Save credentials'; }
+        }
+    }
+
+    async protonConnect() {
+        const { email } = await this._protonStoreInputs();
+        if (!window.confirm('Start the Proton Bridge re-login now? This runs the local bridge CLI (no secrets are shown).')) return;
+        const btn = document.getElementById('protonConnectBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+        try {
+            await this._protonPost('/api/proton/connect', { email });
+            this.showToast('Bridge login started in the background — polling result…', 'info');
+            this.pollProtonResult();
+        } catch (e) {
+            this.showToast('Failed: ' + e.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Connect Bridge'; }
+        }
+    }
+
+    async pollProtonResult() {
+        for (let i = 0; i < 40; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+            try {
+                const data = await this.fetchAPI('/api/proton/last-run');
+                const s = data.status;
+                if (s === 'ok' || s === 'partial' || s === 'failed') {
+                    this.renderProton({ ...this._protonData, last_run: data });
+                    this.showToast('Bridge connect finished: ' + s, s === 'ok' ? 'success' : 'warning');
+                    await this.loadProton();
+                    return;
+                }
+            } catch (e) { /* transient */ }
+        }
+        this.showToast('Still connecting — check the Last run panel.', 'info');
+    }
+
+    async protonVerify() {
+        if (!window.confirm('Run a one-time verification probe (IMAP login + Drive remote check)?')) return;
+        const btn = document.getElementById('protonVerifyBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+        try {
+            const res = await this._protonPost('/api/proton/verify', {});
+            const el = document.getElementById('protonLastRun');
+            if (el) el.textContent = JSON.stringify(res, null, 2);
+            this.showToast(res.ok ? 'Proton is reachable ✔' : 'Proton verification incomplete', res.ok ? 'success' : 'warning');
+            await this.loadProton();
+        } catch (e) {
+            this.showToast('Failed: ' + e.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
+        }
+    }
+
+    async protonTestEmail() {
+        if (!window.confirm('Send a test email now? (outbound — human-initiated)')) return;
+        const btn = document.getElementById('protonTestEmailBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+        try {
+            const res = await this._protonPost('/api/proton/test-email', {});
+            const el = document.getElementById('protonLastRun');
+            if (el) el.textContent = JSON.stringify(res, null, 2);
+            this.showToast(res.ok ? 'Test email sent ✔' : 'Test email failed', res.ok ? 'success' : 'error');
+        } catch (e) {
+            this.showToast('Failed: ' + e.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Send test email'; }
+        }
+    }
+
+    async protonDisconnect() {
+        if (!window.confirm('Remove Proton credentials from the keyring and mark disconnected? Services will idle without retrying.')) return;
+        const btn = document.getElementById('protonDisconnectBtn');
+        if (btn) { btn.disabled = true; }
+        try {
+            await this._protonPost('/api/proton/disconnect', {});
+            this.showToast('Proton disconnected', 'success');
+            await this.loadProton();
+        } catch (e) {
+            this.showToast('Failed: ' + e.message, 'error');
+        } finally {
+            if (btn) { btn.disabled = false; }
         }
     }
 

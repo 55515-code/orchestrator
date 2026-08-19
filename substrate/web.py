@@ -79,6 +79,7 @@ from .tooling import ensure_tool_profile, tooling_snapshot
 from .vault import delete_secret as vault_delete_secret
 from .vault import put_secret as vault_put_secret
 from .vault import vault_status
+from .proton_support import proton_status_payload, store_proton_credentials
 
 logger = logging.getLogger(__name__)
 
@@ -1207,6 +1208,108 @@ def api_vault_delete(
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return {"ok": True, **result}
+
+
+# --- Proton integration (keyring-backed; TOTP via env, never argv) ----------
+@app.get("/api/proton/status")
+def api_proton_status(request: Request) -> dict[str, Any]:
+    _ = request
+    try:
+        return proton_status_payload(RUNTIME)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+
+@app.get("/api/proton/last-run")
+def api_proton_last_run(request: Request) -> dict[str, Any]:
+    _ = request
+    try:
+        from .proton_support import _last_run_payload
+
+        return _last_run_payload(RUNTIME)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+
+@app.post("/api/proton/store")
+def api_proton_store(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    totp: str = Form(""),
+) -> dict[str, Any]:
+    """Persist Proton credentials to the OS keyring (no plaintext files).
+
+    `totp` is stored for future 2FA use but is NOT consumed now (2FA not
+    yet enabled). Password/TOTP are wiped from the DOM after submission.
+    """
+    _ = request
+    email = email.strip()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="A valid email address is required.")
+    if len(password.encode("utf-8")) > 8192:
+        raise HTTPException(status_code=400, detail="Password exceeds 8 KiB limit.")
+    try:
+        from .proton_support import store_proton_credentials
+
+        store_proton_credentials(RUNTIME, email, password)
+    except (KeyError, ValueError) as exc:
+        if isinstance(exc, KeyError):
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "email": email, "note": "Stored in OS keyring."}
+
+
+@app.post("/api/proton/connect")
+def api_proton_connect(
+    request: Request,
+    email: str = Form(""),
+    totp: str = Form(""),
+) -> dict[str, Any]:
+    """Launch the bridge login in a background thread; poll /api/proton/last-run."""
+    _ = request
+    from .proton_support import launch_proton_connect
+
+    try:
+        return launch_proton_connect(RUNTIME, email=email or None, totp=totp)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+
+@app.post("/api/proton/verify")
+def api_proton_verify(request: Request) -> dict[str, Any]:
+    """Explicit user action: single bounded IMAP + Drive probe."""
+    _ = request
+    from .proton_support import verify_proton
+
+    try:
+        return verify_proton(RUNTIME)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+
+@app.post("/api/proton/test-email")
+def api_proton_test_email(request: Request) -> dict[str, Any]:
+    """Send one verification email (human-initiated via the panel)."""
+    _ = request
+    from .proton_support import send_test_email
+
+    try:
+        return send_test_email(RUNTIME)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
+
+
+@app.post("/api/proton/disconnect")
+def api_proton_disconnect(request: Request) -> dict[str, Any]:
+    """Remove Proton secrets from keyring and mark disconnected."""
+    _ = request
+    from .proton_support import disconnect_proton
+
+    try:
+        return disconnect_proton(RUNTIME)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
 
 @app.get("/api/learning")

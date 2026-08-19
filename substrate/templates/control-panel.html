@@ -156,6 +156,12 @@
                         </svg>
                         <span>WhatsApp Setup</span>
                     </a>
+                    <a href="#proton" class="nav-item" data-page="proton" aria-label="Proton setup">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path d="M12 21s-7-4.2-7-9.3A4.4 4.4 0 0 1 9.4 8c1 0 1.6.4 2.6 1.2C13 8.4 13.6 8 14.6 8A4.4 4.4 0 0 1 19 11.7c0 5.1-7 9.3-7 9.3z"/>
+                        </svg>
+                        <span>Proton</span>
+                    </a>
                     <a href="#config" class="nav-item" data-page="config" aria-label="Configuration">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="12" cy="12" r="3"/>
@@ -602,6 +608,57 @@
                     <div class="vault-grid" id="vaultGrid">
                         <div class="vault-loading">Loading vault…</div>
                     </div>
+
+                <!-- Proton Page: keyring-backed Proton Mail/Drive setup (no terminal secrets) -->
+                <div class="page" id="page-proton" role="region" aria-label="Proton — Mail &amp; Drive.">
+                    <div class="page-header">
+                        <h1>Proton Mail &amp; Drive</h1>
+                        <p class="page-subtitle">Connect Proton Mail via the local Bridge. Credentials are stored only in the OS keyring — never in files, logs, or this page.</p>
+                    </div>
+
+                    <div class="proton-status" id="protonStatus">
+                        <div class="proton-loading">Checking status…</div>
+                    </div>
+
+                    <div class="proton-layout">
+                        <!-- Action cards -->
+                        <div class="proton-card glass">
+                            <h3>Email (Mail Bridge)</h3>
+                            <p class="muted">Proton Mail Bridge runs locally and exposes IMAP/SMTP. Authenticate once so the email manager and hook can read safely.</p>
+                            <div class="proton-mail-state" id="protonMailState"></div>
+                            <div class="form-field">
+                                <label for="protonEmail">Proton email</label>
+                                <input type="text" id="protonEmail" placeholder="you@protonmail.com" autocomplete="username" value="ahronzombi@protonmail.com">
+                            </div>
+                            <div class="form-field">
+                                <label for="protonPassword">Password</label>
+                                <input type="password" id="protonPassword" placeholder="Proton account password" autocomplete="current-password">
+                            </div>
+                            <div class="form-field">
+                                <label for="protonTotp">2FA code <span class="opt">(optional — reserve for future 2FA)</span></label>
+                                <input type="password" id="protonTotp" placeholder="Leave blank unless 2FA is enabled" autocomplete="one-time-code" inputmode="numeric">
+                            </div>
+                            <div class="proton-actions">
+                                <button class="btn-primary" id="protonStoreBtn" onclick="panel.protonStore()">Save credentials</button>
+                                <button class="btn-primary" id="protonConnectBtn" onclick="panel.protonConnect()">Connect Bridge</button>
+                                <button class="btn-secondary" id="protonVerifyBtn" onclick="panel.protonVerify()">Verify</button>
+                                <button class="btn-secondary" id="protonTestEmailBtn" onclick="panel.protonTestEmail()">Send test email</button>
+                                <button class="btn-danger" id="protonDisconnectBtn" onclick="panel.protonDisconnect()">Disconnect</button>
+                            </div>
+                        </div>
+
+                        <div class="proton-card glass">
+                            <h3>Drive (rclone)</h3>
+                            <p class="muted">Proton Drive has no public write API. Re-authorization needs the interactive rclone browser flow (OAuth + CAPTCHA) handled by you.</p>
+                            <div class="proton-drive-state" id="protonDriveState"></div>
+                        </div>
+
+                        <div class="proton-card glass">
+                            <h3>Last run</h3>
+                            <pre class="proton-log mono" id="protonLastRun">(none yet)</pre>
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Vault modal (created once; reused for store/update) -->
