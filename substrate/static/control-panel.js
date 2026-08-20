@@ -1004,17 +1004,28 @@ class ControlPanel {
             </div>`;
         }).join('');
 
-// TODO(dev-agent,vault-setup-wizard): The vault setup wizard button (navigateTo('proton')) was broken
-// by a missing </div> that nested page-proton inside page-vault. The structural fix is in
-// tests/test_control_panel_structure.py + the template, but we need deeper coverage:
-//   1. Headless browser test (Playwright/puppeteer) that clicks 'Open setup wizard' from the
-//      Vault page and asserts page-proton becomes visible (catches nesting regressions).
-//   2. Same test for 'page-whatsapp-setup', 'page-config', 'page-agents', 'page-pipelines'.
-//   3. Verify all nav-item sidebar clicks cycle through every .page div (no dead nav links).
-//   4. Test the vault modal (openVaultModal, confirmVaultDelete) round-trips in headless mode.
-//   5. Test that the Proton wizard 3-step flow completes (or at least advances) without console errors.
-// See chains/local-agent-chain.yaml for the patch generation chain; use the free kilo-auto model.
-// Tests belong in tests/test_panel_integration.py; keep all state isolated (no real keyring writes).
+// TODO(dev-agent,vault-setup-wizard): Missing headless test coverage for vault wizard navigation.
+// Action: add tests/test_panel_integration.py with these tests, following the exact
+// style of tests/test_control_panel_structure.py and tests/test_vault_api.py:
+//
+//   1. test_proton_wizard_button_is_visible_after_navigate — parse the panel
+//      HTML (served by Jinja2 from disk), call panel.navigateTo('proton'), assert
+//      page-proton has .active class and page-vault does not (catches nesting
+//      regressions like the Aug-19 missing </div> bug).
+//
+//   2. test_all_nav_pages_are_direct_children — ensure every id="page-*" div
+//      is a direct child of .page-container, no nesting inside another page.
+//
+//   3. test_vault_modal_actions — verify panel.openVaultModal(s) and
+//      panel.confirmVaultDelete(s) exist as methods and don't throw on a
+//      synthetic DOM built from a fixture.
+//
+//   4. test_put_secret_leaves_no_raw_secret_in_state — PUT via TestClient,
+//      read integrations-state.json, assert raw secret never appears.
+//
+// Use TestClient from fastapi, tmp_path fixtures, monkeypatch for the
+// encrypted-file vault backend, no keyring daemon required. Keep all state
+// isolated in tmp_path (copy integrations.yaml from repo root).
     }
 
     openVaultModal(serviceId) {
