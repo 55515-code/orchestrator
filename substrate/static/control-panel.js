@@ -1003,6 +1003,18 @@ class ControlPanel {
                 </div>
             </div>`;
         }).join('');
+
+// TODO(dev-agent,vault-setup-wizard): The vault setup wizard button (navigateTo('proton')) was broken
+// by a missing </div> that nested page-proton inside page-vault. The structural fix is in
+// tests/test_control_panel_structure.py + the template, but we need deeper coverage:
+//   1. Headless browser test (Playwright/puppeteer) that clicks 'Open setup wizard' from the
+//      Vault page and asserts page-proton becomes visible (catches nesting regressions).
+//   2. Same test for 'page-whatsapp-setup', 'page-config', 'page-agents', 'page-pipelines'.
+//   3. Verify all nav-item sidebar clicks cycle through every .page div (no dead nav links).
+//   4. Test the vault modal (openVaultModal, confirmVaultDelete) round-trips in headless mode.
+//   5. Test that the Proton wizard 3-step flow completes (or at least advances) without console errors.
+// See chains/local-agent-chain.yaml for the patch generation chain; use the free kilo-auto model.
+// Tests belong in tests/test_panel_integration.py; keep all state isolated (no real keyring writes).
     }
 
     openVaultModal(serviceId) {
