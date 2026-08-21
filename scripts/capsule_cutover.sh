@@ -87,13 +87,15 @@ PY
 }
 
 gateway_deep_health() {
-  # Authenticated deep health: returns 0 only when the gateway reports healthy.
-  local token
-  token="$(gateway_token)"
-  [[ -n "$token" ]] || return 1
-  curl -fsS -m 10 \
-    -H "Authorization: Bearer ${token}" \
-    "http://127.0.0.1:${GATEWAY_PORT}/api/health" >/dev/null 2>&1
+  # Authenticated deep health: /health is the documented liveness endpoint
+  # (returns {"ok":true,"status":"live"}); /api/health is NOT a real route.
+  # Try the CLI probe first (covers channels/sessions), fall back to /health.
+  if command -v openclaw >/dev/null 2>&1; then
+    if timeout 15 openclaw health --json >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+  curl -fsS -m 10 "http://127.0.0.1:${GATEWAY_PORT}/health" >/dev/null 2>&1
 }
 
 btrfs_snapshot() {
@@ -555,6 +557,12 @@ cutover() {
   fi
 
   # 1. Stop the native gateway (systemd).
+  #    The unit has Restart=always/RestartSec=5, so a plain `stop` is undone
+  #    within seconds and the port is re-occupied before the container can
+  #    bind. Mask first to suppress the auto-restart, then stop.
+  log "cutover: masking native gateway service (suppress Restart=always)"
+  systemctl --user mask "$NATIVE_SERVICE" >/dev/null 2>&1 \
+    || die "failed to mask native gateway service"
   log "cutover: stopping native gateway"
   if native_running; then
     systemctl --user stop "$NATIVE_SERVICE" || die "failed to stop native gateway"
@@ -609,9 +617,9 @@ cutover() {
     exit 1
   fi
 
-  # 6. Disable native service so it does not fight for the port on reboot.
-  systemctl --user disable "$NATIVE_SERVICE" >/dev/null 2>&1 || true
-  log "cutover: complete — gateway now containerized on http://127.0.0.1:${GATEWAY_PORT}"
+  # 6. Native service stays masked (prevents port fight on reboot). The
+  #    capsule container is the gateway now; rollback unmask it.
+  log "cutover: complete — gateway now containerized on http://127.0.0.1:${GATEWAY_PORT} (native service masked)"
 }
 
 # ---------------------------------------------------------------------------
@@ -622,6 +630,8 @@ restore_native() {
   podman rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
   # Restore pristine host state for the systemd gateway.
   restore_state_for_native "$STATE_DIR" >>"$LOG_FILE" 2>&1 || true
+  # Unmask first (the cutover masked it to suppress Restart=always).
+  systemctl --user unmask "$NATIVE_SERVICE" >/dev/null 2>&1 || true
   systemctl --user enable "$NATIVE_SERVICE" >/dev/null 2>&1 || true
   systemctl --user start "$NATIVE_SERVICE" >/dev/null 2>&1 || true
   sleep 3
