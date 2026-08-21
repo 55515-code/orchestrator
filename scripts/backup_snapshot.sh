@@ -11,7 +11,8 @@ LOG="$HOME/.config/restic/backup.log"
 # Use a disk-backed scratch dir: /tmp is a small tmpfs that can fill up
 # (e.g. desktop memfd pressure), which previously failed ENOSPC mid-snapshot.
 RESTIC_TMP="${RESTIC_TMP:-$HOME/.cache/restic/tmp}"
-mkdir -p "$(dirname "$RESTIC_PASSWORD_FILE")" "$(dirname "$LOG")" "$RESTIC_TMP"
+CAPSULE_BACKUP_DIR="${CAPSULE_BACKUP_DIR:-$HOME/codespace/artifacts/capsule/backups}"
+mkdir -p "$(dirname "$RESTIC_PASSWORD_FILE")" "$(dirname "$LOG")" "$RESTIC_TMP" "$CAPSULE_BACKUP_DIR"
 
 export RESTIC_REPOSITORY="$RESTIC_REPO"
 export RESTIC_PASSWORD_FILE="$RESTIC_PASSWORD_FILE"
@@ -33,6 +34,17 @@ RAW_PATHS=( \
   "$HOME/.local/share/chezmoi" \
   "$HOME/codespace/automation" "$HOME/codespace/artifacts" "$HOME/codespace/scripts" "$HOME/codespace/substrate" \
 )
+
+# OpenClaw's native backup safely captures its SQLite databases and emits a
+# manifest-bearing archive. Back up that verified archive with restic instead
+# of copying live database files directly.
+if command -v openclaw >/dev/null 2>&1 && [ -d "$HOME/.openclaw" ]; then
+  if ! openclaw backup create --verify --no-include-workspace \
+    --output "$CAPSULE_BACKUP_DIR" >> "$LOG" 2>&1; then
+    echo "[$(date -u +%FT%TZ)] OpenClaw verified backup FAILED" >> "$LOG"
+    exit 1
+  fi
+fi
 
 # Filter out missing paths to avoid restic warnings and failed snapshots.
 PATHS=()

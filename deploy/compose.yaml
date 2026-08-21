@@ -3,12 +3,21 @@ services:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
-    image: substrate-ops:latest
+    image: ${SUBSTRATE_IMAGE:-substrate-ops:local}
     ports:
-      - "8090:8090"
+      # Keep the disposable panel off the live OpenClaw Gateway's port 8090.
+      - "127.0.0.1:${SUBSTRATE_HOST_PORT:-18080}:8080"
+    environment:
+      PORT: "8080"
     volumes:
       - ../memory:/app/memory
       - ../state:/app/state
       - ../.research:/app/.research
+      - ../artifacts:/app/artifacts
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
     restart: unless-stopped
-

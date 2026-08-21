@@ -5,8 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/deploy/compose.yaml"
 SERVICE_NAME="substrate-ops"
 HOST="${HOST:-127.0.0.1}"
-PORT="${PORT:-8090}"
+PORT="${PORT:-18080}"
 BASE_URL="http://${HOST}:${PORT}"
+export SUBSTRATE_HOST_PORT="${PORT}"
 
 choose_compose() {
   if command -v docker >/dev/null 2>&1; then

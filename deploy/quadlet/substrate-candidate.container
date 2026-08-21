@@ -1,0 +1,26 @@
+# Candidate-only Quadlet. Render image/state paths before installation.
+[Unit]
+Description=Substrate control-plane candidate
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=${SUBSTRATE_IMAGE_DIGEST}
+ContainerName=substrate-candidate
+Environment=PORT=8080
+Volume=${WORKSPACE_DIR}:/app/workspace:ro
+Volume=${SUBSTRATE_STATE_DIR}:/app/state:rw
+Volume=${MEMORY_DIR}:/app/memory:rw
+Volume=${ARTIFACTS_DIR}:/app/artifacts:rw
+PublishPort=127.0.0.1:18080:8080
+UserNS=keep-id
+DropCapability=all
+NoNewPrivileges=true
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
+

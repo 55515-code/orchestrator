@@ -899,6 +899,29 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Validate Btrfs recommendations against the tooling stack.",
     )
 
+    capsule = subparsers.add_parser(
+        "capsule",
+        help="Probe and plan the portable OpenClaw/Substrate Gateway Capsule.",
+    )
+    capsule_sub = capsule.add_subparsers(dest="capsule_command", required=True)
+    capsule_sub.add_parser(
+        "probe",
+        help="Inspect prerequisites, ports, state paths, and versions without mutation.",
+    )
+    capsule_sub.add_parser(
+        "plan",
+        help="Generate a staged, non-mutating disposable-capsule plan.",
+    )
+    capsule_manifest = capsule_sub.add_parser(
+        "manifest",
+        help="Generate a release manifest (stdout unless --output is supplied).",
+    )
+    capsule_manifest.add_argument(
+        "--output",
+        type=Path,
+        help="Optional JSON output path. Parent directories are created.",
+    )
+
     storage_maintenance = subparsers.add_parser(
         "storage-maintenance",
         help="Run dedup + defrag maintenance (dry-run by default; --apply to run).",
@@ -1763,6 +1786,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         report = compatibility_report(runtime.root)
         print(json.dumps(report, indent=2, ensure_ascii=False))
         return 1 if not report["compatible"] else 0
+
+    if args.command == "capsule":
+        from .capsule import plan_capsule, probe_capsule, release_manifest, write_manifest
+
+        if args.capsule_command == "probe":
+            result = probe_capsule(runtime.root)
+        elif args.capsule_command == "plan":
+            result = plan_capsule(runtime.root)
+        elif args.output:
+            result = write_manifest(runtime.root, args.output)
+        else:
+            result = release_manifest(runtime.root)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
 
     if args.command == "storage-maintenance":
         from .btrfs import run_maintenance

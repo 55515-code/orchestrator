@@ -1,0 +1,27 @@
+# Candidate-only Quadlet. Render image/state paths before installation.
+[Unit]
+Description=OpenClaw Gateway Capsule candidate
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=${OPENCLAW_IMAGE_DIGEST}
+ContainerName=openclaw-candidate
+EnvironmentFile=${OPENCLAW_STATE_DIR}/.env
+Environment=HOME=/home/node
+Environment=OPENCLAW_NO_RESPAWN=1
+Volume=${OPENCLAW_STATE_DIR}:/home/node/.openclaw:rw
+Volume=${WORKSPACE_DIR}:/home/node/.openclaw/workspace:rw
+PublishPort=127.0.0.1:18090:18789
+UserNS=keep-id
+DropCapability=all
+NoNewPrivileges=true
+Exec=openclaw gateway --bind lan --port 18789
+
+[Service]
+Restart=on-failure
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
+
