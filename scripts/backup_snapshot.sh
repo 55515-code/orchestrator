@@ -12,7 +12,6 @@ LOG="$HOME/.config/restic/backup.log"
 # (e.g. desktop memfd pressure), which previously failed ENOSPC mid-snapshot.
 RESTIC_TMP="${RESTIC_TMP:-$HOME/.cache/restic/tmp}"
 CAPSULE_BACKUP_DIR="${CAPSULE_BACKUP_DIR:-$HOME/codespace/artifacts/capsule/backups}"
-mkdir -p "$(dirname "$RESTIC_PASSWORD_FILE")" "$(dirname "$LOG")" "$RESTIC_TMP" "$CAPSULE_BACKUP_DIR"
 
 export RESTIC_REPOSITORY="$RESTIC_REPO"
 export RESTIC_PASSWORD_FILE="$RESTIC_PASSWORD_FILE"
@@ -22,9 +21,18 @@ if [ "${1:-}" = "--restore-list" ]; then
   restic snapshots 2>&1 | tail -15
   exit 0
 fi
+
+mkdir -p "$(dirname "$RESTIC_PASSWORD_FILE")" "$(dirname "$LOG")" "$RESTIC_TMP" "$CAPSULE_BACKUP_DIR"
 if [ "${1:-}" = "--init" ]; then
   restic init 2>&1 | tail -4
   exit $?
+fi
+if [ "${1:-}" = "--dry-run" ]; then
+  printf '%s\n' \
+    "OpenClaw: verified native backup -> $CAPSULE_BACKUP_DIR" \
+    "Restic repository: $RESTIC_REPO" \
+    "Mode: dry-run (no backup or prune executed)"
+  exit 0
 fi
 
 # Critical, small, portable set — NOT the whole home (avoid OS images/binaries).

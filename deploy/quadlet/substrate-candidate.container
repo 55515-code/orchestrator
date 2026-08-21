@@ -8,12 +8,13 @@ Wants=network-online.target
 Image=${SUBSTRATE_IMAGE_DIGEST}
 ContainerName=substrate-candidate
 Environment=PORT=8080
-Volume=${WORKSPACE_DIR}:/app/workspace:ro
 Volume=${SUBSTRATE_STATE_DIR}:/app/state:rw
 Volume=${MEMORY_DIR}:/app/memory:rw
 Volume=${ARTIFACTS_DIR}:/app/artifacts:rw
 PublishPort=127.0.0.1:18080:8080
 UserNS=keep-id
+User=1000
+Group=1000
 DropCapability=all
 NoNewPrivileges=true
 
@@ -23,4 +24,3 @@ TimeoutStartSec=300
 
 [Install]
 WantedBy=default.target
-

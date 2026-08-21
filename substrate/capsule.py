@@ -93,14 +93,15 @@ def probe_capsule(root: Path) -> dict[str, Any]:
         "artifacts": root / "artifacts",
     }
     current_gateway_port = 8090
+    filesystem_type = _filesystem_type(root)
     return {
         "schema_version": CAPSULE_SCHEMA_VERSION,
         "generated_at": datetime.now(UTC).isoformat(),
         "mode": "read-only",
         "root": str(root),
         "filesystem": {
-            "type": _filesystem_type(root),
-            "btrfs": _filesystem_type(root) == "btrfs",
+            "type": filesystem_type,
+            "btrfs": filesystem_type == "btrfs",
         },
         "tools": {name: {"available": path is not None, "path": path} for name, path in tools.items()},
         "versions": {
