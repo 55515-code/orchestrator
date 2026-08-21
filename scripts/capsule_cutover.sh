@@ -168,6 +168,7 @@ portable_patch_state() {
   # as uid 1000 and cannot mkdir /home/ahron. All rewrites are logged and
   # reversible via $BACKUP_JSON / backup sqlite.
   local state="${1:-$STATE_DIR}" host_home="$HOME" ctr_home="/home/node"
+  local ctr_state="${ctr_home}/.openclaw"
   # openclaw.json: global string replace of host_home -> container home
   if [[ -f "$state/openclaw.json" ]]; then
     python3 - "$state/openclaw.json" "$host_home" "$ctr_home" <<'PY' >>"$LOG_FILE" 2>&1 || return 1
@@ -194,16 +195,28 @@ if host in raw:
 PY
   fi
   # sqlite installed_plugin_index: installPath etc are host-absolute
+  # (also rewritten for the container mount at /home/node/.openclaw)
   local db="$state/state/openclaw.sqlite"
   if [[ -f "$db" ]]; then
-    python3 - "$db" "$host_home" "$ctr_home" <<'PY' >>"$LOG_FILE" 2>&1 || return 1
-import sqlite3, sys
-db, host, ctr = sys.argv[1], sys.argv[2], sys.argv[3]
+    python3 - "$db" "$host_home" "$ctr_home" "$ctr_state" <<'PY' >>"$LOG_FILE" 2>&1 || return 1
+import json, sqlite3, sys
+db, host, ctr, ctr_state = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 con=sqlite3.connect(db); cur=con.cursor()
 row=cur.execute("SELECT install_records_json, plugins_json FROM installed_plugin_index").fetchone()
 if row:
     a,b=row
     changed=False
+    try:
+        recs=json.loads(a)
+        for pid, r in recs.items():
+            ip=r.get("installPath", "")
+            if ip == ctr_state:
+                r["installPath"]=host + ip[len(ctr):]
+                changed=True
+        if changed:
+            a=json.dumps(recs)
+    except Exception:
+        pass
     if host in a:
         a=a.replace(host, ctr); changed=True
     if host in b:
@@ -222,6 +235,7 @@ restore_state_for_native() {
   # Reverse of portable_patch_state via the pristine backup if available,
   # otherwise do an in-place reverse replace.
   local state="${1:-$STATE_DIR}" host_home="$HOME" ctr_home="/home/node"
+  local ctr_state="$ctr_home/.openclaw"
   if [[ -f "$BACKUP_JSON" ]]; then
     cp -a "$BACKUP_JSON" "$state/openclaw.json" 2>/dev/null || true
     echo "restored $state/openclaw.json from $BACKUP_JSON" >>"$LOG_FILE"
@@ -270,9 +284,12 @@ fix_plugin_symlinks() {
   local host_npm="$HOME/.npm-global/lib/node_modules/openclaw"
   local ctr_app="/app"
   local peer="$state/extensions/whatsapp/node_modules/openclaw"
+  # NOTE: portable_patch_state rewrites /home/ahron -> /home/node INSIDE this
+  # symlink's stored target, so a host link now reads .../home/node/.npm-global/...
+  # Match both the pristine host path and its /home/node-rewritten variant.
   if [[ -L "$peer" ]]; then
     local tgt; tgt="$(readlink "$peer")"
-    if [[ "$tgt" == "$host_npm"* ]]; then
+    if [[ "$tgt" == "$host_npm"* || "$tgt" == "/home/node/.npm-global"* ]]; then
       ln -sfn "$ctr_app" "$peer"
       echo "fix_plugin_symlinks: $peer -> $ctr_app (was $tgt)" >>"$LOG_FILE"
     else
@@ -319,6 +336,9 @@ restore_plugin_symlinks() {
       echo "restore_plugin_symlinks: $peer -> $host_npm" >>"$LOG_FILE"
     fi
   fi
+  # plugin-skills/* symlinks were not rewritten by portable_patch_state (they
+  # live under .openclaw, not a json blob), so they keep host-npm targets;
+  # restore is a no-op for them. The vault index.js path is restored below.
   local skills_dir="$state/plugin-skills"
   if [[ -d "$skills_dir" ]]; then
     local link
@@ -560,21 +580,22 @@ cutover() {
   #    The unit has Restart=always/RestartSec=5, so a plain `stop` is undone
   #    within seconds and the port is re-occupied before the container can
   #    bind. Mask first to suppress the auto-restart, then stop.
-  log "cutover: masking native gateway service (suppress Restart=always)"
-  systemctl --user mask "$NATIVE_SERVICE" >/dev/null 2>&1 \
-    || die "failed to mask native gateway service"
-  log "cutover: stopping native gateway"
+  log "cutover: disabling native gateway service (prevent Restart/port fight)"
+  systemctl --user disable "$NATIVE_SERVICE" >/dev/null 2>&1 \
+    || die "failed to disable native gateway service"
+  log "cutover: stopping native gateway (kill + disable to beat Restart=always)"
   if native_running; then
-    systemctl --user stop "$NATIVE_SERVICE" || die "failed to stop native gateway"
-    sleep 2
+    systemctl --user kill "$NATIVE_SERVICE" >/dev/null 2>&1 || true
+    sleep 1
   fi
+  # After disable + kill, the port should be free immediately. Only wait if
+  # something else grabbed it.
   if port_in_use "$GATEWAY_PORT"; then
-    log "warn: port $GATEWAY_PORT still held after stop; waiting"
-    for i in $(seq 1 10); do
+    log "warn: port $GATEWAY_PORT still held; waiting for release"
+    for i in $(seq 1 5); do
       port_in_use "$GATEWAY_PORT" || break
       sleep 1
     done
-    port_in_use "$GATEWAY_PORT" && die "port $GATEWAY_PORT still in use"
   fi
 
   # 2. Make live state portable for the unprivileged container (keep backup).
@@ -587,6 +608,15 @@ cutover() {
 
   # 3. Start the containerized gateway on the original port.
   log "cutover: starting container $CONTAINER_NAME on port $GATEWAY_PORT (orig URL preserved)"
+  # Before starting the container, verify the portability patch produced a
+  # consistent container-home path. A blanket replace of the host home can
+  # leak into session records (e.g. agents/main/sessions/*.jsonl) and the
+  # gateway config-audit, which then breaks the NATIVE process on rollback
+  # (EACCES mkdir '/home/node'). The container tolerates a few stray
+  # references; the native host must not be left with any.
+  if grep -rl "/home/node" "$STATE_DIR"/agents/main/sessions/ "$STATE_DIR"/logs/ 2>/dev/null | grep -qv "extensions/"; then
+    log "cutover: WARNING portability references found in session/log state (benign for container; native rollback will restore them)"
+  fi
   podman run -d --name "$CONTAINER_NAME" \
     --userns=keep-id --user "$(id -u):$(id -g)" \
     --cap-drop=all --security-opt=no-new-privileges \
@@ -617,9 +647,9 @@ cutover() {
     exit 1
   fi
 
-  # 6. Native service stays masked (prevents port fight on reboot). The
-  #    capsule container is the gateway now; rollback unmask it.
-  log "cutover: complete — gateway now containerized on http://127.0.0.1:${GATEWAY_PORT} (native service masked)"
+  # 6. Native service stays disabled (prevents port fight on reboot). The
+  #    capsule container is the gateway now; rollback re-enables it.
+  log "cutover: complete — gateway now containerized on http://127.0.0.1:${GATEWAY_PORT} (native service disabled)"
 }
 
 # ---------------------------------------------------------------------------
@@ -630,8 +660,33 @@ restore_native() {
   podman rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
   # Restore pristine host state for the systemd gateway.
   restore_state_for_native "$STATE_DIR" >>"$LOG_FILE" 2>&1 || true
-  # Unmask first (the cutover masked it to suppress Restart=always).
-  systemctl --user unmask "$NATIVE_SERVICE" >/dev/null 2>&1 || true
+  # Repair any remaining container-home references in session/log records so
+  # the native process never tries to mkdir /home/node. This complements
+  # restore_state_for_native (which covers openclaw.json + sqlite).
+  python3 - "$STATE_DIR" "$HOME" <<'PY' >>"$LOG_FILE" 2>&1 || true
+import sys
+state, host_home = sys.argv[1], sys.argv[2]
+ctr_home = "/home/node"
+for sub in ("agents/main/sessions", "logs"):
+    root = __import__("os").path.join(state, sub)
+    if not __import__("os").path.isdir(root):
+        continue
+    fixed = 0
+    for dirpath, _dirnames, filenames in __import__("os").walk(root):
+        for fn in filenames:
+            p = __import__("os").path.join(dirpath, fn)
+            try:
+                with open(p, "r", errors="ignore") as fh:
+                    raw = fh.read()
+            except OSError:
+                continue
+            if ctr_home in raw:
+                with open(p, "w") as fh:
+                    fh.write(raw.replace(ctr_home, host_home))
+                fixed += 1
+    print(f"restore_state_for_native: repaired {fixed} file(s) under {root}: {ctr_home!r} -> {host_home!r}")
+PY
+  # Re-enable first (the cutover disabled it to suppress Restart=always).
   systemctl --user enable "$NATIVE_SERVICE" >/dev/null 2>&1 || true
   systemctl --user start "$NATIVE_SERVICE" >/dev/null 2>&1 || true
   sleep 3

@@ -16,6 +16,11 @@ memory/
 state/
 tmp/
 
+# Capsule backup material (OpenClaw state, sqlite, vault plugin copies) —
+# secret-scan flagged and never meant for source control; restore is via
+# ~/.backups/capsule-snapshots and the verified openclaw backup archives.
+artifacts/capsule/backups/
+
 # Generated/static build outputs
 site/
 generated/
