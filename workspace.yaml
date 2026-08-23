@@ -41,6 +41,24 @@ policy:
     - concepts2code.com
     - dialconnection
     - dialconnection.com
+  # Framework-first development: prefer maintained open-source frameworks
+  # (LangChain/smolagents for agents, FastAPI for APIs, Chart.js for viz)
+  # over custom one-off implementations.
+  framework_first_development: true
+  default_agent_framework: smolagents
+  default_orchestration_framework: langgraph
+  default_web_framework: fastapi
+  default_frontend_framework: vanilla_js_with_established_libs
+  # UX accessibility: all human-facing tooling must be reachable by hand
+  # (mouse/touch, min 44px targets) and eye (high contrast, clear hierarchy,
+  # screen-reader ARIA, logical ordering).
+  ux_accessibility_first: true
+  ux_min_touch_target_px: 44
+  ux_screen_reader_support: true
+  # OpenClaw Gateway substrate is the foundational baseline for all related
+  # development and alignment efforts.
+  openclaw_gateway_baseline: true
+  openclaw_gateway_primary_ui: true
 
 discovery:
   enabled: true

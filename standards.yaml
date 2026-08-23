@@ -19,266 +19,88 @@ principles:
     text: Keep the base package lean and assemble optional tooling on first use.
   - id: lifecycle_enforced
     text: Apply the 3x3 lifecycle in order (local -> hosted_dev -> production, and research -> development -> testing).
+  - id: framework_first
+    text: Default to preexisting, established open-source frameworks (LangChain/smolagents for agents, FastAPI for APIs, Chart.js for visualization) before writing custom parsers, agents, or UI from scratch.
+  - id: openclaw_gateway_baseline
+    text: Treat the OpenClaw Gateway substrate (ops panel, webhooks, iPhone panel, chat embeddings) as the foundational baseline for all related development and alignment efforts.
+  - id: ux_hand_eye_accessible
+    text: All human-facing interfaces must be reachable by hand (min 44px touch targets, logical ordering) and eye (high contrast, clear hierarchy, ARIA screen-reader support, focus-visible states).
+  - id: ux_iterative_evolution
+    text: Build interfaces that are logically ordered, easy to produce, and designed to evolve iteratively alongside user needs and product growth.
 
 tracks:
-  - id: device_inspired_ops
-    name: Device-Inspired Operations
-    description: Rubber Ducky and Flipper-style workflows adapted to software orchestration patterns.
-    tags: [ducky, flipper, payloads, automation]
+  - id: openclaw_gateway_baseline
+    name: OpenClaw Gateway Baseline
+    description: The OpenClaw Gateway substrate and its included components are the foundational baseline for all related development. This track covers the ops panel (FastAPI + Jinja2), webhook gateway (WhatsApp, etc.), iPhone panel extensions, embedded chat, dashboard, pipelines, and security hardening.
+    tags: [openclaw, gateway, fastapi, jinja2, panel, webhooks, baseline]
     standards:
-      - id: duckyscript3
-        name: DuckyScript 3.0
-        format: DuckyScript source compiled to payload binaries.
-        source_url: https://docs.hak5.org/hak5-usb-rubber-ducky/usb-rubber-ducky-by-hak5/
-        repo_url: https://github.com/hak5/usbrubberducky-payloads
-        maintained_by: Hak5 + community payload contributors
-        notes: Use official DuckyScript compatibility and payload conventions as baseline behavior.
-      - id: flipper_badusb
-        name: Flipper BadUSB Script Format
-        format: Text script format with delay/default-delay and keycode controls.
-        source_url: https://developer.flipper.net/flipperzero/doxygen/badusb_file_format.html
-        repo_url: https://github.com/flipperdevices/flipperzero-firmware
-        maintained_by: Flipper Devices
-        notes: Keep parser/adapter compatibility with documented BadUSB directives.
-      - id: flipper_subghz
-        name: Flipper Sub-GHz Key File Format
-        format: Structured key file format for captured/saved sub-GHz data.
-        source_url: https://developer.flipper.net/flipperzero/doxygen/subghz_file_format.html
-        repo_url: https://github.com/flipperdevices/flipperzero-firmware
-        maintained_by: Flipper Devices
-        notes: Reuse official file field names when modeling RF metadata in workflows.
+      - id: openclaw_gateway_panel
+        name: OpenClaw Gateway Ops Panel
+        format: FastAPI + Jinja2 + vanilla JS control panel served on 127.0.0.1:8090.
+        source_url: https://github.com/55515-code/orchestrator
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: This is the primary ops UI. All new development that affects operator workflows must align with the panel's existing routes, security model (origin/host checks, bearer auth, rate limiting), and UX patterns.
+      - id: openclaw_gateway_security
+        name: OpenClaw Gateway Security Hardening
+        format: Origin/host CSRF + DNS-rebinding checks, HMAC-protected webhook exemptions, bearer-token auth, per-IP rate limiting, XSS hardening, shell-injection hardening.
+        source_url: https://github.com/55515-code/orchestrator/blob/main/substrate/web.py
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: Reuse the existing security middleware in substrate/web.py for all new state-changing endpoints. Do not bypass origin/host checks or bearer auth for new routes.
+      - id: openclaw_gateway_chat
+        name: OpenClaw Gateway Embedded Chat
+        format: Kilo chat agent embedded under the panel's own /api/* paths via ChatbotApp.
+        source_url: https://github.com/55515-code/orchestrator/blob/main/substrate/chatbot/
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: New automation surfaces should hook into the same task queue so the browser UI can run real autonomous sessions.
+      - id: openclaw_gateway_iphone
+        name: OpenClaw Gateway iPhone Panel
+        format: iPhone webapp panel extensions (automations + live system stream) mounted under the same FastAPI app.
+        source_url: https://github.com/55515-code/orchestrator/blob/main/substrate/iphone_panel.py
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: Additive extensions only. Reuse the existing router inclusion pattern (app.include_router(iphone_panel_router)).
 
-  - id: hak5_device_ecosystem
-    name: Hak5 Device Ecosystem and Comparable Open-Source Security Tooling
-    description: Open standards and payload formats for the Hak5 hardware security ecosystem (USB Rubber Ducky, Bash Bunny, WiFi Pineapple, Packet Squirrel, Key Croc, Shark Jack, LAN Turtle, O.MG) and comparable open-source penetration-testing, wireless-auditing, SDR, RFID, and HID projects.
-    tags: [hak5, duckyscript, badusb, payloads, hardware, wifi, sdr, rfid, hid, pentesting, wireless, openwrt]
+  - id: web_ux_accessibility
+    name: Web UX and Accessibility
+    description: Standards for intuitive hand and eye interaction with operator tooling. All interfaces must be logically ordered, easy to produce, and designed to evolve iteratively.
+    tags: [ux, accessibility, wcag, aria, touch, keyboard, screen-reader, fastapi, jinja2, chartjs]
     standards:
-      - id: duckyscript3
-        name: DuckyScript 3.0
-        format: Text scripting language compiled to HID keystroke injection binaries.
-        source_url: https://docs.hak5.org/hak5-usb-rubber-ducky/usb-rubber-ducky-by-hak5/
-        repo_url: https://github.com/hak5/usbrubberducky-payloads
-        maintained_by: Hak5 + community payload contributors
-        notes: Use official DuckyScript compatibility and payload conventions as baseline behavior. v3.0 adds functions, IF/ELSE, WHILE loops, extensions, keystroke reflection, jitter, randomization, OS detection, and hardware ID cloning.
-      - id: bash_bunny_payloads
-        name: Bash Bunny Payload Format
-        format: Bash scripts with DuckyScript HID phases and switch-slot directory conventions.
-        source_url: https://docs.hak5.org/hak5-bash-bunny/
-        repo_url: https://github.com/hak5/bashbunny-payloads
-        maintained_by: Hak5 + community
-        notes: Treat switch1/switch2 directory layout and LED indicator conventions as canonical for multi-vector HID/network/storage payloads.
-      - id: wifi_pineapple_pager_payloads
-        name: WiFi Pineapple Pager Payload Format
-        format: Bash/ash shell scripts with OpenWrt opkg dependencies, DuckyScript UI helpers, and payload.sh entry points.
-        source_url: https://docs.hak5.org/wifi-pineapple-pager/
-        repo_url: https://github.com/hak5/wifipineapplepager-payloads
-        maintained_by: Hak5 + community
-        notes: Reuse official payload conventions (recon/, attack/, capture/, exfiltration/, stealth/, utility/) and DuckyScript UI functions (PROMPT, CONFIRMATION_DIALOG, SPINNER_START, NUMBER_PICKER).
-      - id: shark_jack_payloads
-        name: Shark Jack Payload Format
-        format: Shell scripts for Ethernet hotplug and network payload automation.
-        source_url: https://docs.hak5.org/shark-jack/
-        repo_url: https://github.com/hak5/sharkjack-payloads
-        maintained_by: Hak5 + community
-        notes: Keep compatibility with hotplug-triggered execution and shark-files overlay conventions.
-      - id: packet_squirrel_payloads
-        name: Packet Squirrel Payload Format
-        format: Shell scripts for inline network tap and VPN tunneling payloads.
-        source_url: https://docs.hak5.org/packet-squirrel/
-        repo_url: https://github.com/hak5/packetsquirrel-payloads
-        maintained_by: Hak5 + community
-        notes: Reuse MITM, DNS spoofing, and packet-capture payload patterns for network forensics workflows.
-      - id: key_croc_payloads
-        name: Key Croc Payload Format
-        format: Shell scripts for keystroke logging, pattern matching, and HID injection.
-        source_url: https://docs.hak5.org/key-croc/
-        repo_url: https://github.com/hak5/keycroc-payloads
-        maintained_by: Hak5 + community
-        notes: Align trigger-based payload design and word-detection patterns with official conventions.
-      - id: omg_payloads
-        name: O.MG Payload Format
-        format: HTML/JavaScript web-interface payloads for the O.MG cable and Mischief Gadgets line.
-        source_url: https://docs.hak5.org/omg/
-        repo_url: https://github.com/hak5/omg-payloads
-        maintained_by: Hak5 + community
-        notes: Treat web-based payload interfaces and stealth deployment patterns as baseline for covert physical-access tooling.
-      - id: flipper_zero_badusb
-        name: Flipper Zero BadUSB Script Format
-        format: Extended DuckyScript text format with custom USB IDs, ALT-codes, and device-specific controls.
-        source_url: https://developer.flipper.net/flipperzero/doxygen/badusb_file_format.html
-        repo_url: https://github.com/flipperdevices/flipperzero-firmware
-        maintained_by: Flipper Devices
-        notes: Keep parser/adapter compatibility with documented BadUSB directives and extended Flipper syntax.
-      - id: proxmark3
-        name: Proxmark3
-        format: Open-source RFID/NFC sniffing, cloning, and simulation toolchain.
-        source_url: https://github.com/Proxmark/proxmark3
-        repo_url: https://github.com/Proxmark/proxmark3
-        maintained_by: Proxmark community
-        notes: Prefer Proxmark3 for low-frequency/high-frequency RFID analysis before proprietary hardware tools.
-      - id: hackrf
-        name: HackRF (HackRF One / Portapack)
-        format: Open-source software-defined radio (1 MHz–6 GHz) for signal capture, analysis, and transmission.
-        source_url: https://github.com/greatscottgadgets/hackrf
-        repo_url: https://github.com/greatscottgadgets/hackrf
-        maintained_by: Great Scott Gadgets
-        notes: Use HackRF as the baseline SDR tool for RF auditing, sub-GHz analysis, and signal replay workflows.
-      - id: p4wnp1
-        name: P4wnP1 ALOA
-        format: Raspberry Pi Zero USB attack platform with HID backdoor, network exfiltration, and trigger-based payloads.
-        source_url: https://github.com/mame82/P4wnP1
-        repo_url: https://github.com/mame82/P4wnP1
-        maintained_by: mame82 + community
-        notes: Treat as an open-hardware alternative to USB Rubber Ducky / Bash Bunny for Linux-powered HID and network attacks.
-      - id: pwnagotchi
-        name: Pwnagotchi
-        format: AI-based WiFi cracking and handshake collection tool running on Raspberry Pi.
-        source_url: https://github.com/evilsocket/pwnagotchi
-        repo_url: https://github.com/evilsocket/pwnagotchi
-        maintained_by: evilsocket + community
-        notes: Reuse Pwnagotchi deauth/PMKID capture patterns as automated WiFi audit baselines comparable to Pineapple modules.
-      - id: aircrack_ng
-        name: Aircrack-ng
-        format: Complete WiFi audit suite (airmon-ng, airodump-ng, aireplay-ng, aircrack-ng) for monitor mode, deauth, and WEP/WPA cracking.
-        source_url: https://github.com/aircrack-ng/aircrack-ng
-        repo_url: https://github.com/aircrack-ng/aircrack-ng
-        maintained_by: Aircrack-ng team
-        notes: Canonical open-source WiFi pentesting toolkit; align Pineapple/Shark Jack payloads with aircrack-ng CLI conventions.
-      - id: bettercap
-        name: Bettercap
-        format: MITM framework for WiFi, BLE, Ethernet, HID, and network reconnaissance with event-driven scripting.
-        source_url: https://github.com/bettercap/bettercap
-        repo_url: https://github.com/bettercap/bettercap
-        maintained_by: bettercap team
-        notes: Prefer bettercap for programmatic MITM, BLE, and HID attacks when a Linux host is available.
-      - id: kismet
-        name: Kismet
-        format: Wireless detector, sniffer, and WIDS supporting WiFi, Bluetooth, BLE, SDR, and drone detection.
-        source_url: https://github.com/kismetwireless/kismet
-        repo_url: https://github.com/kismetwireless/kismet
-        maintained_by: Kismet team
-        notes: Use Kismet for passive wireless reconnaissance and drone detection alongside active Pineapple/Shark Jack scans.
-      - id: openwrt_security_modules
-        name: OpenWrt Security and Pentesting Modules
-        format: opkg-packaged OpenWrt modules for wireless auditing, MITM, and network forensics.
-        source_url: https://github.com/hak5/wifipineapple-openwrt
-        repo_url: https://github.com/hak5/wifipineapple-openwrt
-        maintained_by: Hak5 + OpenWrt community
-        notes: Align Pineapple Pager/MK7 module packaging with upstream OpenWrt build and dependency conventions.
-
-  - id: distro_baselines
-    name: Distro Baselines
-    description: Kali/Parrot packaging and maintenance norms for trusted offensive-security toolchains.
-    tags: [kali, parrot, packaging, maintenance]
-    standards:
-      - id: kali_metapackages
-        name: Kali Metapackages
-        format: Debian metapackages that bundle tool categories.
-        source_url: https://www.kali.org/docs/general-use/metapackages/
-        repo_url: https://gitlab.com/kalilinux/packages/kali-meta
-        maintained_by: Kali Linux
-        notes: Prefer metapackage-based composition over ad-hoc tool lists.
-      - id: kali_tool_lifecycle
-        name: Kali Tool Curation Lifecycle
-        format: Documented add/remove criteria for tools.
-        source_url: https://www.kali.org/docs/tools/removed-tools/
-        repo_url: https://www.kali.org/docs/tools/submitting-tools/
-        maintained_by: Kali Linux
-        notes: Mirror this model by pruning stale integrations and requiring maintenance signals.
-      - id: parrot_signed_mirrors
-        name: Parrot Signed Mirror Distribution
-        format: Mirror network with centralized digital signature checks.
-        source_url: https://www.parrotsec.org/docs/mirrors/mirrors-list/
-        repo_url: https://github.com/ParrotSec
-        maintained_by: Parrot Security
-        notes: Align remote package intake with signed and centrally controlled update flows.
-
-  - id: threat_research_formats
-    name: Threat Research Formats
-    description: Widely used open standards for adversary mapping, atomic tests, detections, and templates.
-    tags: [mitre, detection, templates, research]
-    standards:
-      - id: mitre_attack
-        name: MITRE ATT&CK
-        format: Structured adversary knowledge base and mappings.
-        source_url: https://attack.mitre.org/resources/
-        repo_url: https://github.com/mitre-attack
-        maintained_by: MITRE ATT&CK
-        notes: Map automation intents to ATT&CK technique references for traceability.
-      - id: atomic_red_team
-        name: Atomic Red Team
-        format: Atomic test definitions mapped to ATT&CK.
-        source_url: https://github.com/redcanaryco/atomic-red-team
-        repo_url: https://github.com/redcanaryco/atomic-red-team
-        maintained_by: Red Canary + community
-        notes: Reuse existing atomic tests for validation before writing custom test harnesses.
-      - id: sigma_rules
-        name: Sigma Detection Rule Format
-        format: YAML-based generic detection rule schema.
-        source_url: https://sigmahq.io/
-        repo_url: https://github.com/SigmaHQ/sigma
-        maintained_by: SigmaHQ
-        notes: Keep detection content in Sigma-compatible YAML to stay backend-agnostic.
-      - id: nuclei_templates
-        name: Nuclei Template Format
-        format: YAML templates for repeatable security checks.
-        source_url: https://docs.projectdiscovery.io/templates/introduction
-        repo_url: https://github.com/projectdiscovery/nuclei-templates
-        maintained_by: ProjectDiscovery + community
-        notes: Prefer maintained template sets for checks rather than one-off scanner scripts.
-
-  - id: android_security_ops
-    name: Android Security Ops
-    description: Open-source Android tooling standards for authorized reverse engineering and app security testing.
-    tags: [android, mobile, reverse-engineering]
-    standards:
-      - id: android_platform_tools
-        name: Android SDK Platform-Tools
-        format: Official adb/fastboot host tooling distribution.
-        source_url: https://developer.android.com/tools/releases/platform-tools
-        repo_url: https://developer.android.com/tools/releases/platform-tools
-        maintained_by: Android Developers
-        notes: Treat platform-tools as the baseline transport layer for Android workflows.
-      - id: apktool
-        name: Apktool
-        format: APK decode/build workflow for Android resources and smali.
-        source_url: https://apktool.org/
-        repo_url: https://github.com/iBotPeaches/Apktool
-        maintained_by: Apktool project
-        notes: Use canonical Apktool decode/build paths before custom APK unpackers.
-      - id: jadx
-        name: JADX
-        format: Dex to Java decompilation and interactive code review.
-        source_url: https://github.com/skylot/jadx
-        repo_url: https://github.com/skylot/jadx
-        maintained_by: JADX maintainers
-        notes: Reuse JADX output conventions when generating static-analysis artifacts.
-      - id: mobsf
-        name: Mobile Security Framework (MobSF)
-        format: Automated mobile app static/dynamic analysis framework.
-        source_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
-        repo_url: https://github.com/MobSF/Mobile-Security-Framework-MobSF
-        maintained_by: MobSF maintainers
-        notes: Prefer MobSF scans as first-pass evidence before custom analyzers.
-      - id: frida
-        name: Frida
-        format: Dynamic instrumentation framework and CLI tooling.
-        source_url: https://frida.re/docs/frida-cli/
-        repo_url: https://github.com/frida/frida
-        maintained_by: Frida maintainers
-        notes: Use Frida for runtime instrumentation hooks instead of proprietary agents.
-      - id: owasp_mas
-        name: OWASP MASVS and MASTG
-        format: Mobile AppSec verification and testing standards.
-        source_url: https://mas.owasp.org/
-        repo_url: https://github.com/OWASP/owasp-mastg
-        maintained_by: OWASP Mobile Security Project
-        notes: Align test evidence and reporting with MASVS/MASTG control language.
+      - id: wcag_2_1_aa
+        name: WCAG 2.1 AA
+        format: Web Content Accessibility Guidelines.
+        source_url: https://www.w3.org/WAI/WCAG21/quickref/
+        repo_url: https://github.com/w3c/wcag
+        maintained_by: W3C
+        notes: All new panel pages, modals, and forms must meet WCAG 2.1 AA. Minimum touch target 44x44 CSS pixels. Use escapeHtml() before innerHTML interpolation.
+      - id: fastapi_panel
+        name: FastAPI Panel Pattern
+        format: Async FastAPI routes with Jinja2 templates, static files, and security middleware.
+        source_url: https://fastapi.tiangolo.com/
+        repo_url: https://github.com/fastapi/fastapi
+        maintained_by: FastAPI team
+        notes: Reuse the existing security middleware, rate limiting, and auth bootstrap patterns in substrate/web.py for all new panel endpoints.
+      - id: chartjs_visualization
+        name: Chart.js Visualization
+        format: Canvas-based charts via Chart.js v4 for metrics, telemetry, and simulation data.
+        source_url: https://www.chartjs.org/
+        repo_url: https://github.com/chartjs/Chart.js
+        maintained_by: Chart.js contributors
+        notes: Use Chart.js for all new dashboard visualizations rather than custom canvas code.
+      - id: vanilla_js_established_libs
+        name: Vanilla JS with Established Libraries
+        format: Plain JavaScript plus maintained libraries (Chart.js, no build step required).
+        source_url: https://github.com/55515-code/orchestrator/tree/main/substrate/static
+        repo_url: https://github.com/55515-code/orchestrator
+        maintained_by: Local Agent Substrate
+        notes: Prefer CDN-linked established libraries over npm/bundler complexity for the panel frontend. Keep the base package lean; assemble optional tooling on first use.
 
   - id: ai_agent_orchestration
     name: AI Agent Orchestration
     description: Open-source agent frameworks and multi-agent collaboration patterns for composable, auditable automation.
-    tags: [agents, ai, orchestration, multi-agent, huggingface]
+    tags: [agents, ai, orchestration, multi-agent, huggingface, langchain, langgraph]
     standards:
       - id: smolagents
         name: Hugging Face smolagents
@@ -286,7 +108,21 @@ tracks:
         source_url: https://huggingface.co/docs/smolagents
         repo_url: https://github.com/huggingface/smolagents
         maintained_by: Hugging Face
-        notes: Prefer code-agent loops and tool-agnostic design over custom agent parsers; execute generated code in sandboxed environments.
+        notes: Default agent framework per workspace policy. Prefer code-agent loops and tool-agnostic design over custom agent parsers; execute generated code in sandboxed environments.
+      - id: langgraph
+        name: LangGraph
+        format: Structured orchestration for agent workflows with durable state patterns.
+        source_url: https://langchain-ai.github.io/langgraph/
+        repo_url: https://github.com/langchain-ai/langgraph
+        maintained_by: LangChain team
+        notes: Default orchestration framework per workspace policy. Reuse graph-based state machines for chain workflows instead of ad-hoc step runners.
+      - id: langchain
+        name: LangChain
+        format: LLM application framework with providers, prompts, chains, and agents.
+        source_url: https://python.langchain.com/
+        repo_url: https://github.com/langchain-ai/langchain
+        maintained_by: LangChain team
+        notes: Reuse LangChain provider adapters, prompt templates, and retry policies instead of rolling custom LLM client code.
       - id: agent_collabs
         name: Hugging Face agent-collabs
         format: Multi-agent collaboration challenge template with FastAPI backend, message board, taskforces, and leaderboard.
@@ -294,133 +130,3 @@ tracks:
         repo_url: https://github.com/huggingface/agent-collabs
         maintained_by: Hugging Face
         notes: Reuse the message-board / taskforce / verification pattern when coordinating multiple specialized agents.
-
-  - id: llm_serving
-    name: LLM Serving
-    description: Production-grade open-source inference engines for local and hosted LLM deployments.
-    tags: [llm, inference, serving, vllm, sglang]
-    standards:
-      - id: vllm
-        name: vLLM
-        format: OpenAI-compatible LLM serving engine with PagedAttention, continuous batching, and broad hardware support.
-        source_url: https://docs.vllm.ai/
-        repo_url: https://github.com/vllm-project/vllm
-        maintained_by: vLLM Project / Linux Foundation
-        notes: Default production serving choice recommended by Hugging Face after TGI maintenance-mode transition.
-      - id: sglang
-        name: SGLang
-        format: Structured generation and LLM serving runtime with RadixAttention for shared-prefix workloads.
-        source_url: https://docs.sglang.ai/
-        repo_url: https://github.com/sgl-project/sglang
-        maintained_by: SGLang Team / LMSYS
-        notes: Prefer for agentic, multi-turn, and RAG workloads with heavy prefix reuse.
-
-  - id: local_automation_optimization
-    name: Local Automation Optimization
-    description: Caching, memoization, and task-decomposition patterns that reduce redundant AI calls and repeated computation in local automation workflows.
-    tags: [cache, memoization, optimization, local, automation]
-    standards:
-      - id: substrate_local_cache_workflow
-        name: Substrate Local Cache Workflow
-        format: SQLite + filesystem cache keyed by deterministic SHA-256 hashes of (kind, inputs), with summaries, TTL, tags, and pruning.
-        source_url: https://github.com/55515-code/orchestrator/blob/main/docs/caching.md
-        repo_url: https://github.com/55515-code/orchestrator
-        maintained_by: Local Agent Substrate
-        notes: Cache AI calls, subtask results, and plans; decompose large objectives into smaller cacheable units; prefer cache hits over repeated LLM calls.
-      - id: diskcache
-        name: diskcache
-        format: Disk and file-backed Python cache with SQLite metadata, tag-based eviction, and memoization recipes.
-        source_url: https://diskcache.readthedocs.io/
-        repo_url: https://github.com/grantjenks/python-diskcache
-        maintained_by: Grant Jenks / community
-        notes: Consider for larger persistent caches or drop-in memoization when the substrate cache needs richer eviction policies.
-      - id: cachetools
-        name: cachetools
-        format: Lightweight in-memory Python caching with TTL, LRU, and LFU policies.
-        source_url: https://cachetools.readthedocs.io/
-        repo_url: https://github.com/tkem/cachetools
-        maintained_by: Thomas Kemmer / community
-        notes: Use for short-lived, in-process memoization of deterministic helper functions.
-      - id: joblib_memory
-        name: Joblib Memory
-        format: Disk-based memoization of Python functions optimized for NumPy/scikit-learn workloads.
-        source_url: https://joblib.readthedocs.io/
-        repo_url: https://github.com/joblib/joblib
-        maintained_by: scikit-learn / Joblib maintainers
-        notes: Use for deterministic heavy computations and data pipelines where function source-code hashing is acceptable.
-
-  - id: crypto_payment_flows
-    name: Crypto Payment Flows
-    description: Maintained standards for deterministic wallets, address encoding, and governed on-chain payment verification used by the crypto value automation system.
-    tags: [crypto, payments, bip, eip, wallets]
-    standards:
-      - id: bip39
-        name: BIP-39 Mnemonic Seeds
-        format: 128-256 bit entropy mapped to mnemonic phrases with checksum.
-        source_url: https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
-        maintained_by: Bitcoin BIP process
-        notes: Wallet generation uses 256-bit entropy; seeds encrypted at rest, never logged.
-      - id: bip44
-        name: BIP-44 Derivation Paths
-        format: Hierarchical deterministic derivation m/44'/60'/0'/0/<index> for EVM chains.
-        source_url: https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
-        maintained_by: Bitcoin BIP process
-        notes: One master seed per purpose; child addresses derived on demand.
-      - id: eip55
-        name: EIP-55 Checksum Addresses
-        format: Mixed-case checksum encoding for Ethereum-compatible addresses.
-        source_url: https://eips.ethereum.org/EIPS/eip-55
-        maintained_by: Ethereum EIP process
-        notes: Always display and store EIP-55 checksummed addresses to catch typos.
-      - id: substrate_payment_governance
-        name: Substrate Payment Flow Governance
-        format: crypto-rules.yaml rules + machine-checked runbook + hash-chained audit trail.
-        repo_url: https://github.com/55515-code/orchestrator
-        maintained_by: Local Agent Substrate
-        notes: Payment flows must stay documented, current, and vetted; financial operations are Tier 2.
-
-  - id: decentralized_governance_networks
-    name: Decentralized Governance Networks
-    description: Commons-based, non-hierarchical organizational models rooted in socialist, anarchist, cooperative, Indigenous, and federated governance traditions. Embeds decentralization, collective awareness, consensus-driven data, non-Westernized perspectives, and transparent value systems into substrate operations.
-    tags: [commons, cooperative, anarchist, indigenous, federated, dignity, liberation, consensus, mutualism]
-    standards:
-      - id: dignity_stack_layers
-        name: Dignity Stack Six-Layer Governance
-        format: Governance overlay mapping technological oversight, data sovereignty, contextual integrity, fiduciary limits, participatory governance, and economic justice to commons-based organizational protocols.
-        source_url: https://arxiv.org/abs/2606.06083
-        notes: Enforce capital-governance decoupling; verify inter-layer dependencies; resist formal and structural capture through polycentric, substitutable supply.
-      - id: liberation_stack_layers
-        name: Liberation Stack Layered Architecture
-        format: Directed acyclic dependency graph of energy, manufacturing, food, communication, knowledge, and governance commons with explicit gate conditions and threat models.
-        source_url: https://arxiv.org/abs/2602.13154
-        notes: Each layer has function, dependencies, gate condition, threat model, and governance hooks. No layer deploys sustainably without lower layers.
-      - id: consensuscode_horizontal_collective
-        name: Consensus Code Horizontal Agent Collective
-        format: True consensus decision-making with temporary/revocable coordination roles, 50% teaching / 50% doing commitment, anti-hierarchy safeguards, and transparent reasoning documentation.
-        source_url: https://github.com/notque/consensuscode
-        notes: All coordination roles temporary; no permanent authority; collective accountability for all agents including facilitators.
-      - id: coop_kernel_democratic_core
-        name: coop-kernel Democratic Software Cooperative Core
-        format: 1 person = 1 vote governance; algorithmic fairness via formula-based earnings (Time × Complexity = Share); lazy consensus with 48-hour approval window; right to fork guarantee.
-        source_url: https://github.com/abdozkaya/coop-kernel
-        notes: Capital provides no extra governance rights; labor governs; revenue sharing transparent and non-negotiable.
-      - id: intercooperative_network_constraint_engine
-        name: InterCooperative Network Constraint Enforcement
-        format: P2P constraint engine with strict Meaning Firewall (kernel enforces constraints blindly; apps translate governance into generic ConstraintSet via PolicyOracle); Cooperative Contract Language (CCL) non-Turing-complete; mutual credit ledger.
-        source_url: https://intercooperative.network/
-        notes: Kernel never sees domain semantics; apps translate meaning; federation preserves autonomy via bilateral agreements.
-      - id: indigenous_data_sovereignty_care
-        name: Indigenous Data Sovereignty (CARE Principles)
-        format: Collective Benefit, Authority to Control, Responsibility, Ethics applied to all data lifecycle stages; data governed as extension of collective identity, memory, kinship, territory.
-        source_url: https://www.un.org/digital-emerging-technologies/sites/www.un.org.techenvoy/files/GDC-submission_WAMPUM_Lab_and_the_Collaboratory_for_Indigenous.pdf
-        notes: Data is not resource/commodity; requires community permission, restrictions, oversight; ex-situ repositories under hybrid agreements; intergenerational responsibility.
-      - id: fediverse_covenantal_federalism
-        name: Fediverse Covenantal Federalism
-        format: Decentralized governance through shared-value covenants (not contracts); instance sovereignty with federated diplomacy; defederation as only cross-instance governance lever; local norms dominate over network dynamics.
-        source_url: https://doi.org/10.1080/1369118x.2022.2147400
-        notes: Governance priorities converge across scales (harassment, hate speech, illegal content); local autonomy preserved; federation requires overlapping shared norms.
-      - id: liberation_stack_universal_desired_resources
-        name: Universal Desired Resources (UDR)
-        format: Post-monetary allocation principle for zero-marginal-cost goods distributed by need (not price) subject to ecological feasibility constraint; mutual credit surplus distribution democratically governed.
-        source_url: https://arxiv.org/abs/2602.13154
-        notes: Conditional on strong automation; eliminates material basis of structural inequality; requires democratic surplus rules, not wealth-weighted claims.

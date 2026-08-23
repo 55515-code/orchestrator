@@ -1,4 +1,62 @@
 projects:
+  # --- Foundational baseline ---
+  - slug: openclaw-gateway-substrate
+    name: OpenClaw Gateway Substrate
+    repo_url: https://github.com/55515-code/orchestrator
+    docs_url: https://github.com/55515-code/orchestrator/blob/main/AGENTS.md
+    rationale: Foundational baseline for all related development: ops panel (FastAPI + Jinja2), webhook gateway, iPhone panel, embedded chat, dashboard, pipelines, and security hardening.
+
+  # --- Established web/ops frameworks ---
+  - slug: fastapi
+    name: FastAPI
+    repo_url: https://github.com/fastapi/fastapi
+    docs_url: https://fastapi.tiangolo.com/
+    rationale: Lightweight async API and templating framework; the standard for the OpenClaw Gateway panel backend.
+
+  - slug: jinja2
+    name: Jinja2
+    repo_url: https://github.com/pallets/jinja
+    docs_url: https://jinja.palletsprojects.com/
+    rationale: Template engine for the panel HTML; maintained by the Pallets team.
+
+  - slug: chartjs
+    name: Chart.js
+    repo_url: https://github.com/chartjs/Chart.js
+    docs_url: https://www.chartjs.org/
+    rationale: Canvas-based charting library for dashboard metrics, telemetry, and simulation visualizations.
+
+  - slug: starlette
+    name: Starlette
+    repo_url: https://github.com/encode/starlette
+    docs_url: https://www.starlette.io/
+    rationale: ASGI framework underlying FastAPI; reused for SSE streams, static files, and middleware.
+
+  # --- Agent / orchestration frameworks ---
+  - slug: langchain
+    name: LangChain
+    repo_url: https://github.com/langchain-ai/langchain
+    docs_url: https://python.langchain.com/
+    rationale: Core framework for LLM provider adapters, prompt templates, chains, and agents.
+
+  - slug: langgraph
+    name: LangGraph
+    repo_url: https://github.com/langchain-ai/langgraph
+    docs_url: https://langchain-ai.github.io/langgraph/
+    rationale: Structured orchestration for agent workflows with durable state patterns; default orchestration framework.
+
+  - slug: smolagents
+    name: smolagents
+    repo_url: https://github.com/huggingface/smolagents
+    docs_url: https://huggingface.co/docs/smolagents
+    rationale: Minimal code-first agent framework; default agent framework per workspace policy.
+
+  - slug: huggingface_hub
+    name: Hugging Face Hub
+    repo_url: https://github.com/huggingface/huggingface_hub
+    docs_url: https://huggingface.co/docs/huggingface_hub
+    rationale: Python client for model, dataset, and Space discovery and downloads.
+
+  # --- Runtime / packaging ---
   - slug: uv
     name: uv
     repo_url: https://github.com/astral-sh/uv
@@ -11,54 +69,7 @@ projects:
     docs_url: https://mise.jdx.dev/
     rationale: Cross-platform version-managed CLI tooling and task runtime.
 
-  - slug: langgraph
-    name: LangGraph
-    repo_url: https://github.com/langchain-ai/langgraph
-    docs_url: https://langchain-ai.github.io/langgraph/
-    rationale: Structured orchestration for agent workflows with durable state patterns.
-
-  - slug: smolagents
-    name: smolagents
-    repo_url: https://github.com/huggingface/smolagents
-    docs_url: https://huggingface.co/docs/smolagents
-    rationale: Minimal code-first agent framework from Hugging Face with CodeAgent, ToolCallingAgent, and multi-agent hierarchies.
-
-  - slug: agent-collabs
-    name: agent-collabs
-    repo_url: https://github.com/huggingface/agent-collabs
-    docs_url: https://huggingface.co/learn/agents-course
-    rationale: Multi-agent collaboration template with FastAPI backend, message board, taskforces, leaderboard, and eval-space.
-
-  - slug: transformers
-    name: Hugging Face Transformers
-    repo_url: https://github.com/huggingface/transformers
-    docs_url: https://huggingface.co/docs/transformers
-    rationale: Core library for loading and running open-source models; foundation for local inference integrations.
-
-  - slug: huggingface_hub
-    name: Hugging Face Hub
-    repo_url: https://github.com/huggingface/huggingface_hub
-    docs_url: https://huggingface.co/docs/huggingface_hub
-    rationale: Python client for the Hugging Face Hub; model, dataset, and Space discovery and downloads.
-
-  - slug: vllm
-    name: vLLM
-    repo_url: https://github.com/vllm-project/vllm
-    docs_url: https://docs.vllm.ai/
-    rationale: High-throughput open-source LLM serving engine with PagedAttention; Hugging Face recommends for production deployments.
-
-  - slug: sglang
-    name: SGLang
-    repo_url: https://github.com/sgl-project/sglang
-    docs_url: https://docs.sglang.ai/
-    rationale: Structured generation and LLM serving with RadixAttention; strong for agentic and shared-prefix workloads.
-
-  - slug: optimum
-    name: Optimum
-    repo_url: https://github.com/huggingface/optimum
-    docs_url: https://huggingface.co/docs/optimum
-    rationale: Hardware optimization toolkit for Transformers, Diffusers, and Sentence Transformers across ONNX, OpenVINO, ExecuTorch, and NVIDIA backends.
-
+  # --- Caching / optimization ---
   - slug: diskcache
     name: diskcache
     repo_url: https://github.com/grantjenks/python-diskcache
@@ -77,30 +88,20 @@ projects:
     docs_url: https://joblib.readthedocs.io/
     rationale: Disk-based function memoization and parallel computing toolkit from the scikit-learn ecosystem.
 
-  - slug: fastapi
-    name: FastAPI
-    repo_url: https://github.com/fastapi/fastapi
-    docs_url: https://fastapi.tiangolo.com/
-    rationale: Lightweight async API and templating framework suitable for CLI-first ops tooling.
+  # --- Serving / inference ---
+  - slug: vllm
+    name: vLLM
+    repo_url: https://github.com/vllm-project/vllm
+    docs_url: https://docs.vllm.ai/
+    rationale: High-throughput open-source LLM serving engine with PagedAttention; recommended for production deployments.
 
-  - slug: caddy
-    name: Caddy
-    repo_url: https://github.com/caddyserver/caddy
-    docs_url: https://caddyserver.com/docs/
-    rationale: Open-source HTTPS reverse proxy for secure self-hosting with minimal ops overhead.
+  - slug: sglang
+    name: SGLang
+    repo_url: https://github.com/sgl-project/sglang
+    docs_url: https://docs.sglang.ai/
+    rationale: Structured generation and LLM serving with RadixAttention; strong for agentic and shared-prefix workloads.
 
-  - slug: cloudflared
-    name: cloudflared
-    repo_url: https://github.com/cloudflare/cloudflared
-    docs_url: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
-    rationale: Tunnel-based secure ingress option for no-domain or low-cost remote access.
-
-  - slug: tailscale
-    name: Tailscale
-    repo_url: https://github.com/tailscale/tailscale
-    docs_url: https://tailscale.com/kb/
-    rationale: Encrypted mesh networking for private control panel access across distributed environments.
-
+  # --- Config / sync ---
   - slug: chezmoi
     name: chezmoi
     repo_url: https://github.com/twpayne/chezmoi
@@ -137,6 +138,7 @@ projects:
     docs_url: https://rclone.org/docs/
     rationale: Multi-provider sync/transfer tool for low-cost remote config replication.
 
+  # --- Mail / network ---
   - slug: proton-mail
     name: Proton Mail
     repo_url: https://proton.me/support/imap-smtp-and-pop3-setup
@@ -155,6 +157,19 @@ projects:
     docs_url: https://proton.me/support/business/vpn
     rationale: Managed VPN deployment and business admin surfaces, with no assumed public consumer automation API.
 
+  - slug: cloudflared
+    name: cloudflared
+    repo_url: https://github.com/cloudflare/cloudflared
+    docs_url: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+    rationale: Tunnel-based secure ingress option for no-domain or low-cost remote access.
+
+  - slug: tailscale
+    name: Tailscale
+    repo_url: https://github.com/tailscale/tailscale
+    docs_url: https://tailscale.com/kb/
+    rationale: Encrypted mesh networking for private control panel access across distributed environments.
+
+  # --- Deployment ---
   - slug: dokku
     name: Dokku
     repo_url: https://github.com/dokku/dokku
@@ -167,6 +182,7 @@ projects:
     docs_url: https://coolify.io/docs
     rationale: Self-hosted developer platform for affordable app deployment with Git-based automation.
 
+  # --- Security / payloads ---
   - slug: ducky-payloads
     name: USB Rubber Ducky Payloads
     repo_url: https://github.com/hak5/usbrubberducky-payloads

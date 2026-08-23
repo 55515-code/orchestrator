@@ -1,10 +1,15 @@
 name: local-agent-chain
-description: Sequential chain for local environment analysis, planning, execution, and review.
+description: Sequential chain for local environment analysis, planning, execution, and review. Defaults to established frameworks: LangChain for prompt templating, smolagents/LangGraph patterns for orchestration.
 
 defaults:
   provider: local
   models:
     local: roo-router
+  # Established framework defaults per workspace policy.
+  framework: langgraph
+  agent_framework: smolagents
+  web_framework: fastapi
+  frontend_framework: vanilla_js_with_established_libs
 
 context_files:
   - docs/setup.md

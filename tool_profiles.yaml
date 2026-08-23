@@ -13,6 +13,40 @@ manager_priority:
   - manual
 
 profiles:
+  - id: web_ux_frameworks
+    name: Web UX and Panel Frameworks
+    description: Established frontend and visualization libraries for the OpenClaw Gateway control panel. Kept lean; assembled on first use.
+    tools:
+      - id: chartjs
+        name: Chart.js
+        binary: chartjs
+        source_url: https://www.chartjs.org/
+        install:
+          manual:
+            - Include Chart.js via CDN in panel templates (no build step required).
+      - id: fastapi
+        name: FastAPI
+        binary: fastapi
+        source_url: https://fastapi.tiangolo.com/
+        install:
+          uv_tool:
+            - uv tool install fastapi
+          pipx:
+            - pipx install fastapi
+          manual:
+            - Install FastAPI from PyPI or follow the official installation guide.
+      - id: jinja2
+        name: Jinja2
+        binary: jinja2
+        source_url: https://jinja.palletsprojects.com/
+        install:
+          uv_tool:
+            - uv tool install jinja2
+          pipx:
+            - pipx install jinja2
+          manual:
+            - Install Jinja2 from PyPI; it is included with Flask/FastAPI stacks.
+
   - id: remote_access
     name: Remote Access and Tunnel Tools
     description: Optional tools for no-domain remote ops panel access and recovery.

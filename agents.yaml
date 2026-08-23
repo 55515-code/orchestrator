@@ -15,6 +15,8 @@ agents:
     cadence: daily
     autonomy_tier: 0
     provider: local
+    framework: smolagents
+    ux_principle: human-readable research notes written to .research/ for eye-readable review
     enabled: true
     command: scripts/substrate_cli.py agent-run --role research-agent --repo substrate-core
 
@@ -25,6 +27,8 @@ agents:
     cadence: daily
     autonomy_tier: 0
     provider: local
+    framework: smolagents
+    ux_principle: human-readable research notes written to .research/ for eye-readable review
     enabled: true
     command: scripts/substrate_cli.py agent-run --role research-agent --repo luigios
 
@@ -35,6 +39,8 @@ agents:
     cadence: daily
     autonomy_tier: 0
     provider: local
+    framework: smolagents
+    ux_principle: human-readable research notes written to .research/ for eye-readable review
     enabled: true
     command: scripts/substrate_cli.py agent-run --role research-agent --repo ahrondarnell-site
 
@@ -45,6 +51,8 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: patches generated via established chain frameworks; human reviews diff in panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role dev-agent --repo substrate-core
 
@@ -55,6 +63,8 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: patches generated via established chain frameworks; human reviews diff in panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role dev-agent --repo luigios
 
@@ -65,6 +75,8 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: patches generated via established chain frameworks; human reviews diff in panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role dev-agent --repo ahrondarnell-site
 
@@ -75,6 +87,8 @@ agents:
     cadence: weekly
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: dependency bumps exposed as readable reports in the ops panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role update-agent --repo substrate-core
 
@@ -85,6 +99,8 @@ agents:
     cadence: weekly
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: dependency bumps exposed as readable reports in the ops panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role update-agent --repo luigios
 
@@ -95,6 +111,8 @@ agents:
     cadence: weekly
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: dependency bumps exposed as readable reports in the ops panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role update-agent --repo ahrondarnell-site
 
@@ -105,6 +123,8 @@ agents:
     cadence: hourly
     autonomy_tier: 1
     provider: local
+    framework: smolagents
+    ux_principle: moderation actions visible as clear queue cards in the panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role content-moderator --repo ahrondarnell-site
 
@@ -115,6 +135,8 @@ agents:
     cadence: every_4_hours
     autonomy_tier: 1
     provider: local
+    framework: smolagents
+    ux_principle: community simulation results rendered as readable charts in the panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role community-manager --repo substrate-core
 
@@ -125,6 +147,8 @@ agents:
     cadence: weekly
     autonomy_tier: 0
     provider: local
+    framework: smolagents
+    ux_principle: research notes and posture dashboard written to .research/ and state/
     enabled: true
     command: scripts/substrate_cli.py agent-run --role market-research --repo substrate-core
 
@@ -135,6 +159,8 @@ agents:
     cadence: weekly
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: generated resources previewed in the panel before publish
     enabled: true
     command: scripts/substrate_cli.py agent-run --role resource-generator --repo substrate-core
 
@@ -152,6 +178,8 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: smolagents
+    ux_principle: creative drafts previewed as readable text in the panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role creative-agent --repo substrate-core
 
@@ -162,6 +190,8 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: smolagents
+    ux_principle: email actions routed through approval lane UI in the panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role email-manager --repo substrate-core
 
@@ -172,5 +202,7 @@ agents:
     cadence: daily
     autonomy_tier: 1
     provider: local
+    framework: langgraph
+    ux_principle: maintenance results shown as system health cards in the panel
     enabled: true
     command: scripts/substrate_cli.py agent-run --role maintenance-agent --repo substrate-core

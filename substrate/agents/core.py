@@ -63,6 +63,8 @@ class AgentConfig:
     command: str
     enabled: bool = True
     model: str | None = None
+    framework: str | None = None
+    ux_principle: str | None = None
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> AgentConfig:
@@ -77,6 +79,8 @@ class AgentConfig:
             autonomy_tier = int(raw["autonomy_tier"])
             provider = str(raw["provider"]).strip()
             command = str(raw.get("command") or "").strip()
+            framework = str(raw.get("framework") or "").strip() or None
+            ux_principle = str(raw.get("ux_principle") or "").strip() or None
         except KeyError as exc:
             raise AgentConfigError(f"Agent entry missing required field: {exc}") from exc
         except (TypeError, ValueError) as exc:
@@ -106,6 +110,8 @@ class AgentConfig:
                 f"Expected one of {sorted(ALLOWED_AGENT_PROVIDERS)}."
             )
         model = raw.get("model")
+        framework = raw.get("framework")
+        ux_principle = raw.get("ux_principle")
         return cls(
             id=agent_id,
             role=role,
@@ -117,6 +123,8 @@ class AgentConfig:
             command=command,
             enabled=bool(raw.get("enabled", True)),
             model=str(model).strip() if model else None,
+            framework=str(framework).strip() if framework else None,
+            ux_principle=str(ux_principle).strip() if ux_principle else None,
         )
 
 
@@ -769,6 +777,8 @@ def agent_status_payload(runtime: Any, *, now: datetime | None = None) -> dict[s
                 "cadence": agent.cadence,
                 "autonomy_tier": agent.autonomy_tier,
                 "provider": agent.provider,
+                "framework": agent.framework,
+                "ux_principle": agent.ux_principle,
                 "enabled": agent.enabled,
                 "due_now": (
                     agent.id in {item.id for item in evaluate_due_agents(agents, state_store, now=current)}
