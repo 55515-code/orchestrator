@@ -307,6 +307,33 @@ def check_tailscale_serve() -> dict[str, Any]:
     return result
 
 
+def check_openclaw_config() -> dict[str, Any]:
+    """Verify OpenClaw gateway bind is loopback to prevent tailnet drift."""
+    result: dict[str, Any] = {
+        "ok": False,
+        "bind": None,
+        "action": None,
+    }
+
+    config_path = Path("/home/ahron/.openclaw/openclaw.json")
+    if not config_path.exists():
+        result["action"] = "config_missing"
+        return result
+
+    try:
+        data = json.loads(config_path.read_text())
+        bind = (((data.get("gateway") or {}).get("bind")) or "")
+        result["bind"] = bind
+        if bind == "loopback":
+            result["ok"] = True
+        else:
+            result["action"] = f"bind_drift:{bind}"
+    except Exception as exc:  # noqa: BLE001
+        result["action"] = f"config_read_error:{exc}"
+
+    return result
+
+
 def _is_port_open(host: str, port: int) -> bool:
     try:
         with socket.create_connection((host, port), timeout=3):
@@ -327,6 +354,7 @@ def lister_cycle() -> dict[str, Any]:
         "timers": [],
         "agent_cycle": {},
         "tailscale_serve": {},
+        "openclaw_config": {},
     }
 
     for svc in SERVICES:
@@ -337,6 +365,7 @@ def lister_cycle() -> dict[str, Any]:
 
     status["agent_cycle"] = check_agent_cycle()
     status["tailscale_serve"] = check_tailscale_serve()
+    status["openclaw_config"] = check_openclaw_config()
 
     write_status(status)
 
@@ -358,6 +387,10 @@ def lister_cycle() -> dict[str, Any]:
 
     if not status["tailscale_serve"].get("ok"):
         log(f"TAILSCALE_SERVE_DOWN: {status['tailscale_serve'].get('detail', '')[:120]}")
+
+    config = status.get("openclaw_config", {})
+    if not config.get("ok"):
+        log(f"OPENCLAW_CONFIG_DRIFT: {config.get('action', 'unknown')}")
 
     return status
 

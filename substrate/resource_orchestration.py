@@ -143,7 +143,7 @@ def hardware_profile_from_probe(probe_text: str) -> HardwareProfile:
 
 def provider_capabilities(provider: str) -> tuple[ResolvedCapabilityClass, ...]:
     normalized = provider.strip().lower()
-    if normalized in {"local", "roo-router"}:
+    if normalized in {"local", "roo-router", "community-compute"}:
         return ("cpu",)
     if normalized == "ollama":
         return ("cpu", "gpu")
@@ -378,6 +378,12 @@ def default_resource_pools(
             max_workers=local_gpu,
         ),
         ResourcePoolState(
+            name="community_compute_pool",
+            location="cloud",
+            capability="cpu",
+            max_workers=2,
+        ),
+        ResourcePoolState(
             name="cloud_cpu_pool",
             location="cloud",
             capability="cpu",
@@ -422,6 +428,12 @@ def _legacy_default_resource_pools(
             location="local",
             capability="gpu",
             max_workers=1,
+        ),
+        ResourcePoolState(
+            name="community_compute_pool",
+            location="cloud",
+            capability="cpu",
+            max_workers=2,
         ),
         ResourcePoolState(
             name="cloud_cpu_pool",

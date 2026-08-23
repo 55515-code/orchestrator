@@ -10,6 +10,7 @@ from typing import Any
 
 FREE_FIRST_PROVIDER_ORDER = (
     "local",
+    "community-compute",
     "roo-router",
     "ollama",
     "huggingface",
@@ -21,14 +22,14 @@ FREE_FIRST_PROVIDER_ORDER = (
     "replicate",
     "anthropic",
     "openai",
-    "mock",
-)
+    "mock",)
 
 
 DEFAULT_PROVIDER_MODELS: dict[str, str] = {
     "mock": "mock-model",
     "local": "roo-router",
     "roo-router": "roo-router",
+    "community-compute": "auto",
     "ollama": "llama3.2:latest",
     "huggingface": "meta-llama/Llama-3.1-8B-Instruct",
     "gcloud": "gemini-1.5-flash",
@@ -197,6 +198,8 @@ def build_model(provider: str, model: str):
         return None
     if normalized in {"local", "roo-router"}:
         return _build_local_router(model)
+    if normalized == "community-compute":
+        return _build_community_compute(model)
     if normalized == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
@@ -267,6 +270,38 @@ def _build_local_router(model: str):
         "local provider temporarily unavailable: set SUBSTRATE_LOCAL_OPENAI_BASE_URL "
         "or SUBSTRATE_LOCAL_OLLAMA_MODEL"
     )
+
+
+def _build_community_compute(model: str):
+    try:
+        from .distributed_compute import distributed_compute
+    except ImportError as exc:  # noqa: BLE001
+        raise RuntimeError(f"community-compute provider unavailable: {exc}")
+
+    class CommunityComputeWrapper:
+        def __init__(self) -> None:
+            self._facade = distributed_compute
+            self._node_id = "community-compute-default"
+            self._model = model
+            self._last_error: str | None = None
+
+        def invoke(self, prompt: str) -> ProviderMessage:
+            if self._last_error:
+                raise RuntimeError(self._last_error)
+            result = self._facade.request_community_inference(
+                prompt,
+                preferred_kind="mesh-llm",
+                model=self._model,
+            )
+            if "error" in result:
+                self._last_error = str(result["error"])
+                raise RuntimeError(f"community-compute: {result['error']}")
+            text = str(result.get("text") or result.get("content") or result.get("output") or "")
+            if not text:
+                raise RuntimeError("community-compute: empty response")
+            return ProviderMessage(content=text)
+
+    return CommunityComputeWrapper()
 
 
 def _build_groq(model: str):
