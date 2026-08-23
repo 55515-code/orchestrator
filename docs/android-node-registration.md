@@ -1,13 +1,13 @@
-# Register an Android OpenClaw CLI as a Worker + Developer Node
+# Register an Android OpenClaw Node
 
-> **SIMPLEST NO-ROOT PATH — read this first.** See
-> "Simplest no-root boot setup" below. Summary: bind the gateway to the tailnet
-> once, pair the phone once, then a 2-line Termux:Boot script with **no flags**
-> is all you need forever. No root, no tunnel, no systemd.
+> **CURRENT TARGET — Nothing Phone (3a) on tailnet.**
+> Use the official OpenClaw Android app unless shell-worker behavior is
+> explicitly required. This runbook now matches the actual device
+> `nothing-phone-3a.tail0b124a.ts.net` / `100.105.175.41`.
 
 
 Target gateway: `cachyos-x8664` (this machine)
-Generated: 2026-08-13
+Generated/updated: 2026-08-23
 
 ## Simplest no-root boot setup (recommended)
 
