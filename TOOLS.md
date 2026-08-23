@@ -37,7 +37,7 @@ Add whatever helps you do your job. This is your cheat sheet.
 - Browser node routing is manual and pinned to this device; target the node explicitly. If it is offline or its browser proxy is unavailable, use the gateway browser instead.
 - Do not route sensitive sensor, SMS, camera, screen-recording, or outbound actions to the phone without the normal permission and user-confirmation checks.
 - Local inference is opportunistic only: run discovery first and fall back if no compatible Ollama model is advertised.
-- Current verification (2026-08-23): the node is connected but its approved snapshot declares `commands: []`; do not dispatch automation to it until the phone restarts/re-registers and the refreshed pairing declares commands. Gateway fallback remains mandatory.
+- Current verification (2026-08-23): pairing was refreshed successfully and the node now declares `system.run`, `system.which`, `system.execApprovals.get/set`, and `browser.proxy`. `system.which` works. Direct exec is still denied by the phone's node-host runtime despite an effective full/off/full approvals policy, so keep gateway fallback mandatory until the node host is upgraded or restarted with corrected approval handling. Browser proxy reaches the phone but no supported Chromium executable is installed; local inference advertises a capability but no compatible Ollama service/model is currently discoverable.
 
 ## Related
 
