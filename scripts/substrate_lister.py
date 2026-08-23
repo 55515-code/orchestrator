@@ -119,6 +119,7 @@ def write_status(status: dict[str, Any]) -> None:
         "timers": status.get("timers", []),
         "agent_cycle": status.get("agent_cycle", {}),
         "tailscale_serve": status.get("tailscale_serve", {}),
+        "openclaw_config": status.get("openclaw_config", {}),
     }
     STATUS_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=False))
 

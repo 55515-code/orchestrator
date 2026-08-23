@@ -2,8 +2,9 @@
 set -euo pipefail
 
 OPENCLAW_CONFIG="/home/ahron/.openclaw/openclaw.json"
+OPENCLAW_OVERRIDE="/home/ahron/.config/systemd/user/openclaw-gateway.service.d/override.conf"
 OPENCLAW_UNIT="openclaw-gateway.service"
-EXPECTED_BIND="loopback"
+EXPECTED_BIND="lan"
 HEALTH_URL="http://127.0.0.1:8090/healthz"
 MAX_RESTARTS=3
 RESTART_WINDOW=300
@@ -20,9 +21,35 @@ while true; do
         if [ "$current_bind" != "$EXPECTED_BIND" ]; then
             echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Config drift detected: bind=$current_bind, expected=$EXPECTED_BIND. Repairing..."
             sed -i "s/\"bind\": *\"[^\"]*\"/\"bind\": \"$EXPECTED_BIND\"/" "$OPENCLAW_CONFIG"
+            chmod 0444 "$OPENCLAW_CONFIG"
             systemctl --user daemon-reload
             systemctl --user restart "$OPENCLAW_UNIT"
             sleep 5
+        fi
+        
+        # Enforce read-only permissions to prevent OpenClaw from rewriting
+        current_perms=$(stat -c "%a" "$OPENCLAW_CONFIG" 2>/dev/null || stat -f "%Lp" "$OPENCLAW_CONFIG" 2>/dev/null || echo "000")
+        if [ "$current_perms" != "444" ]; then
+            chmod 0444 "$OPENCLAW_CONFIG" 2>/dev/null || true
+        fi
+    fi
+    
+    # Check if systemd override has correct bind
+    if [ -f "$OPENCLAW_OVERRIDE" ]; then
+        override_bind=$(grep -oE -- "--bind [^ ]*" "$OPENCLAW_OVERRIDE" | head -1 | awk '{print $2}' || true)
+        if [ "$override_bind" != "$EXPECTED_BIND" ]; then
+            echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Override drift detected: bind=$override_bind, expected=$EXPECTED_BIND. Repairing..."
+            sed -i "s|--bind [^ ]*|--bind $EXPECTED_BIND|g" "$OPENCLAW_OVERRIDE"
+            chmod 0444 "$OPENCLAW_OVERRIDE"
+            systemctl --user daemon-reload
+            systemctl --user restart "$OPENCLAW_UNIT"
+            sleep 5
+        fi
+        
+        # Enforce read-only permissions on override
+        current_perms=$(stat -c "%a" "$OPENCLAW_OVERRIDE" 2>/dev/null || stat -f "%Lp" "$OPENCLAW_OVERRIDE" 2>/dev/null || echo "000")
+        if [ "$current_perms" != "444" ]; then
+            chmod 0444 "$OPENCLAW_OVERRIDE" 2>/dev/null || true
         fi
     fi
     
