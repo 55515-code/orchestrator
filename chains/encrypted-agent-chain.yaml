@@ -1,10 +1,14 @@
 name: encrypted-agent-chain
-description: Chain with encrypted step execution using per-chain ephemeral keys.
+description: Chain with encrypted step execution using per-chain ephemeral keys. Defaults to established frameworks.
 
 defaults:
   provider: ollama
   models:
     ollama: llama3.1:8b
+  framework: langgraph
+  agent_framework: smolagents
+  web_framework: fastapi
+  frontend_framework: vanilla_js_with_established_libs
 
 context_files:
   - docs/setup.md

@@ -14,6 +14,7 @@ def dashboard_payload(runtime: SubstrateRuntime) -> dict:
     integrations = integrations_payload(runtime)
     learning = learning_payload(runtime)
     config_sync = config_sync_payload(runtime)
+    policy = runtime.workspace.policy
     return {
         "environment": {
             "os": runtime.environment.os_name,
@@ -35,4 +36,14 @@ def dashboard_payload(runtime: SubstrateRuntime) -> dict:
         "learning": learning,
         "config_sync": config_sync,
         "dotfiles": config_sync,
+        "framework_policy": {
+            "framework_first_development": getattr(policy, 'framework_first_development', False),
+            "default_agent_framework": getattr(policy, 'default_agent_framework', 'smolagents'),
+            "default_orchestration_framework": getattr(policy, 'default_orchestration_framework', 'langgraph'),
+            "default_web_framework": getattr(policy, 'default_web_framework', 'fastapi'),
+            "default_frontend_framework": getattr(policy, 'default_frontend_framework', 'vanilla_js_with_established_libs'),
+            "ux_accessibility_first": getattr(policy, 'ux_accessibility_first', False),
+            "openclaw_gateway_baseline": getattr(policy, 'openclaw_gateway_baseline', False),
+            "openclaw_gateway_primary_ui": getattr(policy, 'openclaw_gateway_primary_ui', False),
+        },
     }

@@ -1,9 +1,13 @@
 name: 1pointo-content
-description: Ship new 1pointo posts and moderated community content through the local substrate. Queue → validate → approve → build → verify.
+description: Ship new 1pointo posts and moderated community content through the local substrate. Queue → validate → approve → build → verify. Defaults to established frameworks.
 defaults:
   provider: local
   models:
     local: roo-router
+  framework: langgraph
+  agent_framework: smolagents
+  web_framework: fastapi
+  frontend_framework: vanilla_js_with_established_libs
 context_files:
   - ahrondarnell-site/src/site.config.ts
   - ahrondarnell-site/src/content.config.ts

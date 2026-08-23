@@ -4,7 +4,7 @@ projects:
     name: OpenClaw Gateway Substrate
     repo_url: https://github.com/55515-code/orchestrator
     docs_url: https://github.com/55515-code/orchestrator/blob/main/AGENTS.md
-    rationale: Foundational baseline for all related development: ops panel (FastAPI + Jinja2), webhook gateway, iPhone panel, embedded chat, dashboard, pipelines, and security hardening.
+    rationale: "Foundational baseline for all related development: ops panel (FastAPI + Jinja2), webhook gateway, iPhone panel, embedded chat, dashboard, pipelines, and security hardening."
 
   # --- Established web/ops frameworks ---
   - slug: fastapi

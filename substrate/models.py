@@ -100,6 +100,19 @@ class PolicyConfig:
     rc1_watchdog_poll_interval_seconds: float = 0.5
     rc1_watchdog_terminate_grace_seconds: float = 1.0
     restricted_terms: list[str] = field(default_factory=list)
+    # Framework-first development policy
+    framework_first_development: bool = False
+    default_agent_framework: str = "smolagents"
+    default_orchestration_framework: str = "langgraph"
+    default_web_framework: str = "fastapi"
+    default_frontend_framework: str = "vanilla_js_with_established_libs"
+    # UX accessibility policy
+    ux_accessibility_first: bool = False
+    ux_min_touch_target_px: int = 44
+    ux_screen_reader_support: bool = True
+    # OpenClaw Gateway baseline policy
+    openclaw_gateway_baseline: bool = False
+    openclaw_gateway_primary_ui: bool = False
 
 
 @dataclass(slots=True)

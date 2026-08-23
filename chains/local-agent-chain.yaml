@@ -1,5 +1,5 @@
 name: local-agent-chain
-description: Sequential chain for local environment analysis, planning, execution, and review. Defaults to established frameworks: LangChain for prompt templating, smolagents/LangGraph patterns for orchestration.
+description: "Sequential chain for local environment analysis, planning, execution, and review. Defaults to established frameworks: LangChain for prompt templating, smolagents/LangGraph patterns for orchestration."
 
 defaults:
   provider: local

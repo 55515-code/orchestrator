@@ -81,6 +81,31 @@
     box-sizing: border-box;
 }
 
+/* Screen-reader only utility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Ensure interactive elements meet min 44px touch target for hand accessibility */
+button, .nav-item, .action-btn, .automation-card, .btn-primary, .btn-secondary, .btn-sm {
+    min-height: 44px;
+    min-width: 44px;
+}
+
 html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;

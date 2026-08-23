@@ -1,5 +1,8 @@
 // Substrate Control Panel - Interactive Dashboard
 // Modern UI with real-time updates and OpenClaw-inspired design
+// Accessibility: min 44px touch targets, ARIA live regions, focus-visible, screen-reader support
+
+// --- Accessibility helpers ---------------------------------------------------------
 
 function escapeHtml(value) {
     // Escape dynamic values before interpolation into innerHTML to prevent
@@ -12,6 +15,30 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function announceForScreenReader(message) {
+    const el = document.getElementById('srAnnounce');
+    if (!el) return;
+    el.textContent = '';
+    // Double-clear to force screen readers to re-announce identical messages.
+    requestAnimationFrame(() => {
+        el.textContent = message;
+    });
+}
+
+function ensureTouchTarget(element) {
+    // Enforce min 44x44px touch target for hand interaction accessibility.
+    const rect = element.getBoundingClientRect();
+    if (rect.width < 44 || rect.height < 44) {
+        element.style.minWidth = '44px';
+        element.style.minHeight = '44px';
+    }
+}
+
+function focusFirstInteractive(container) {
+    const candidates = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (candidates.length) candidates[0].focus();
+}
+
 class ControlPanel {
     constructor() {
         this.currentPage = 'overview';
@@ -19,6 +46,7 @@ class ControlPanel {
         this.sidebarCollapsed = false;
         this.eventSource = null;
         this.commands = [];
+        this._lastToastId = 0;
         
         this.init();
     }
@@ -30,6 +58,8 @@ class ControlPanel {
         this.buildCommandPalette();
         await this.loadInitialData();
         this.startRealtimeUpdates();
+        // Enforce touch targets on all primary controls after render.
+        document.querySelectorAll('button, .nav-item, .action-btn, .automation-card').forEach(ensureTouchTarget);
     }
 
     // Theme Management
@@ -79,6 +109,10 @@ class ControlPanel {
             // Load page-specific data
             this.loadPageData(page);
             
+            // Move focus to the page heading for screen readers and keyboard users.
+            const heading = targetPage.querySelector('h1, h2');
+            if (heading) heading.focus();
+            
             // Load WhatsApp config if navigating to setup page
             if (page === 'whatsapp-setup') {
                 this.loadWhatsAppConfig();
@@ -87,6 +121,8 @@ class ControlPanel {
             if (page === 'vault') {
                 this.initVaultSearch();
             }
+            
+            announceForScreenReader(`Navigated to ${this.getPageTitle(page)}`);
         }
     }
 
@@ -922,6 +958,8 @@ class ControlPanel {
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.textContent = message;
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
         
         container.appendChild(toast);
         
@@ -929,6 +967,7 @@ class ControlPanel {
             toast.style.animation = 'slideIn 0.3s reverse';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+        announceForScreenReader(message);
     }
 
     // --- Vault: secure secrets UX (no plaintext at rest) ---

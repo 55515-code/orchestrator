@@ -833,6 +833,13 @@ class Orchestrator:
                     "data_class": openclaw_data_class,
                     "enabled": self.runtime.workspace.policy.rc1_openclaw_internal_assist_enabled,
                 },
+                "frameworks": {
+                    "agent_framework": self.runtime.workspace.policy.default_agent_framework,
+                    "orchestration_framework": self.runtime.workspace.policy.default_orchestration_framework,
+                    "web_framework": self.runtime.workspace.policy.default_web_framework,
+                    "frontend_framework": self.runtime.workspace.policy.default_frontend_framework,
+                    "framework_first_development": self.runtime.workspace.policy.framework_first_development,
+                },
             },
         )
 

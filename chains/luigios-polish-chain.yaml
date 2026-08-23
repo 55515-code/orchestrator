@@ -1,10 +1,14 @@
 name: luigios-polish-chain
-description: Sequential chain for LuigiOS production polish through the substrate 3x3 lifecycle with dedicated development agents.
+description: Sequential chain for LuigiOS production polish through the substrate 3x3 lifecycle with dedicated development agents. Defaults to established frameworks.
 
 defaults:
   provider: local
   models:
     local: roo-router
+  framework: langgraph
+  agent_framework: smolagents
+  web_framework: fastapi
+  frontend_framework: vanilla_js_with_established_libs
 
 context_files:
   - LuigiOS/docs/ROADMAP.md
