@@ -68,7 +68,7 @@ Run these before touching anything. All are enforced automatically by the script
 your codename from `spike0en/nothing_archive` via the GitHub API, downloads the
 `-image-boot.7z`, `-image-firmware.7z`, `-image-logical.7z` assets, verifies
 `.sha256` checksums when present, and extracts them. Requires `curl` or `wget`, `jq`,
-`7z`, `unzip`.
+`unzip`, and either `7z`, `7zz`, or `bsdtar`.
 
 **Option B — manual.** Go to `https://nothingarchive.tech`, pick **Nothing Phone (3a)**,
 and download the **latest full stock build** (Nothing OS 4.x / Android 16 — same

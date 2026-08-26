@@ -86,8 +86,8 @@ Options:
       --no-lock             restore stock only; leave the bootloader unlocked
       --allow-downgrade     permit flashing a build older than the device's
                             current build (rollback protection may block boot)
-      --yes                 skip extra interactive prompts (the typed
-                            data-wipe confirmation is ALWAYS required)
+      --yes                 explicit acknowledgement of the data wipe; skip
+                            interactive prompts (use only after backing up)
       --dry-run             print every flash/wipe/lock command without
                             executing anything
       --work-dir DIR        working directory for downloads + logs
@@ -229,7 +229,9 @@ require_tools() {
     command -v fastboot >/dev/null 2>&1 || missing+=(fastboot)
     if [[ -z "$IMAGES_DIR" ]]; then
         command -v jq >/dev/null 2>&1 || missing+=(jq)
-        command -v 7z >/dev/null 2>&1 || missing+=(7z)
+        if ! command -v 7z >/dev/null 2>&1 && ! command -v 7zz >/dev/null 2>&1 && ! command -v bsdtar >/dev/null 2>&1; then
+            missing+=(7z-or-bsdtar)
+        fi
         command -v unzip >/dev/null 2>&1 || missing+=(unzip)
     fi
     command -v sha256sum >/dev/null 2>&1 || missing+=(sha256sum)
@@ -330,6 +332,10 @@ Back up photos, messages, 2FA secrets, authenticator apps, and anything else
 you need BEFORE continuing. This is irreversible.
 
 EOF
+    if [[ "$ASSUME_YES" == yes ]]; then
+        warn "--yes supplied: treating it as explicit data-wipe acknowledgement"
+        return 0
+    fi
     local ans
     read -r -p 'Type  ERASE MY DEVICE  (exact, uppercase) to continue: ' ans
     [[ "$ans" == "ERASE MY DEVICE" ]] || die "aborted: data-wipe confirmation not provided"
@@ -390,19 +396,36 @@ download_firmware() {
 
 extract_images() {
     mkdir -p "$IMAGES_DIR"
-    local f found=0
+    local f found=0 extractor
+    if command -v 7z >/dev/null 2>&1; then
+        extractor=7z
+    elif command -v 7zz >/dev/null 2>&1; then
+        extractor=7zz
+    else
+        extractor=bsdtar
+    fi
     for f in "$FW_DIR"/*.7z.001 "$FW_DIR"/*.7z; do
         [[ -f "$f" ]] || continue
         [[ "$f" == *.7z.00[2-9] ]] && continue
         info "extracting $(basename "$f")"
         found=1
-        7z x -y -o"$IMAGES_DIR" "$f" >/dev/null
+        if [[ "$extractor" == bsdtar ]]; then
+            bsdtar -xf "$f" -C "$IMAGES_DIR"
+        else
+            "$extractor" x -y -o"$IMAGES_DIR" "$f" >/dev/null
+        fi
     done
     for f in "$FW_DIR"/*.zip; do
         [[ -f "$f" ]] || continue
         info "extracting $(basename "$f")"
         found=1
-        unzip -oq "$f" -d "$IMAGES_DIR" || 7z x -y -o"$IMAGES_DIR" "$f" >/dev/null
+        if ! unzip -oq "$f" -d "$IMAGES_DIR"; then
+            if [[ "$extractor" == bsdtar ]]; then
+                bsdtar -xf "$f" -C "$IMAGES_DIR"
+            else
+                "$extractor" x -y -o"$IMAGES_DIR" "$f" >/dev/null
+            fi
+        fi
     done
     [[ $found -eq 1 ]] || die "no firmware archives found in $FW_DIR"
     mapfile -t IMG_FILES < <(find "$IMAGES_DIR" -maxdepth 3 -type f -name '*.img' | sort)
