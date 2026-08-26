@@ -314,6 +314,7 @@ def check_openclaw_config() -> dict[str, Any]:
         "ok": False,
         "bind": None,
         "action": None,
+        "warnings": [],
     }
 
     config_path = Path("/home/ahron/.openclaw/openclaw.json")
@@ -323,12 +324,43 @@ def check_openclaw_config() -> dict[str, Any]:
 
     try:
         data = json.loads(config_path.read_text())
-        bind = (((data.get("gateway") or {}).get("bind")) or "")
+        gateway = data.get("gateway") or {}
+        bind = gateway.get("bind") or ""
         result["bind"] = bind
         if bind in ("loopback", "lan"):
             result["ok"] = True
         else:
             result["action"] = f"bind_drift:{bind}"
+
+        auth = gateway.get("auth") or {}
+        auth_mode = auth.get("mode") or ""
+        tailscale = gateway.get("tailscale") or {}
+        tailscale_mode = tailscale.get("mode") or ""
+
+        # Check: tailscale funnel requires password auth
+        if tailscale_mode == "funnel" and auth_mode != "password":
+            result["warnings"].append(
+                "tailscale_funnel_no_password: gateway.tailscale.mode=funnel requires "
+                "gateway.auth.mode=password"
+            )
+
+        # Check: bind=loopback with LAN origins breaks mobile device access
+        origins = (((gateway.get("webchat") or {}).get("allowedOrigins")) or [])
+        lan_origins = [o for o in origins if isinstance(o, str) and o.startswith("http://192.168.")]
+        if bind == "loopback" and lan_origins:
+            result["warnings"].append(
+                f"bind_loopback_lan_origins: gateway.bind=loopback but allowedOrigins "
+                f"contains LAN IPs {lan_origins}. iPhone/Android LAN devices cannot reach "
+                f"127.0.0.1. Set gateway.bind=lan or remove LAN origins."
+            )
+
+        # Check: bind=lan without auth exposes gateway to LAN
+        if bind == "lan" and auth_mode == "none":
+            result["warnings"].append(
+                "bind_lan_no_auth: gateway.bind=lan with gateway.auth.mode=none exposes "
+                "gateway to LAN without authentication"
+            )
+
     except Exception as exc:  # noqa: BLE001
         result["action"] = f"config_read_error:{exc}"
 
@@ -392,6 +424,9 @@ def lister_cycle() -> dict[str, Any]:
     config = status.get("openclaw_config", {})
     if not config.get("ok"):
         log(f"OPENCLAW_CONFIG_DRIFT: {config.get('action', 'unknown')}")
+    
+    for warning in config.get("warnings", []):
+        log(f"OPENCLAW_CONFIG_WARNING: {warning}")
 
     return status
 

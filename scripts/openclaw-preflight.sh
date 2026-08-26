@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OPENCLAW_CONFIG="/home/ahron/.openclaw/openclaw.json"
+OPENCLAW_CONFIG="${OPENCLAW_CONFIG:-/home/ahron/.openclaw/openclaw.json}"
 
 if [ ! -f "$OPENCLAW_CONFIG" ]; then
     echo "[openclaw-preflight] FATAL: Config missing: $OPENCLAW_CONFIG"
@@ -13,7 +13,12 @@ BIND=$(grep -o '"bind": *"[^"]*"' "$OPENCLAW_CONFIG" | head -1 | sed 's/"bind": 
 # Extract allowedOrigins
 ORIGINS=$(grep -A5 '"allowedOrigins"' "$OPENCLAW_CONFIG" | grep -o '"[^"]*"' | tr -d '"' | grep -v 'allowedOrigins' || true)
 # Extract tailscale mode
-TAILSCALE_MODE=$(grep -o '"mode": *"[^"]*"' "$OPENCLAW_CONFIG" | grep -A1 -B1 'tailscale' | tail -1 | sed 's/"mode": *"//;s/"//' || echo "")
+TAILSCALE_MODE=$(python3 -c "
+import json, sys
+with open('$OPENCLAW_CONFIG') as f:
+    data = json.load(f)
+print(((data.get('gateway') or {}).get('tailscale') or {}).get('mode', ''))
+" 2>/dev/null || echo "")
 
 echo "[openclaw-preflight] bind=$BIND tailscale_mode=$TAILSCALE_MODE"
 
@@ -31,7 +36,12 @@ fi
 
 # Check 2: tailscale funnel requires password auth
 if [ "$TAILSCALE_MODE" = "funnel" ]; then
-    AUTH_MODE=$(grep -o '"mode": *"[^"]*"' "$OPENCLAW_CONFIG" | grep -A1 -B1 'auth' | tail -1 | sed 's/"mode": *"//;s/"//' || echo "")
+    AUTH_MODE=$(python3 -c "
+import json, sys
+with open('$OPENCLAW_CONFIG') as f:
+    data = json.load(f)
+print(((data.get('gateway') or {}).get('auth') or {}).get('mode', ''))
+" 2>/dev/null || echo "")
     if [ "$AUTH_MODE" != "password" ]; then
         echo "[openclaw-preflight] ERROR: gateway.tailscale.mode=funnel requires gateway.auth.mode=password, but found mode=$AUTH_MODE"
         echo "[openclaw-preflight] Fix: set gateway.auth.mode=password or remove tailscale.funnel config."
