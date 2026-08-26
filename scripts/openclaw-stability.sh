@@ -4,13 +4,15 @@ set -euo pipefail
 OPENCLAW_CONFIG="/home/ahron/.openclaw/openclaw.json"
 OPENCLAW_OVERRIDE="/home/ahron/.config/systemd/user/openclaw-gateway.service.d/override.conf"
 OPENCLAW_UNIT="openclaw-gateway.service"
-EXPECTED_BIND="lan"
+EXPECTED_BIND="loopback"
 HEALTH_URL="http://127.0.0.1:8090/healthz"
-MAX_RESTARTS=3
-RESTART_WINDOW=300
+MAX_RESTARTS=2
+RESTART_WINDOW=600
+STARTUP_GRACE_SECONDS=30
 
 restart_count=0
 last_restart=0
+last_healthy=0
 
 while true; do
     now=$(date +%s)
@@ -53,9 +55,25 @@ while true; do
         fi
     fi
     
-    # Check if gateway is healthy
-    if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
+    # Skip health check during startup grace period after restart
+    if [ $((now - last_restart)) -lt $STARTUP_GRACE_SECONDS ]; then
+        sleep 10
+        continue
+    fi
+    
+    # Check if gateway is healthy (with retry)
+    healthy=false
+    for attempt in 1 2 3; do
+        if curl -sf "$HEALTH_URL" >/dev/null 2>&1; then
+            healthy=true
+            break
+        fi
+        sleep 2
+    done
+    
+    if [ "$healthy" = true ]; then
         restart_count=0
+        last_healthy=$now
         sleep 30
         continue
     fi
@@ -75,5 +93,5 @@ while true; do
     systemctl --user restart "$OPENCLAW_UNIT"
     last_restart=$now
     restart_count=$((restart_count + 1))
-    sleep 10
+    sleep 15
 done

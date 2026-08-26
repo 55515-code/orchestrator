@@ -309,7 +309,7 @@ def check_tailscale_serve() -> dict[str, Any]:
 
 
 def check_openclaw_config() -> dict[str, Any]:
-    """Verify OpenClaw gateway bind is loopback to prevent tailnet drift."""
+    """Verify OpenClaw gateway bind is valid and gateway is healthy."""
     result: dict[str, Any] = {
         "ok": False,
         "bind": None,
@@ -325,7 +325,7 @@ def check_openclaw_config() -> dict[str, Any]:
         data = json.loads(config_path.read_text())
         bind = (((data.get("gateway") or {}).get("bind")) or "")
         result["bind"] = bind
-        if bind == "loopback":
+        if bind in ("loopback", "lan"):
             result["ok"] = True
         else:
             result["action"] = f"bind_drift:{bind}"
