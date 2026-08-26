@@ -1,6 +1,6 @@
 # Agent Hybrid Report
 
-- Generated at: 2026-08-26T04:02:12.641677+00:00
+- Generated at: 2026-08-26T04:02:18.221033+00:00
 - Session: `20260826-1b21f09`
 - Mode: `deep`
 - Loop count: `6`
@@ -12,11 +12,14 @@
 
 - Loop 1: 1 command(s) failed during mode 'deep'.
 - Loop 1: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
+- Loop 2: 1 command(s) failed during mode 'deep'.
+- Loop 2: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
 
 ## Deep research findings with sources/risks
 
 - Source anchors reviewed: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
 - Strategic direction reviewed: `docs/security-toolkit-roadmap.md`.
+- Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 
 ## Development plan with prioritized tasks
@@ -36,9 +39,11 @@
 
 | Loop | Status | Route | Failing commands | Merge action |
 | --- | --- | --- | --- | --- |
-| 1 | partial_failure | deterministic | 1 | n/a |
+| 1 | partial_failure | deterministic | 1 | pr_create_failed |
+| 2 | partial_failure | deterministic | 1 | n/a |
 
 - Loop 1 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
+- Loop 2 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
 
@@ -49,6 +54,7 @@
 ## Command transcript summary
 
 - Loop 1 executed 3 commands.
+- Loop 2 executed 3 commands.
 
 ## Compatibility notes
 
@@ -61,9 +67,9 @@
 
 ## Git sync posture summary
 
-- Current branch: `main`
+- Current branch: `agent/swarm-20260826-1b21f09`
 - Target branch: `main`
-- Ahead: `0` | Behind: `0` | Diverged: `False`
+- Ahead: `1` | Behind: `0` | Diverged: `False`
 - PR URL: `n/a`
 - Final merge state: `not_attempted`
 
@@ -78,13 +84,16 @@
   "allow_write": true,
   "session_id": "20260826-1b21f09",
   "loop_count": 6,
-  "generated_at": "2026-08-26T04:02:12.641677+00:00",
+  "generated_at": "2026-08-26T04:02:18.221033+00:00",
   "started_at": "2026-08-26T04:01:55.944599+00:00",
   "findings": [
     "Loop 1: 1 command(s) failed during mode 'deep'.",
-    "Loop 1: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+    "Loop 1: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)",
+    "Loop 2: 1 command(s) failed during mode 'deep'.",
+    "Loop 2: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
   ],
   "risks": [
+    "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
   ],
   "tasks": [
@@ -127,6 +136,13 @@
       "return_code": 0,
       "duration_seconds": 3.627,
       "loop": 1
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 1.177,
+      "loop": 2
     }
   ],
   "assumptions": [
@@ -221,18 +237,130 @@
           "return_code": 0,
           "duration_seconds": 3.627
         }
+      ],
+      "publish_result": {
+        "action": "pr_create_failed",
+        "ok": false,
+        "branch": "agent/swarm-20260826-1b21f09",
+        "pr_number": 0,
+        "pr_url": "",
+        "merge_attempted": false,
+        "merged": false,
+        "merge_attempts": 0,
+        "message": "Failed to create PR from rolling branch.",
+        "rebase_ok": true,
+        "push_ok": true,
+        "loop_index": 1
+      }
+    },
+    {
+      "loop_index": 2,
+      "started_at": "2026-08-26T04:02:16.478193+00:00",
+      "generated_at": "2026-08-26T04:02:17.774614+00:00",
+      "route": "deterministic",
+      "cloud_attempted": false,
+      "cloud_success": false,
+      "cloud_note": "Cloud command not configured; skipping cloud route.",
+      "findings": [
+        "1 command(s) failed during mode 'deep'.",
+        "Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+      ],
+      "risks": [
+        "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 1,
+          "ok": false,
+          "duration_seconds": 0.063,
+          "stdout_tail": "________^\n2177 |       return JSONResponse(\n2178 |           {\"status\": \"success\", \"message\": \"Test message sent\", \"message_id\": message_id}\n     |\n\nI001 [*] Import block is un-sorted or un-formatted\n --> tests/test_crypto_backup.py:1:1\n  |\n1 | / from pathlib import Path\n2 | | import tempfile\n3 | | import unittest\n4 | |\n5 | | from substrate.crypto import WalletManager, backup_wallet_seeds, proton_sync_dir\n  | |________________________________________________________________________________^\n6 |\n7 |   DIRECTIVE = \"human: test backup\"\n  |\nhelp: Organize imports\n  |\n  - from pathlib import Path\n1 | import tempfile\n2 | import unittest\n3 + from pathlib import Path\n4 |\n  |\n\nBLE001 Do not catch blind exception: `Exception`\n  --> tests/test_crypto_backup.py:13:8\n   |\n11 | try:\n12 |     from mnemonic import Mnemonic\n13 | except Exception:  # pragma: no cover - optional crypto extra\n   |        ^^^^^^^^^\n14 |     Mnemonic = None  # type: ignore[assignment,misc]\n   |\n\nBLE001 Do not catch blind exception: `Exception`\n  --> tests/test_crypto_backup.py:19:8\n   |\n17 | try:\n18 |     from eth_account import Account\n19 | except Exception:  # pragma: no cover - optional crypto extra\n   |        ^^^^^^^^^\n20 |     Account = None  # type: ignore[assignment,misc]\n   |\n\nDTZ001 `datetime.datetime()` called without a `tzinfo` argument\n  --> tests/test_gh_sync.py:28:26\n   |\n26 |         \"\"\"Test converting sync state to dictionary.\"\"\"\n27 |         state = SyncState(\n28 |             last_sync_at=datetime(2024, 1, 1, 12, 0, 0),\n   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n29 |             last_commit_sha=\"abc123\",\n30 |             last_tag=\"v1.0.0\",\n   |\nhelp: Pass a `datetime.timezone` object to the `tzinfo` parameter\n\nF401 [*] `shutil` imported but unused\n  --> tests/test_panel_integration.py:16:8\n   |\n14 | from __future__ import annotations\n15 |\n16 | import shutil\n   |        ^^^^^^\n17 | from pathlib import Path\n   |\nhelp: Remove unused import: `shutil`\n   |\n15 |\n   - import shutil\n16 | from pathlib import Path\n   |\n\nF401 [*] `fastapi.testclient.TestClient` imported but unused\n  --> tests/test_panel_integration.py:19:32\n   |\n17 | from pathlib import Path\n18 |\n19 | from fastapi.testclient import TestClient\n   |                                ^^^^^^^^^^\n20 |\n21 | from substrate import vault\n   |\nhelp: Remove unused import: `fastapi.testclient.TestClient`\n   |\n18 |\n   - from fastapi.testclient import TestClient\n19 |\n   |\n\nF401 [*] `substrate.vault` imported but unused\n  --> tests/test_panel_integration.py:21:23\n   |\n19 | from fastapi.testclient import TestClient\n20 |\n21 | from substrate import vault\n   |                       ^^^^^\n22 | from substrate.registry import SubstrateRuntime\n23 | from substrate.web import app\n   |\nhelp: Remove unused import: `substrate.vault`\n   |\n20 |\n   - from substrate import vault\n21 | from substrate.registry import SubstrateRuntime\n   |\n\nF401 [*] `substrate.registry.SubstrateRuntime` imported but unused\n  --> tests/test_panel_integration.py:22:32\n   |\n21 | from substrate import vault\n22 | from substrate.registry import SubstrateRuntime\n   |                                ^^^^^^^^^^^^^^^^\n23 | from substrate.web import app\n   |\nhelp: Remove unused import: `substrate.registry.SubstrateRuntime`\n   |\n21 | from substrate import vault\n   - from substrate.registry import SubstrateRuntime\n22 | from substrate.web import app\n   |\n\nF401 [*] `substrate.web.app` imported but unused\n  --> tests/test_panel_integration.py:23:27\n   |\n21 | from substrate import vault\n22 | from substrate.registry import SubstrateRuntime\n23 | from substrate.web import app\n   |                           ^^^\n24 |\n25 | CLIENT_KWARGS = {\"base_url\": \"http://127.0.0.1:8090\"}\n   |\nhelp: Remove unused import: `substrate.web.app`\n   |\n22 | from substrate.registry import SubstrateRuntime\n   - from substrate.web import app\n23 |\n   |\n\nFound 323 errors.\n[*] 47 fixable with the `--fix` option (4 hidden fixes can be enabled with the `--unsafe-fixes` option).\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.057,
+          "stdout_tail": "Listing 'substrate'...\nListing 'substrate/agents'...\nListing 'substrate/assets'...\nListing 'substrate/chatbot'...\nListing 'substrate/chatbot/static'...\nListing 'substrate/credentials'...\nListing 'substrate/crypto'...\nListing 'substrate/dashboard'...\nListing 'substrate/gateway'...\nListing 'substrate/gateway/plugins'...\nListing 'substrate/gh_sync'...\nListing 'substrate/monitoring'...\nListing 'substrate/pipelines'...\nListing 'substrate/render_engines'...\nListing 'substrate/resources'...\nListing 'substrate/security'...\nListing 'substrate/static'...\nListing 'substrate/templates'...\nListing 'scripts'...\nListing 'scripts/crypto'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/test_decentralized_governance.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 1.177,
+          "stdout_tail": ".............                                                            [100%]\n13 passed in 0.30s\n",
+          "stderr_tail": ""
+        }
+      ],
+      "failing_count": 1,
+      "loop_status": "partial_failure",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 1.177
+        }
       ]
     }
   ],
-  "merge_history": [],
+  "merge_history": [
+    {
+      "action": "pr_create_failed",
+      "ok": false,
+      "branch": "agent/swarm-20260826-1b21f09",
+      "pr_number": 0,
+      "pr_url": "",
+      "merge_attempted": false,
+      "merged": false,
+      "merge_attempts": 0,
+      "message": "Failed to create PR from rolling branch.",
+      "rebase_ok": true,
+      "push_ok": true,
+      "loop_index": 1
+    }
+  ],
   "final_pr_url": "",
   "final_merge_state": "not_attempted",
   "git_context": {
-    "current_branch": "main",
+    "current_branch": "agent/swarm-20260826-1b21f09",
     "target_branch": "main",
-    "head_sha": "1b21f0989db65e180e03439e08500dd034f8e324",
+    "head_sha": "1ca88159fb00dee673aec43b6e0badad12a69cb3",
     "target_sha": "1b21f0989db65e180e03439e08500dd034f8e324",
-    "ahead_count": 0,
+    "ahead_count": 1,
     "behind_count": 0,
     "diverged": false,
     "working_tree_clean_start": true,
@@ -412,6 +540,122 @@
       "ok": true,
       "duration_seconds": 0.002,
       "stdout_tail": "0\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.005,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/agent_hybrid_publish.sh",
+        "true",
+        "main",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md",
+        "1",
+        "6",
+        "20260826-1b21f09",
+        "safe_gate",
+        "1",
+        "false"
+      ],
+      "command_text": "bash scripts/agent_hybrid_publish.sh true main /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md 1 6 20260826-1b21f09 safe_gate 1 false",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 3.835,
+      "stdout_tail": "[agent/swarm-20260826-1b21f09 1ca8815] chore(agent): swarm loop 1/6 session 20260826-1b21f09\n 2 files changed, 791 insertions(+)\n create mode 100644 artifacts/agent-hybrid/agent_report.md\n create mode 100644 artifacts/agent-hybrid/agent_summary.json\nCurrent branch agent/swarm-20260826-1b21f09 is up to date.\nbranch 'agent/swarm-20260826-1b21f09' set up to track 'origin/agent/swarm-20260826-1b21f09'.\nAGENT_PUBLISH_ACTION=pr_create_failed\nAGENT_PUBLISH_OK=false\nAGENT_PUBLISH_BRANCH=agent/swarm-20260826-1b21f09\nAGENT_PUBLISH_PR_NUMBER=\nAGENT_PUBLISH_PR_URL=\nAGENT_PUBLISH_MERGE_ATTEMPTED=false\nAGENT_PUBLISH_MERGED=false\nAGENT_PUBLISH_MERGE_ATTEMPTS=0\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=Failed to create PR from rolling branch.\n",
+      "stderr_tail": "From https://github.com/55515-code/orchestrator\n * branch            main       -> FETCH_HEAD\nSwitched to a new branch 'agent/swarm-20260826-1b21f09'\nremote: \nremote: Create a pull request for 'agent/swarm-20260826-1b21f09' on GitHub by visiting:        \nremote:      https://github.com/55515-code/orchestrator/pull/new/agent/swarm-20260826-1b21f09        \nremote: \nTo https://github.com/55515-code/orchestrator\n * [new branch]      agent/swarm-20260826-1b21f09 -> agent/swarm-20260826-1b21f09\nscripts/agent_hybrid_publish.sh: line 64: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json\\: No such file or directory\nscripts/agent_hybrid_publish.sh: line 65: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md\\: No such file or directory\npull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)\n"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.429,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "agent/swarm-20260826-1b21f09\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "1ca88159fb00dee673aec43b6e0badad12a69cb3\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "1b21f0989db65e180e03439e08500dd034f8e324\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "1\t0\n",
       "stderr_tail": ""
     },
     {
