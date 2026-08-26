@@ -1,5 +1,25 @@
 # MEMORY.md
 
+## Standing Design Principle: Surgical Restorability (2026-08-25)
+
+**Principle:** All system data, configs, and credentials must be surgically restorable. Before any destructive operation (logout, credential rotation, config overwrite), snapshot the current state with a timestamp. Not just a `.bak` of the same content.
+
+**Requirements:**
+- Versioned state snapshots before destructive operations
+- Atomic operations with rollback capability
+- Server-validated state tracking (separate from raw credential files)
+- Pre-operation safety checks and dry-run modes
+
+**Incident that motivated this:** WhatsApp credentials were cleared by `whatsapp_login(force=true)` at 21:32, then the session was server-invalidated at 21:35 with "status 440: session conflict." The `.bak` file was identical to the current file (same-moment copy), and even if it had been older, the server-side session was already gone. No surgical rollback was possible; required a fresh QR scan.
+
+**Action items:**
+- Add pre-operation snapshot hook for WhatsApp credential operations (and other stateful integrations)
+- Version credential backups with timestamps, not just `.bak`
+- Track server-validated session state separately from raw credential files
+- Add dry-run mode for destructive operations
+
+
+
 ## Incident: Android node remote-setup failure (2026-08-25) — must not repeat
 
 **What happened:** While configuring remote connectivity for the Android node (`nothing-3a`), I:

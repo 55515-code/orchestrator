@@ -973,6 +973,32 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Maximum commits for --list (default 20).",
     )
 
+    cred_snap = subparsers.add_parser(
+        "credential-snapshot",
+        help="Snapshot a credential/config file or directory (surgical restore).",
+    )
+    cred_snap.add_argument("path", help="File or directory to snapshot.")
+    cred_snap.add_argument("--reason", default="", help="Why this snapshot is taken.")
+
+    cred_list = subparsers.add_parser(
+        "credential-snapshots",
+        help="List available credential/config snapshots.",
+    )
+
+    cred_restore = subparsers.add_parser(
+        "credential-restore",
+        help="Atomically restore a credential/config snapshot (reversible).",
+    )
+    cred_restore.add_argument("snapshot_dir", help="Snapshot directory to restore.")
+
+    cred_prune = subparsers.add_parser(
+        "credential-snapshots-prune",
+        help="Delete credential snapshots older than N days.",
+    )
+    cred_prune.add_argument(
+        "--days", type=int, default=30, help="Retention in days (default 30)."
+    )
+
     swarm_control = subparsers.add_parser(
         "swarm-control",
         help="Coordinated multi-agent swarm control for the control panel "
@@ -1876,6 +1902,34 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(json.dumps(results, indent=2, ensure_ascii=False))
         return 1 if failed else 0
+
+    if args.command in {
+        "credential-snapshot",
+        "credential-snapshots",
+        "credential-restore",
+        "credential-snapshots-prune",
+    }:
+        from scripts.credential_snapshots import (
+            list_snapshots,
+            prune,
+            restore,
+            snapshot as cred_snapshot,
+        )
+
+        try:
+            if args.command == "credential-snapshot":
+                result = cred_snapshot(args.path, reason=args.reason, root=runtime.root)
+            elif args.command == "credential-snapshots":
+                result = list_snapshots(root=runtime.root)
+            elif args.command == "credential-restore":
+                result = restore(args.snapshot_dir, root=runtime.root)
+            else:
+                result = {"removed": prune(args.days, root=runtime.root)}
+        except (FileNotFoundError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0
 
     if args.command == "swarm-control":
         if args.swarm_command == "simulate-users":
