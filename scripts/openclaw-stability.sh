@@ -4,7 +4,7 @@ set -euo pipefail
 OPENCLAW_CONFIG="/home/ahron/.openclaw/openclaw.json"
 OPENCLAW_OVERRIDE="/home/ahron/.config/systemd/user/openclaw-gateway.service.d/override.conf"
 OPENCLAW_UNIT="openclaw-gateway.service"
-EXPECTED_BIND="loopback"
+EXPECTED_BIND="lan"
 HEALTH_URL="http://127.0.0.1:8090/healthz"
 MAX_RESTARTS=2
 RESTART_WINDOW=600
