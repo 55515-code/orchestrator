@@ -38,3 +38,35 @@
 - Gateway already has a tailnet-only Serve URL: `https://cachyos-x8664.tail0b124a.ts.net:10000` → 127.0.0.1:8090.
 - Robust remote path options: (A) Tailscale on phone + node-host pointed at serve URL, or (B) Funnel (public wss://) — B requires password auth mode + operator grant.
 - Setup code generation: `openclaw qr --setup-code-only` / `--url wss://...`; approval via `openclaw devices approve <requestId>`.
+
+## Device operator-admin escalation (2026-08-25)
+
+**How to grant full admin (operator.admin + operator.pairing) to a paired app/device:**
+
+Native mobile apps (iOS/Android) onboard through a "bootstrap handoff" profile that
+**hard-caps** operator scopes to exactly `operator.approvals, operator.read,
+operator.talk.secrets, operator.write` (see `BOOTSTRAP_HANDOFF_OPERATOR_SCOPES` in
+the gateway dist). `openclaw devices rotate` is deliberately gated by the device's
+`approvedScopes` baseline, so it **cannot** escalate past that cap
+(reason: `scope-outside-approved-baseline`). There is no CLI/API path to mint admin.
+
+The authoritative device pairing state is `~/.openclaw/devices/paired.json` (read
+fresh on every WS connect; no restart needed). To grant admin:
+
+1. Snapshot `paired.json` (surgical restore).
+2. For the target device entry, set `scopes`, `approvedScopes`, AND
+   `tokens.operator.scopes` **all three** to the full set (must be mutually
+   consistent, or token-verify fails with `scope-mismatch`):
+   `operator.admin, operator.read, operator.write, operator.approvals,
+   operator.pairing, operator.talk.secrets`.
+3. Write atomically (temp + `os.replace`).
+4. The app picks up admin on its next reconnect (gateway re-reads the file;
+   effective session scopes = `deviceToken.scopes` when a device token exists).
+
+**Effective-session-scope mechanism (verified in dist source):**
+`helloOkAuthScopes = deviceToken ? deviceToken.scopes : scopes` — the token's
+stored scopes are what matter, not just what the app requests.
+
+**Devices granted admin 2026-08-25:**
+- `Phone (3a)` — `2371c65a0bf69f18bd7ce02e7606397d1bd45ccb1645436105896f94f18bb0d1`
+- `iPhone` — `ecd0b6dc64eb8a45e013900b43dd6e058cb1dc2bfbea73c55938fd09f5d6bb39`
