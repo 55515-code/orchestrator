@@ -538,7 +538,13 @@ resolve_unknown_physical() {
 
 flash_physical() {
     info "PHASE 1/4 -- flashing physical partitions to BOTH slots (bootloader fastboot)"
-    fb reboot bootloader
+    # ADB must perform the Android -> bootloader transition.  `fastboot reboot
+    # bootloader` can only be used after a fastboot device is already present.
+    if [[ "$FB_MODE_ONLY" != yes ]]; then
+        info "    requesting bootloader mode through ADB"
+        adb_run reboot bootloader
+        sleep 3
+    fi
     wait_fastboot
     guard_single_fastboot
     resolve_unknown_physical
