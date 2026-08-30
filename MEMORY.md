@@ -1,5 +1,12 @@
 # MEMORY.md
 
+## WhatsApp messaging boundary (2026-08-30)
+
+- Reply only to Ahron at `+17163528536`.
+- Never respond to or proactively message Rebekah or any other WhatsApp contact unless Ahron explicitly instructs it for that specific action.
+- Other conversations may be used as read-only context when available; reading is not permission to send.
+- WhatsApp access is owner-only: DM allowlist contains only Ahron's number, and group handling is disabled.
+
 ## Standing Design Principle: Surgical Restorability (2026-08-25)
 
 **Principle:** All system data, configs, and credentials must be surgically restorable. Before any destructive operation (logout, credential rotation, config overwrite), snapshot the current state with a timestamp. Not just a `.bak` of the same content.
