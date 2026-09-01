@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenClaw Gateway deep health watchdog (one-shot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/ahron/codespace/scripts/openclaw_gateway_watchdog.sh
+Environment=HOME=/home/ahron
+TimeoutStartSec=60

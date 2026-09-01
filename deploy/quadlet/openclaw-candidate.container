@@ -3,13 +3,15 @@
 Description=OpenClaw Gateway Capsule candidate
 After=network-online.target
 Wants=network-online.target
+# Crash-loop breaker: at most 5 starts per 5 minutes.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Container]
 Image=${OPENCLAW_IMAGE_DIGEST}
 ContainerName=openclaw-candidate
 EnvironmentFile=${OPENCLAW_STATE_DIR}/.env
 Environment=HOME=/home/node
-Environment=OPENCLAW_NO_RESPAWN=1
 Volume=${OPENCLAW_STATE_DIR}:/home/node/.openclaw:rw
 Volume=${WORKSPACE_DIR}:/home/node/.openclaw/workspace:rw
 PublishPort=127.0.0.1:18090:18789
@@ -19,7 +21,14 @@ NoNewPrivileges=true
 Exec=openclaw gateway --bind lan --port 18789
 
 [Service]
-Restart=on-failure
+# Restart on ANY exit (including a clean SIGTERM from the built-in channel
+# health monitor). Do NOT set OPENCLAW_NO_RESPAWN — that disables the
+# gateway's own respawn path and leaves it offline until manual intervention.
+Restart=always
+RestartSec=3
+# Exit code 78 = invalid config: stop relaunching until fixed.
+RestartPreventExitStatus=78
+TimeoutStopSec=30
 TimeoutStartSec=300
 
 [Install]
