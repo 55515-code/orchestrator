@@ -23,7 +23,7 @@ while true; do
         if [ "$current_bind" != "$EXPECTED_BIND" ]; then
             echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Config drift detected: bind=$current_bind, expected=$EXPECTED_BIND. Repairing..."
             sed -i "s/\"bind\": *\"[^\"]*\"/\"bind\": \"$EXPECTED_BIND\"/" "$OPENCLAW_CONFIG"
-            chmod 0444 "$OPENCLAW_CONFIG"
+            chmod 600 "$OPENCLAW_CONFIG"
             systemctl --user daemon-reload
             systemctl --user restart "$OPENCLAW_UNIT"
             sleep 5
@@ -32,7 +32,7 @@ while true; do
         # Enforce read-only permissions to prevent OpenClaw from rewriting
         current_perms=$(stat -c "%a" "$OPENCLAW_CONFIG" 2>/dev/null || stat -f "%Lp" "$OPENCLAW_CONFIG" 2>/dev/null || echo "000")
         if [ "$current_perms" != "444" ]; then
-            chmod 0444 "$OPENCLAW_CONFIG" 2>/dev/null || true
+            chmod 600 "$OPENCLAW_CONFIG" 2>/dev/null || true
         fi
     fi
     
@@ -42,7 +42,7 @@ while true; do
         if [ "$override_bind" != "$EXPECTED_BIND" ]; then
             echo "[$(date -u +%Y-%m-%dT%H:%M:%SZ)] Override drift detected: bind=$override_bind, expected=$EXPECTED_BIND. Repairing..."
             sed -i "s|--bind [^ ]*|--bind $EXPECTED_BIND|g" "$OPENCLAW_OVERRIDE"
-            chmod 0444 "$OPENCLAW_OVERRIDE"
+            chmod 600 "$OPENCLAW_OVERRIDE"
             systemctl --user daemon-reload
             systemctl --user restart "$OPENCLAW_UNIT"
             sleep 5
@@ -51,7 +51,7 @@ while true; do
         # Enforce read-only permissions on override
         current_perms=$(stat -c "%a" "$OPENCLAW_OVERRIDE" 2>/dev/null || stat -f "%Lp" "$OPENCLAW_OVERRIDE" 2>/dev/null || echo "000")
         if [ "$current_perms" != "444" ]; then
-            chmod 0444 "$OPENCLAW_OVERRIDE" 2>/dev/null || true
+            chmod 600 "$OPENCLAW_OVERRIDE" 2>/dev/null || true
         fi
     fi
     
