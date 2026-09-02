@@ -254,3 +254,52 @@ Run `bash scripts/health_check.sh` to validate substrate infrastructure integrit
 - Substrate scan succeeds
 
 The CI pipeline automatically runs this check on every push/PR.
+
+## Tools
+
+### Local notes (migrated from TOOLS.md)
+
+# TOOLS.md - Local Notes
+
+Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup: camera names and locations, SSH hosts and aliases, preferred TTS voices, speaker/room names, device nicknames, anything environment-specific.
+
+## Examples
+
+```markdown
+### Cameras
+
+- living-room → Main area, 180° wide angle
+- front-door → Entrance, motion-triggered
+
+### SSH
+
+- home-server → 192.168.1.100, user: admin
+
+### TTS
+
+- Preferred voice: "Nova" (warm, slightly British)
+- Default speaker: Kitchen HomePod
+```
+
+## Why Separate?
+
+Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+
+---
+
+Add whatever helps you do your job. This is your cheat sheet.
+
+## Android OpenClaw node
+
+- Preferred node: `nothing-3a` (`a303aa5317ec48d38527a49eb3f2b99d269de1b6455b8164e2b468f1ef7dd55e`).
+- Use it only when connected **and** `nodes status` shows the required command declared (not merely a capability label): Android/Termux-specific checks need `system.run`, mobile browser work needs `browser.proxy`, and bounded local inference needs a compatible model returned by discovery.
+- Keep ordinary repository commands, scheduled agents, builds, and tests on the gateway unless the task specifically benefits from Android. Never assume the phone has the workspace or host dependencies.
+- For shell work on Android, call exec explicitly with `host=node`; `tools.exec.node` pins that explicit route while `tools.exec.host=auto` preserves gateway fallback for regular work.
+- Browser node routing is manual and pinned to this device; target the node explicitly. If it is offline or its browser proxy is unavailable, use the gateway browser instead.
+- Do not route sensitive sensor, SMS, camera, screen-recording, or outbound actions to the phone without the normal permission and user-confirmation checks.
+- Local inference is opportunistic only: run discovery first and fall back if no compatible Ollama model is advertised.
+- Current verification (2026-08-23): pairing was refreshed successfully and the node now declares `system.run`, `system.which`, `system.execApprovals.get/set`, and `browser.proxy`. `system.which` works. Direct exec is still denied by the phone's node-host runtime despite an effective full/off/full approvals policy, so keep gateway fallback mandatory until the node host is upgraded or restarted with corrected approval handling. Browser proxy reaches the phone but no supported Chromium executable is installed; local inference advertises a capability but no compatible Ollama service/model is currently discoverable.
+
+## Related
+
+- [Agent workspace](/concepts/agent-workspace)
