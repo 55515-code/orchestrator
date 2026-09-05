@@ -1,0 +1,41 @@
+# restic --exclude-file for scripts/backup_snapshot.sh
+#
+# Version-controlled exclusion list so backup scope is reviewable in git rather
+# than buried in shell flags. Patterns follow restic's exclude syntax:
+# https://restic.readthedocs.io/en/stable/040_backup.html#excluding-files
+#
+# Rule of thumb: exclude anything that is (a) regenerable from a declared
+# source, or (b) large binary media that a re-download can restore. Never
+# exclude declarative configuration or accumulated state that cannot be rebuilt.
+
+# --- Generic regenerable build/VCS noise -----------------------------------
+**/.git/**
+**/node_modules/**
+**/__pycache__/**
+**/.venv/**
+**/dist/**
+**/.mypy_cache/**
+**/.ruff_cache/**
+**/.pytest_cache/**
+
+# --- Substrate state: bulk, regenerable artifacts --------------------------
+# Device firmware/research images: re-downloadable from vendor sources.
+# See docs/generated/backup-recovery.md for the restore path.
+**/codespace/state/device-research/**
+**/codespace/state/nothing-restore-live/**
+
+# Agent git worktrees: reconstructible with `git worktree add` from the
+# agent/* branches, which live in the git remote.
+**/codespace/state/agent-worktrees/**
+
+# Point-in-time state copies already superseded by restic's own history.
+**/codespace/state/openclaw-state-backup-*/**
+**/codespace/state/config-sweep-*/**
+
+# Live SQLite sidecars. The databases themselves are captured as consistent
+# `VACUUM INTO` snapshots under artifacts/db-snapshots/ instead.
+**/codespace/state/*.db-wal
+**/codespace/state/*.db-shm
+
+# Transient caches.
+**/codespace/state/cache/**

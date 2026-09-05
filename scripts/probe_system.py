@@ -309,6 +309,7 @@ def write_probe(out_file: Path) -> None:
         "## Accelerators",
         "```text",
         f"Detected: {', '.join(accelerators) if accelerators else 'none'}",
+        "```",
         "",
     ]
 

@@ -24,6 +24,34 @@ from .config import ChatbotConfig
 DONE_MARKER = "__done__"
 CANCEL_MARKER = "__cancel__"
 
+# Timeout for the prefill-proxy health probe. Deliberately short: the probe sits
+# in the hot path of every chat task, and a missing proxy must degrade to
+# "talk to upstreams directly" quickly rather than stalling the user.
+_PROXY_PROBE_TIMEOUT = 1.5
+
+
+def _proxy_healthy(base: str, *, timeout: float = _PROXY_PROBE_TIMEOUT) -> bool:
+    """Return True when the local prefill proxy answers its health endpoint.
+
+    Probes ``/__health``, which ``substrate/prefill_proxy.py`` serves as a JSON
+    status document (see ``_send_status`` there). Any failure — connection
+    refused, timeout, non-200, unparseable body — is reported as unhealthy so
+    the caller falls back to direct upstream access instead of raising.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    url = f"{base.rstrip('/')}/__health"
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
+            if resp.status != 200:
+                return False
+            payload = _json.loads(resp.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return False
+    return bool(payload.get("ok"))
+
 
 @dataclass(slots=True)
 class AgentTask:

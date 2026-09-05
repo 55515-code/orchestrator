@@ -305,6 +305,39 @@ def load_workspace_config(root: Path) -> WorkspaceConfig:
         rc1_watchdog_poll_interval_seconds=rc1_watchdog_poll_interval_seconds,
         rc1_watchdog_terminate_grace_seconds=rc1_watchdog_terminate_grace_seconds,
         restricted_terms=restricted_terms,
+        # Framework-first development policy. These were declared in
+        # workspace.yaml and read by substrate/stats.py and
+        # substrate/orchestrator.py, but were never wired through the loader —
+        # so configured `true` values silently resolved to the dataclass
+        # defaults (`False`). Regression-tested in tests/test_settings_policy.py.
+        framework_first_development=bool(
+            raw_policy.get("framework_first_development", False)
+        ),
+        default_agent_framework=str(
+            raw_policy.get("default_agent_framework", "smolagents")
+        ),
+        default_orchestration_framework=str(
+            raw_policy.get("default_orchestration_framework", "langgraph")
+        ),
+        default_web_framework=str(raw_policy.get("default_web_framework", "fastapi")),
+        default_frontend_framework=str(
+            raw_policy.get(
+                "default_frontend_framework", "vanilla_js_with_established_libs"
+            )
+        ),
+        # UX accessibility policy.
+        ux_accessibility_first=bool(raw_policy.get("ux_accessibility_first", False)),
+        ux_min_touch_target_px=int(raw_policy.get("ux_min_touch_target_px", 44)),
+        ux_screen_reader_support=bool(
+            raw_policy.get("ux_screen_reader_support", True)
+        ),
+        # OpenClaw Gateway baseline policy.
+        openclaw_gateway_baseline=bool(
+            raw_policy.get("openclaw_gateway_baseline", False)
+        ),
+        openclaw_gateway_primary_ui=bool(
+            raw_policy.get("openclaw_gateway_primary_ui", False)
+        ),
     )
     if policy.default_mode not in {"observe", "mutate"}:
         raise ValueError("policy.default_mode must be observe|mutate.")

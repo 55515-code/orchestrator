@@ -95,13 +95,16 @@ def pid_on_port(port: int) -> int | None:
 def write_audit(record: dict[str, Any]) -> None:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     record["_ts"] = utc_now_iso()
+    # `default=str` guarantees the audit trail is never lost to a stray
+    # non-serializable value (e.g. a subprocess wrapper or exception object).
+    # A watchdog must not crash while recording why it acted.
     with AUDIT_FILE.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
 
 
 def write_status(status: dict[str, Any]) -> None:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
-    STATUS_FILE.write_text(json.dumps(status, indent=2, ensure_ascii=False))
+    STATUS_FILE.write_text(json.dumps(status, indent=2, ensure_ascii=False, default=str))
 
 
 def log(msg: str) -> None:
@@ -452,7 +455,7 @@ def watchdog_cycle(state: dict[str, Any]) -> dict[str, Any]:
 def run_once() -> dict[str, Any]:
     state = load_state()
     state = watchdog_cycle(state)
-    print(json.dumps(state, indent=2, ensure_ascii=False))
+    print(json.dumps(state, indent=2, ensure_ascii=False, default=str))
     return state
 
 

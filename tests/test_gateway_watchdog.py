@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import builtins
+import io
 import json
 import os
 import sys
@@ -10,8 +12,8 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-# Ensure substrate is importable
-ROOT = Path(__file__).resolve().parents[2]
+# Ensure substrate is importable (repo root is the parent of tests/)
+ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from substrate.watchdog.gateway_watchdog import (  # noqa: E402
@@ -35,6 +37,7 @@ from substrate.watchdog.gateway_watchdog import (  # noqa: E402
     run_checks,
     run_once,
     write_audit,
+    write_status,
 )
 
 
@@ -104,28 +107,41 @@ def test_check_port_closed(monkeypatch):
     assert "not listening" in result["detail"]
 
 
-def test_check_resource_usage_ok(monkeypatch, tmp_path):
+def _patch_proc_status(monkeypatch, pid: int, content: str) -> None:
+    """Redirect reads of /proc/<pid>/status to in-memory content.
+
+    The real builtin is captured before patching so the fake can delegate for
+    every other path without recursing into itself.
+    """
+    real_open = builtins.open
+
+    def fake_open(path, *args, **kwargs):
+        if str(path) == f"/proc/{pid}/status":
+            return io.StringIO(content)
+        return real_open(path, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", fake_open)
+
+
+def test_check_resource_usage_ok(monkeypatch):
     """Resource check passes when memory is below threshold."""
-    fake_proc = tmp_path / "status"
-    fake_proc.write_text("VmRSS: 512000 kB\n")
     monkeypatch.setattr("substrate.watchdog.gateway_watchdog.pid_on_port", lambda *a, **k: 5555)
-    monkeypatch.setattr("builtins.open", lambda path, **k: open(path, **k) if str(path) == "/proc/5555/status" else (_ for _ in ()).throw(OSError()))
+    _patch_proc_status(monkeypatch, 5555, "VmRSS:\t  512000 kB\n")
 
     result = check_resource_usage()
     assert result["ok"] is True
     assert result["memory_mb"] == 500.0
 
 
-def test_check_resource_usage_high_memory(monkeypatch, tmp_path):
+def test_check_resource_usage_high_memory(monkeypatch):
     """Resource check fails when memory exceeds threshold."""
-    fake_proc = tmp_path / "status"
-    fake_proc.write_text("VmRSS: 2097152 kB\n")  # 2GB
     monkeypatch.setattr("substrate.watchdog.gateway_watchdog.pid_on_port", lambda *a, **k: 5555)
-    monkeypatch.setattr("builtins.open", lambda path, **k: open(path, **k) if str(path) == "/proc/5555/status" else (_ for _ in ()).throw(OSError()))
+    _patch_proc_status(monkeypatch, 5555, "VmRSS:\t 2097152 kB\n")  # 2GB
 
     result = check_resource_usage()
     assert result["ok"] is False
     assert result["memory_mb"] == 2048.0
+    assert "1024MB threshold" in result["detail"]
 
 
 def test_check_config_valid(monkeypatch, tmp_path):
@@ -293,7 +309,12 @@ def test_run_once_unhealthy_restarts(monkeypatch, tmp_path):
         "upstream_dns": {"ok": True},
     }
     monkeypatch.setattr("substrate.watchdog.gateway_watchdog.run_checks", lambda: checks)
-    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.run", lambda *a, **k: MagicMock(returncode=0))
+    monkeypatch.setattr(
+        "substrate.watchdog.gateway_watchdog.run",
+        lambda *a, **k: MagicMock(returncode=0, stdout="", stderr=""),
+    )
+    # Do not burn the grace period in tests.
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.time.sleep", lambda *_: None)
 
     state = run_once()
     assert state.get("healthy") is False
@@ -367,3 +388,35 @@ def test_audit_log_written(monkeypatch, tmp_path):
     assert record["event"] == "test"
     assert record["detail"] == "hello"
     assert "_ts" in record
+
+
+def test_audit_log_survives_non_serializable_values(monkeypatch, tmp_path):
+    """A non-serializable value must not crash or drop the audit record.
+
+    The watchdog exists to keep the gateway available; losing the audit trail
+    (or raising out of watchdog_cycle) because a subprocess wrapper leaked into
+    the record would defeat that purpose.
+    """
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.AUDIT_FILE", tmp_path / "audit.jsonl")
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.STATE_DIR", tmp_path)
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.LOG_DIR", tmp_path)
+
+    write_audit({"event": "remediation", "detail": MagicMock(name="leaked")})
+
+    lines = (tmp_path / "audit.jsonl").read_text().strip().splitlines()
+    assert len(lines) == 1
+    record = json.loads(lines[0])
+    assert record["event"] == "remediation"
+    assert isinstance(record["detail"], str)
+
+
+def test_write_status_survives_non_serializable_values(monkeypatch, tmp_path):
+    """Status snapshots degrade to string rather than raising."""
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.STATUS_FILE", tmp_path / "status.json")
+    monkeypatch.setattr("substrate.watchdog.gateway_watchdog.STATE_DIR", tmp_path)
+
+    write_status({"healthy": False, "probe": MagicMock(name="leaked")})
+
+    payload = json.loads((tmp_path / "status.json").read_text())
+    assert payload["healthy"] is False
+    assert isinstance(payload["probe"], str)

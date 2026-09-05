@@ -1,0 +1,467 @@
+# system_registry.yaml — canonical description of the running system.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# Before this registry, the system's topology was only discoverable by reading
+# ~/.config/systemd/user/*.service, running `ss -tlnp`, and cross-referencing
+# ~30 prose documents that disagreed with each other about ports and ownership.
+# There was no single answer to "what runs where, and who owns port 8090?".
+#
+# This file is that answer. It is the SOURCE OF TRUTH for:
+#   - port allocation (prevents the 8090/8091 collisions documented below)
+#   - service inventory and ownership
+#   - scheduled automation (systemd timers AND external schedulers)
+#   - backup coverage and restore paths
+#
+# CONTRACT
+# --------
+# 1. `scripts/generate_system_docs.py` renders this into docs/generated/*.md.
+#    Never hand-edit those outputs; edit this file and regenerate.
+# 2. `scripts/validate_system_registry.py` asserts this file matches reality
+#    (no duplicate ports, declared units exist, documented ports match `ss`).
+#    CI runs it, so drift fails the build instead of rotting silently.
+# 3. Adding a service/port/timer means adding it HERE first.
+
+version: 2
+generated_note: >-
+  Ports and unit states in docs/generated/ are rendered from this registry plus
+  a live probe. If the probe disagrees with the registry, validation fails.
+
+# ---------------------------------------------------------------------------
+# Port allocation. Single authority — resolves the 8090/8091/8095 confusion.
+# ---------------------------------------------------------------------------
+ports:
+  - port: 8090
+    owner: openclaw-gateway
+    bind: lan
+    purpose: OpenClaw Gateway — primary ops UI and agent control plane.
+    reserved: true
+    notes: >-
+      RESERVED. Do not bind anything else here. `substrate serve --port 8090`
+      is guarded by an explicit warning in substrate/cli.py.
+  - port: 8091
+    owner: openclaw-gateway
+    bind: lan
+    purpose: OpenClaw Gateway companion listener (same process as 8090).
+    reserved: true
+    notes: >-
+      RESERVED. Historically documented as "the substrate panel port" — that was
+      wrong; the gateway process owns it. Never bind the panel here.
+  - port: 8095
+    owner: substrate-panel-tailnet
+    bind: tailnet
+    purpose: Substrate ops panel (Proton + Vault + Integrations), tailnet-only.
+    reserved: false
+    notes: >-
+      Bound to the Tailscale address, not loopback, so the panel is reachable
+      from the operator's phone without exposing it to the LAN.
+  - port: 8322
+    owner: external
+    bind: unspecified
+    purpose: Non-substrate listener observed on the host.
+    reserved: false
+  - port: 8443
+    owner: paperclip-tailnet-proxy
+    bind: tailnet
+    purpose: Paperclip tailnet TCP proxy -> 127.0.0.1:3100.
+    reserved: false
+  - port: 8765
+    owner: ttyd
+    bind: loopback
+    purpose: Web shell (ttyd) for the phone webapp.
+    reserved: false
+  - port: 8766
+    owner: kilo-acp
+    bind: loopback
+    purpose: Kilo ACP headless server for acpx/Zed automation.
+    reserved: false
+  - port: 9757
+    owner: openclaw-android-lan-proxy
+    bind: lan
+    purpose: LAN proxy 192.168.1.249:9757 -> 127.0.0.1:8090 for the Android node.
+    reserved: false
+  - port: 10000
+    owner: tailscale-serve
+    bind: tailnet
+    purpose: Tailscale serve front door onto the OpenClaw Gateway.
+    reserved: false
+  - port: 11434
+    owner: ollama
+    bind: loopback
+    purpose: Local Ollama inference API.
+    reserved: false
+
+# Ports that local development must never bind, with a safe alternative.
+port_policy:
+  reserved_ports: [8090, 8091]
+  dev_panel_port: 8096
+  rationale: >-
+    8090 and 8091 belong to the OpenClaw Gateway process. 8095 is taken by the
+    tailnet panel unit. 8096 is the first free port in the block and is the
+    documented choice for ad-hoc local panel runs.
+
+# ---------------------------------------------------------------------------
+# Long-running services (systemd user units).
+# ---------------------------------------------------------------------------
+services:
+  - unit: openclaw-gateway.service
+    role: control-plane
+    purpose: OpenClaw Gateway — primary ops UI, agent runtime, plugin host.
+    expected_state: active
+    ports: [8090, 8091]
+    critical: true
+  - unit: openclaw-stability.service
+    role: supervision
+    purpose: Shell-based gateway stability watchdog.
+    expected_state: active
+    critical: true
+    notes: >-
+      Overlaps with openclaw-gateway-watchdog.service. See
+      known_issues.duplicate_watchdogs.
+  - unit: openclaw-gateway-watchdog.service
+    role: supervision
+    purpose: Python gateway watchdog (substrate/watchdog/gateway_watchdog.py).
+    expected_state: inactive
+    critical: false
+    notes: >-
+      Installed but DISABLED. It is the better-tested implementation (28 unit
+      tests) but enabling it alongside openclaw-stability.service would give two
+      supervisors authority to restart the same unit. Consolidation is a
+      deliberate, human-approved change — see known_issues.duplicate_watchdogs.
+  - unit: openclaw-android-lan-proxy.service
+    role: transport
+    purpose: Exposes the gateway to the Android node over LAN.
+    expected_state: active
+    ports: [9757]
+    critical: false
+  - unit: substrate-panel-tailnet.service
+    role: ui
+    purpose: Substrate ops panel over the tailnet.
+    expected_state: active
+    ports: [8095]
+    critical: false
+  - unit: substrate-panel.service
+    role: retired
+    purpose: Former loopback ops panel.
+    expected_state: inactive
+    critical: false
+    notes: >-
+      RETIRED. ExecStart=/bin/true and no WantedBy=default.target. Kept as a
+      tombstone so the port-8090 history stays discoverable.
+  - unit: substrate-chatbot.service
+    role: ui
+    purpose: Desktop chatbot HTTP server (scripts/chatbot.py serve).
+    expected_state: active
+    critical: false
+  - unit: substrate-lister.service
+    role: automation
+    purpose: Persistent lister / automation verifier.
+    expected_state: active
+    critical: false
+  - unit: proton-bridge-hook.service
+    role: integration
+    purpose: Proton Mail Bridge IMAP poll -> OpenClaw webhook.
+    expected_state: active
+    critical: false
+  - unit: protonmail-bridge.service
+    role: integration
+    purpose: Proton Mail Bridge (localhost IMAP/SMTP).
+    expected_state: active
+    critical: false
+  - unit: kilo-remote.service
+    role: integration
+    purpose: Kilo CLI remote agent for the iOS app.
+    expected_state: active
+    critical: false
+  - unit: ttyd.service
+    role: ui
+    purpose: Web shell for the phone webapp.
+    expected_state: active
+    ports: [8765]
+    critical: false
+  - unit: paperclipai.service
+    role: application
+    purpose: Paperclip AI default instance.
+    expected_state: active
+    critical: false
+  - unit: paperclip-tailnet-proxy.service
+    role: transport
+    purpose: Paperclip tailnet TCP proxy.
+    expected_state: active
+    ports: [8443]
+    critical: false
+
+# ---------------------------------------------------------------------------
+# Scheduled automation. Covers systemd timers AND external schedulers, because
+# scheduling is currently split across both and that split caused an
+# unattributed process to be committing to main (see known_issues).
+# ---------------------------------------------------------------------------
+schedules:
+  - name: substrate-agent-timer
+    mechanism: systemd-timer
+    unit: substrate-agent-timer.timer
+    cadence: every 5 minutes
+    action: scripts/ensure_agency.py then substrate_cli.py agent-cycle
+    expected_state: active
+    purpose: Runs due agents; per-agent cadence is evaluated internally.
+  - name: change-snapshot
+    mechanism: systemd-timer
+    unit: change-snapshot.timer
+    cadence: every 10 minutes
+    action: scripts/change_snapshot.sh -> substrate.cli snapshot
+    expected_state: active
+    purpose: Non-blocking working-tree change snapshots.
+  - name: restic-backup
+    mechanism: systemd-timer
+    unit: restic-backup.timer
+    cadence: daily 03:00
+    action: scripts/backup_snapshot.sh
+    expected_state: active
+    purpose: Encrypted restic snapshot of code, config, and state.
+  - name: system-monitor
+    mechanism: systemd-timer
+    unit: system-monitor.timer
+    cadence: every 15 minutes
+    action: scripts/system_monitor.sh
+    expected_state: active
+    purpose: System health and log anomaly monitoring.
+  - name: panel-monitor
+    mechanism: systemd-timer
+    unit: panel-monitor.timer
+    cadence: every 5 minutes
+    action: scripts/monitor_panel.sh
+    expected_state: active
+    purpose: Panel health monitoring.
+  - name: daily-security-report
+    mechanism: systemd-timer
+    unit: daily-security-report.timer
+    cadence: daily 06:30
+    action: scripts/daily_security_report.py
+    expected_state: active
+    purpose: Daily security report generation.
+  - name: git-sync
+    mechanism: systemd-timer
+    unit: git-sync.timer
+    cadence: disabled
+    action: scripts/auto_git_sync.sh
+    expected_state: inactive
+    purpose: Workspace auto-commit/push.
+    notes: >-
+      Disabled and has NEVER triggered (LastTriggerUSec empty). The equivalent
+      work is done by the OpenClaw cron job "Git Auto-Sync" below.
+
+  # --- OpenClaw cron subsystem -------------------------------------------
+  # OpenClaw runs its own cron ("cron": {"enabled": true} in openclaw.json).
+  # Enumerate with: node ~/.npm-global/lib/node_modules/openclaw/dist/index.js cron list
+  # FOUR of these duplicate an active systemd timer. See
+  # known_issues.duplicate_scheduling.
+  - name: Substrate Agent Cycle
+    mechanism: openclaw-cron
+    id: 69997515-7b90-4ddc-95f3-488a1b36d3d9
+    cadence: "*/5 * * * *"
+    expected_state: active
+    purpose: Runs due substrate agents.
+    duplicates: substrate-agent-timer.timer
+  - name: Change Snapshot Cycle
+    mechanism: openclaw-cron
+    id: 822bd7a4-27c3-41c8-baba-2b5ad121aedc
+    cadence: "*/10 * * * *"
+    expected_state: active
+    purpose: Working-tree change snapshots.
+    duplicates: change-snapshot.timer
+  - name: Git Auto-Sync
+    mechanism: openclaw-cron
+    id: 9fffb78a-2ba3-4af6-ade8-ac0c7fbe5b8e
+    cadence: "*/30 * * * *"
+    expected_state: active
+    purpose: >-
+      THE actual producer of `auto-sync: autonomous workspace checkpoint`
+      commits on main. git-sync.timer is disabled because this owns the job.
+  - name: Restic Backup
+    mechanism: openclaw-cron
+    id: a457e395-6c76-4d9f-a4d4-005ed7b5500c
+    cadence: "0 3 * * *"
+    expected_state: active
+    purpose: Encrypted restic snapshot.
+    duplicates: restic-backup.timer
+  - name: Daily Security Report
+    mechanism: openclaw-cron
+    id: 97c8c90a-c38c-4bbd-9e7a-1144c513ae65
+    cadence: "0 6 * * *"
+    expected_state: active
+    purpose: Daily security report.
+    duplicates: daily-security-report.timer (which fires at 06:30, not 06:00)
+  - name: Heartbeat (main)
+    mechanism: openclaw-cron
+    id: 88bbb848-6e1f-453c-a5cd-78c039abc820
+    cadence: every 30m
+    expected_state: active
+    purpose: OpenClaw main-agent heartbeat.
+  - name: Memory Dreaming Promotion
+    mechanism: openclaw-cron
+    id: 3d4ca1c0-d47b-4bb0-9d25-d6ed106991fe
+    cadence: "0 3 * * *"
+    expected_state: active
+    purpose: OpenClaw memory-core dream promotion.
+  - name: Skill collection review
+    mechanism: openclaw-cron
+    id: e085da84-77ae-42ac-ba9f-2963508250bd
+    cadence: every 7d
+    expected_state: active
+    purpose: OpenClaw skill collection review.
+
+  - name: infinity-x-release-watch
+    mechanism: systemd-timer
+    unit: infinity-x-release-watch.timer
+    cadence: disabled
+    action: aosp-eos-asteroids release_watch.sh
+    expected_state: inactive
+    purpose: Infinity X asteroids release watch.
+
+# ---------------------------------------------------------------------------
+# Backup and recovery. Four distinct mechanisms; this is the reconciliation
+# that no single prose document previously provided.
+# ---------------------------------------------------------------------------
+backups:
+  - name: restic
+    mechanism: restic encrypted snapshots
+    driver: scripts/backup_snapshot.sh
+    exclude_file: scripts/backup-excludes.txt
+    schedule: restic-backup.timer (daily 03:00)
+    repository: local:/home/ahron/.backups/restic
+    retention: keep-daily 7, keep-weekly 4, keep-monthly 3
+    covers:
+      - Host dotfiles (.bashrc, .gitconfig, .npmrc)
+      - ~/.config/{kilo,chezmoi,rclone,systemd/user}
+      - ~/.local/share/chezmoi
+      - substrate code (substrate/, scripts/, tests/, chains/, .kilo/)
+      - declarative config (all top-level *.yaml, pyproject.toml, uv.lock)
+      - accumulated state (state/, memory/, .research/) minus bulk artifacts
+      - consistent SQLite snapshots (artifacts/db-snapshots/)
+      - OpenClaw verified archive (artifacts/capsule/backups/)
+    restore: restic restore <id> --target <dir> [--include <path>]
+    verified: >-
+      Restore-tested 2026-09-05: state/orchestrator.db, state/learning-index.json,
+      memory/dev-history.jsonl and workspace.yaml all recovered with SQLite
+      PRAGMA integrity_check = ok.
+  - name: git
+    mechanism: git remote
+    driver: scripts/auto_git_sync.sh (scheduler unattributed)
+    schedule: approximately every 30 minutes
+    repository: https://github.com/55515-code/orchestrator.git
+    covers:
+      - All version-controlled code, docs, and declarative config
+    excludes:
+      - state/, memory/, generated/, .research/ (gitignored)
+    restore: git clone <remote>
+  - name: openclaw-native
+    mechanism: openclaw backup create --verify
+    driver: invoked by scripts/backup_snapshot.sh
+    schedule: daily, with restic
+    covers:
+      - OpenClaw SQLite databases and config, as a verified tar.gz archive
+    output: artifacts/capsule/backups/
+    restore: extract archive, then openclaw restore
+    notes: >-
+      Used instead of copying live OpenClaw databases, which would risk torn
+      reads.
+  - name: change-snapshots
+    mechanism: substrate.cli snapshot
+    driver: scripts/change_snapshot.sh
+    schedule: change-snapshot.timer (every 10 minutes)
+    covers:
+      - Working-tree diffs per configured repository
+    output: state/change-snapshots/
+    restore: see docs/change-snapshots.md
+  - name: credential-snapshots
+    mechanism: substrate.cli credential-snapshot
+    driver: manual
+    covers:
+      - Credential material, for surgical restore
+    restore: see docs/credential-restore-runbook.md
+
+# ---------------------------------------------------------------------------
+# Known issues. Recorded here rather than in prose so they are queryable and
+# cannot be silently forgotten. Each needs an explicit human decision.
+# ---------------------------------------------------------------------------
+known_issues:
+  duplicate_watchdogs:
+    severity: medium
+    summary: >-
+      Two gateway supervisors exist: openclaw-stability.service (shell, active)
+      and openclaw-gateway-watchdog.service (Python, disabled). The Python one
+      has 28 unit tests and structured audit logging; the shell one is what
+      actually runs.
+    risk_if_changed_carelessly: >-
+      Enabling both gives two processes authority to restart
+      openclaw-gateway.service, which can produce restart storms that each
+      supervisor's own rate limiter cannot see.
+    recommendation: >-
+      Consolidate onto the Python watchdog and retire the shell script, in one
+      atomic change: stop+disable openclaw-stability.service, then enable
+      openclaw-gateway-watchdog.service. Tier 2 — requires explicit approval.
+  duplicate_scheduling:
+    severity: high
+    summary: >-
+      Two independent schedulers run the same jobs: systemd user timers and
+      OpenClaw's cron subsystem. Four jobs are double-scheduled — agent cycle
+      (*/5), change snapshot (*/10), restic backup (03:00), and the daily
+      security report (systemd 06:30 vs OpenClaw 06:00).
+    evidence: >-
+      ~/.config/restic/backup.log shows exactly 8 log entries per day = two
+      complete backup runs, firing seconds apart (e.g. 2026-08-31T07:00:01Z and
+      07:00:07Z; 2026-09-02T07:00:01Z and 07:00:25Z).
+    risk: >-
+      Two restic processes race on one repository. The script papered over this
+      with `restic unlock --remove-all`, which can strip a lock held by the
+      legitimately-running sibling process and corrupt concurrent operations.
+      Duplicate agent cycles rely entirely on idempotency keys to avoid double
+      work.
+    mitigated: >-
+      2026-09-05 — scripts/backup_snapshot.sh now takes an flock mutex and
+      no longer force-removes repository locks, so a double-scheduled run
+      exits cleanly instead of racing. This makes the current state SAFE but
+      still wasteful.
+    recommendation: >-
+      Consolidate onto ONE scheduler. systemd timers are preferred: auditable
+      via journalctl, stoppable via systemctl, and already the documented
+      mechanism (scripts/install_agent_timer.sh). Remove the four duplicate
+      OpenClaw cron entries, keeping OpenClaw cron only for jobs that have no
+      systemd equivalent (Heartbeat, Memory Dreaming, Skill review) and for
+      Git Auto-Sync until git-sync.timer is enabled. Tier 2 — requires
+      explicit approval because it changes production scheduling.
+  git_sync_identity:
+    severity: medium
+    summary: >-
+      The OpenClaw cron job "Git Auto-Sync" (*/30) commits to main as
+      "AI Bot <bot@example.com>", a placeholder identity.
+    risk: >-
+      Automated commits on main are not attributable to a real actor, which
+      undermines the audit trail.
+    recommendation: >-
+      Set a real committer identity for automated commits. Tier 2.
+  dead_backup_path:
+    severity: low
+    summary: >-
+      scripts/backup_snapshot.sh referenced $HOME/codespace/automation, which
+      does not exist; every run logged "skip missing path".
+    status: FIXED 2026-09-05 — path removed from RAW_PATHS.
+  unbacked_state:
+    severity: high
+    summary: >-
+      state/ and memory/ are gitignored AND were absent from the restic path
+      list, so state/orchestrator.db, state/learning-index.json,
+      state/agent-state.json and memory/dev-history.jsonl had zero backup
+      coverage.
+    status: >-
+      FIXED 2026-09-05 — added to restic with a version-controlled exclude file,
+      plus VACUUM INTO snapshots for WAL-mode SQLite. Restore-verified.
+  agent_worktree_bloat:
+    severity: medium
+    summary: >-
+      state/agent-worktrees holds 8.9G across 82 worktrees; scripts/health_check.sh
+      warns above 1G. Cleanup of >30-day worktrees is supposed to run each agent
+      cycle.
+    recommendation: >-
+      Investigate why the 30-day reaper is not keeping up before raising the
+      threshold.

@@ -42,6 +42,14 @@ desktop = [
 dev = [
   "pre-commit>=4.0.0",
   "ruff>=0.11.0",
+  # CI runs `uv run mypy substrate scripts tests` (.github/workflows/ci.yml).
+  # mypy was invoked but never declared, so that step failed to spawn on every
+  # run. Declared here so `uv sync --dev` provisions it.
+  "mypy>=1.11.0",
+  # The test suite imports httpx via starlette's TestClient; CI ran
+  # `uv run pytest` without them declared.
+  "pytest>=8.0.0",
+  "httpx>=0.27.0",
 ]
 crypto = [
   "mnemonic>=0.21",
