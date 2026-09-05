@@ -82,7 +82,7 @@ ALLOWED_ORPHANS = {
 # Intentionally-orphaned point-in-time reports. These are now also listed in
 # ALLOWED_ORPHANS above; this set is retained so the annual-review warning
 # fires if any are ever removed from ALLOWED_ORPHANS without moving them here.
-POINT_IN_TIME_REPORTS: set[str] = set()
+POINT_IN_TIME_REPORTS: set[str] = {
     "OPTIMIZATION_CYCLE_2026-08-08.md",
     "automation-review-2026-08-17.md",
     "FINAL_RESEARCH_REPORT.md",
