@@ -1,0 +1,214 @@
+{
+  "email_meta": {
+    "job_id": "8b4d2bf0-a1ac-4d46-8090-a687044894e8",
+    "received_at": "2026-09-05T18:56:00-04:00",
+    "source": "webhook",
+    "source_label": "Proton Mail",
+    "direction": "inbound",
+    "from": {
+      "name": "Best Buy Labor Day Sale",
+      "address": "BestBuy@email.bestbuy.com"
+    },
+    "to": [
+      {
+        "address": "AHRONZOMBI@GMAIL.COM"
+      }
+    ],
+    "subject": "** WOW ** Get incredible deals on tech this Labor Day",
+    "date": "2026-09-05T18:54:58-04:00",
+    "campaign_id": "BBY_20260905_SATLaborDaySale",
+    "content_type": "text/html"
+  },
+  "promotion": {
+    "name": "Labor Day Sale",
+    "brand": "Best Buy",
+    "status": "active",
+    "start_date": "2026-09-05",
+    "end_date": "2026-09-07",
+    "end_time": "11:59 p.m. CT",
+    "disclaimer": "Ends 9/7/26 at 11:59 p.m. CT. Prices valid during, but may start before and end after, the sale dates. Offers subject to change. Limited quantities. No rainchecks. Exclusions may apply.",
+    "primary_cta": "Shop now",
+    "categories": [
+      "TVs & Projectors",
+      "Laptops & Computers",
+      "Cell Phones",
+      "Major Appliances",
+      "Small Appliances",
+      "Headphones",
+      "Tablets & E-Readers",
+      "Video Games, Consoles & VR"
+    ]
+  },
+  "featured_deals": [
+    {
+      "id": "deal-of-the-day",
+      "title": "Deal of the Day",
+      "description": "Don't miss today-only deals",
+      "cta": "Shop now",
+      "category": "Daily Deals"
+    },
+    {
+      "id": "tvs-75-plus",
+      "title": "75\" or larger TVs",
+      "price_point": "as low as $379.99 after savings",
+      "cta": "Shop now",
+      "category": "TVs & Projectors"
+    },
+    {
+      "id": "windows-devices",
+      "title": "Windows devices",
+      "price_point": "Save up to $600",
+      "cta": "Shop now",
+      "category": "Computers"
+    },
+    {
+      "id": "android-phones",
+      "title": "Android phones",
+      "price_point": "Save up to $600",
+      "cta": "Shop now",
+      "category": "Cell Phones"
+    },
+    {
+      "id": "lg-laundry-pairs",
+      "title": "LG laundry pairs",
+      "price_point": "Save up to $1,000",
+      "perks": ["Free delivery with purchase"],
+      "cta": "Shop now",
+      "category": "Major Appliances"
+    },
+    {
+      "id": "lg-oled-tvs",
+      "title": "LG OLED TVs",
+      "perks": [
+        "Free delivery",
+        "Basic TV Mounting or Unboxing & Assembly"
+      ],
+      "cta": "Shop now",
+      "category": "TVs & Projectors"
+    },
+    {
+      "id": "rgb-led-tvs",
+      "title": "RGB LED TVs",
+      "perks": [
+        "Free delivery",
+        "Free installation",
+        "Free haul-away"
+      ],
+      "cta": "Shop now",
+      "category": "TVs & Projectors"
+    },
+    {
+      "id": "recovery-wellness",
+      "title": "Recovery and wellness devices",
+      "price_point": "as low as $179.99 after savings",
+      "cta": "Shop now",
+      "category": "Health & Wellness"
+    },
+    {
+      "id": "amazon-echo",
+      "title": "Amazon Echo smart speakers and displays",
+      "price_point": "Save up to $50",
+      "cta": "Shop now",
+      "category": "Smart Home"
+    },
+    {
+      "id": "smart-lighting",
+      "title": "Smart lighting",
+      "cta": "Shop now",
+      "category": "Smart Home"
+    },
+    {
+      "id": "action-cameras",
+      "title": "Action cameras and camcorders",
+      "cta": "Shop now",
+      "category": "Cameras"
+    },
+    {
+      "id": "tvs-under-500",
+      "title": "TVs under $500",
+      "cta": "Shop now",
+      "category": "TVs & Projectors"
+    }
+  ],
+  "sweepstakes": {
+    "name": "LG AND GEEK SQUAD HOME THEATER SWEEPSTAKES",
+    "partners": ["LG", "Geek Squad"],
+    "end_date": "2026-10-04",
+    "end_time": "11:59 p.m. CT",
+    "eligibility": "Open to legal residents of 50 U.S. and D.C., 18+",
+    "purchase_required": false,
+    "disclaimer": "NO PURCHASE NECESSARY. See Official Rules for full details on eligibility requirements, how to enter, prize descriptions and limitations. Void where prohibited.",
+    "official_rules_url": "https://www.bestbuy.com/site/lg-dream-tv/lg-dream-tv-official-rules/pcmcat1785334512794.c?id=pcmcat1785334512794"
+  },
+  "services_promoted": [
+    {
+      "name": "Authorized Apple iPhone repair",
+      "benefits": [
+        "Guaranteed low prices",
+        "Same-day service"
+      ],
+      "disclaimer": "We will price match Apple service and repair costs of any Apple Authorized Service Provider. Limitations apply. Valid on select Apple models. Reservation required. Most repairs will be completed on the same day if all necessary parts are in stock and the device is not extensively damaged. Certain repairs may require a longer mail-in exchange."
+    },
+    {
+      "name": "My Best Buy Credit Card",
+      "offer": "Limited time 15% back in rewards on first day of purchases when approved",
+      "offer_period": "8/10/26–9/7/26",
+      "disclaimer": "Get 2.5 points per $1 spent (5% back in rewards) on qualifying Best Buy purchases when you choose Standard Credit with your My Best Buy® Credit Card. If you apply and are approved for a new My Best Buy® Credit Card, your first day of purchases on the Credit Card using Standard Credit within the first 14 days of account opening will get an additional 5 bonus points (an additional 10% back in rewards, for a total of 15%). Points are not awarded on promotional credit purchases. May not be combined with other offers. New customer acquisition offers are only available the first time applicants are approved for a My Best Buy® Credit Card. Does not include tax."
+    }
+  ],
+  "membership_promotions": [
+    {
+      "name": "My Best Buy Plus",
+      "type": "membership"
+    },
+    {
+      "name": "My Best Buy Total",
+      "type": "membership",
+      "benefit": "product protection benefit covers most new products purchased from Best Buy while the membership is active"
+    }
+  ],
+  "footer_links": {
+    "app_download": "https://bestbuy.app.link/B6ldrWoTLZb",
+    "support_center": "https://www.bestbuy.com/site/help-topics",
+    "privacy_hub": "https://www.bestbuy.com/site/Help-Topics/Privacy-Policy/pcmcat20440050062.c?id=pcmcat20440050062",
+    "unsubscribe": "https://www.bestbuy.com/site/customer-email-subscription/1001?token=a799d93-6c65-414c-92a3-a505e7b99615-13525d9",
+    "privacy_policy": "https://www.bestbuy.com/site/Help-Topics/Privacy-Policy/pcmcat20440050062.c?id=pcmcat20440050062",
+    "view_in_browser": "https://trk.email.bestbuy.com/c/7/eyJhaSI6OTQwMTc0ODEsImUiOiJtZy1lbmM6MXMrOEZDZVpzK1NEbjIwbHNYeGVEK053YzYrbFVzbHMiLCJyaSI6IjQxNTM5MzkyMiIsInJxIjoiMDItYjI2MjQ4LTllZDhlYjIzZGJlNjQ5NWU5MGFkNjQ1Yjc3MDc0ZDEwIiwibSI6ZmFsc2UsInVpIjoiIiwidW4iOiJHbG9iYWwrSGVhZGVyJTNBQXBwbGlhbmNlcyUzQTQ4In0%3A%3AtPPCyarjUauNW84mHFqlCQ&mg_x_url=aHR0cHM6Ly93d3cuYmVzdGJ1eS5jb20vZWFzZS9lbWFpbD9ldXQ9NTEwNjI2ODA3MCZkZXN0PWh0dHBzJTNBJTJGJTJGd3d3LmJlc3RidXkuY29tJTJGc2l0ZSUyRmVsZWN0cm9uaWNzJTJGaG9tZS1hcHBsaWFuY2VzJTJGYWJjYXQwOTAwMDAwLmMlM0ZpZCUzRGFiY2F0MDkwMDAwMCUyNnNyYyUzRE1HJTI2dmVoaWNsZSUzRGVtYWlsJTI2am9iaWQlM0Q2NjIyMiUyNmNvbW1jb2RlJTNEQkJZXzIwMjYwOTA1X1NBVExhYm9yRGF5U2FsZSUyNmV1dCUzRDUxMDYyNjgwNzAlMjZyZWYlM0RGT09URVI%3D%3D&m=false"
+  },
+  "social_links": [
+    "https://www.youtube.com/user/bestbuy",
+    "https://www.instagram.com/bestbuy",
+    "https://www.tiktok.com/@bestbuy?lang=en",
+    "https://www.facebook.com/bestbuy",
+    "https://www.pinterest.com/bestbuy/",
+    "https://x.com/BestBuy"
+  ],
+  "address": {
+    "name": "Best Buy",
+    "street": "7601 Penn Avenue South",
+    "city": "Richfield",
+    "state": "MN",
+    "zip": "55423-3645"
+  },
+  "legal": {
+    "copyright": "© 2026 Best Buy. All rights reserved.",
+    "privacy_text": "Your privacy is important to Best Buy. For more information on how Best Buy protects your privacy, steps you can take to protect your personal information and alerts on privacy risks facing consumers, please visit the Best Buy Privacy Hub.",
+    "unsubscribe_text": "This email is a Best Buy advertisement. If you no longer wish to receive our marketing emails, unsubscribe here.",
+    "unsubscribe_email": "PrivacyManager@bestbuy.com",
+    "phone": "1-888-BEST-BUY"
+  },
+  "tracking": {
+    "esp_uid": "5106268070",
+    "account_id": "7431",
+    "campaign_id": "1468223098",
+    "email_name": "BBY_20260905_SATLaborDaySale",
+    "creative_ids": [
+      "1546407975",
+      "6363307-email-lds-3-083126-193ad069-4b69-4034-b021-65cab5ea1b4b",
+      "6363307-email-lds-tv-bnr-a84d0fd3-13a7-4f13-a892-c89131a43770",
+      "6363307-email-lds-windows-bnr-7488e3d9-93c9-4d19-b4ae-aff99ed5b8c4",
+      "6363307-email-lds-android-bnr-dccad360-ab80-4f65-9b22-6634ff3a4cdb",
+      "6363307-email-lds-lg-bnr-4de1b647-08a2-4b14-bea0-584f1f268289"
+    ]
+  }
+}
