@@ -161,7 +161,7 @@ def post_to_openclaw(payload: dict) -> bool:
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             body = resp.read().decode(errors="replace")
             log(f"POST {url} -> {resp.status} {body[:200]}")
             return resp.status < 300
