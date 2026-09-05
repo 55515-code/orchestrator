@@ -37,7 +37,7 @@ class TestSyncState:
         )
 
         data = state.to_dict()
-        assert data["last_sync_at"] == "2024-01-01T12:00:00"
+        assert data["last_sync_at"] == "2024-01-01T12:00:00+00:00"
         assert data["last_commit_sha"] == "abc123"
         assert data["last_tag"] == "v1.0.0"
         assert len(data["branches"]) == 2
