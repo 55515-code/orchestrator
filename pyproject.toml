@@ -41,7 +41,8 @@ desktop = [
 ]
 dev = [
   "pre-commit>=4.0.0",
-  "ruff>=0.11.0",
+  # Upper bound so a major ruff release cannot silently redefine the lint gate.
+  "ruff>=0.11.0,<0.17.0",
   # CI runs `uv run mypy substrate scripts tests` (.github/workflows/ci.yml).
   # mypy was invoked but never declared, so that step failed to spawn on every
   # run. Declared here so `uv sync --dev` provisions it.
@@ -76,6 +77,23 @@ package = false
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+
+[tool.ruff.lint]
+# Pinned explicitly. Previously no `select` was declared, so the gate inherited
+# ruff's built-in defaults — which expanded substantially between 0.11 and 0.16.
+# Combined with an unbounded `ruff>=0.11.0`, that meant the lint contract
+# changed meaning on dependency resolution alone (344 findings appeared without
+# a single line of source changing). Declaring the set makes CI reproducible.
+#
+# This is the long-standing ruff default set: pyflakes (F) plus the pycodestyle
+# error subsets that catch real defects rather than formatting preferences.
+select = ["E4", "E7", "E9", "F"]
+# Broader families (BLE001 blind-except, S110 try-except-pass, DTZ naive
+# datetimes, PLW1510 subprocess-without-check, TRY004) surface ~300 further
+# findings. They are tracked as a deliberate backlog in
+# system_registry.yaml -> known_issues.lint_backlog rather than enabled here,
+# because clearing them changes exception-handling behaviour and must be done
+# in reviewed batches, not as a side effect of a lint config change.
 
 [tool.ruff.lint.per-file-ignores]
 # Standalone scripts bootstrap sys.path before importing the substrate package;

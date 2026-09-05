@@ -6,25 +6,16 @@ from __future__ import annotations
 import builtins
 import io
 import json
-import os
 import sys
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 # Ensure substrate is importable (repo root is the parent of tests/)
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from substrate.watchdog.gateway_watchdog import (  # noqa: E402
-    AUDIT_FILE,
-    DEFAULT_INTERVAL,
-    GRACE_AFTER_RESTART,
-    LOG_FILE,
-    MAX_RESTARTS,
-    RESTART_WINDOW,
-    STATE_DIR,
-    STATUS_FILE,
     check_config,
     check_http_health,
     check_port,
@@ -34,7 +25,6 @@ from substrate.watchdog.gateway_watchdog import (  # noqa: E402
     diagnose,
     rate_limit_exceeded,
     record_restart,
-    run_checks,
     run_once,
     write_audit,
     write_status,

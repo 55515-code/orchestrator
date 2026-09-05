@@ -25,7 +25,7 @@ class TestSyncState:
     def test_sync_state_to_dict(self):
         """Test converting sync state to dictionary."""
         state = SyncState(
-            last_sync_at=datetime(2024, 1, 1, 12, 0, 0),
+            last_sync_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=__import__("datetime").timezone.utc),
             last_commit_sha="abc123",
             last_tag="v1.0.0",
             branches=["main", "develop"],

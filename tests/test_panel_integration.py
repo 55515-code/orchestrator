@@ -13,10 +13,7 @@ All state is isolated under tmp_path via the encrypted-file vault backend.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
-
-from fastapi.testclient import TestClient
 
 from substrate import vault
 from substrate.registry import SubstrateRuntime

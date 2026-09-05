@@ -1199,7 +1199,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.26" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "rich", specifier = ">=13.9.4" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.0,<0.17.0" },
     { name = "safetensors", marker = "extra == 'render'", specifier = ">=0.4.0" },
     { name = "sentencepiece", marker = "extra == 'render'", specifier = ">=0.2.0" },
     { name = "sqlalchemy", specifier = ">=2.0.30" },

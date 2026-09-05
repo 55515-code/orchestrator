@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Regression tests for policy loading in substrate/settings.py.
 
 Background
@@ -26,8 +25,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from substrate.models import PolicyConfig  # noqa: E402
-from substrate.settings import WORKSPACE_FILE, load_workspace_config  # noqa: E402
+from substrate.models import PolicyConfig
+from substrate.settings import WORKSPACE_FILE, load_workspace_config
 
 
 def _write_workspace(tmp_path: Path, policy: dict) -> Path:
