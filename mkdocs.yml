@@ -9,17 +9,44 @@ theme:
 
 nav:
   - Overview: index.md
-  - Setup: setup.md
-  - Tooling Rationale: tooling-rationale.md
-  - Orchestrator: orchestrator.md
-  - Community Cycle: community-cycle.md
-  - Lifecycle: lifecycle.md
-  - Integrations: integrations.md
-  - Learning: learning.md
-  - Backup & Sync: dotfiles.md
-  - Deployment: deployment.md
-  - Chains: chains.md
-  - Standards: standards.md
-  - Btrfs Storage Optimization: btrfs-optimization.md
-  - System Probe: system-probe.md
-  - References: references.md
+  - Getting Started:
+    - Setup: setup.md
+    - Deployment: deployment.md
+  - Architecture:
+    - Gateway: GATEWAY_ARCHITECTURE.md
+    - Gateway Implementation: GATEWAY_IMPLEMENTATION_SUMMARY.md
+    - OpenClaw Production Checklist: openclaw-production-checklist.md
+    - Substrate Audit: openclaw_substrate_audit.md
+    - Dashboard & Pipelines: dashboard-orchestration.md
+    - Control Panel: CONTROL_PANEL_IMPLEMENTATION.md
+  - Core Concepts:
+    - Lifecycle: lifecycle.md
+    - Chains: chains.md
+    - Standards: standards.md
+    - Tooling Rationale: tooling-rationale.md
+    - Integrations: integrations.md
+    - Caching: caching.md
+    - Render Router: render-router.md
+  - Operations:
+    - Orchestrator: orchestrator.md
+    - Community Cycle: community-cycle.md
+    - Learning: learning.md
+    - Backup & Sync: dotfiles.md
+    - Credential Restore: credential-restore-runbook.md
+    - Btrfs Storage: btrfs-optimization.md
+    - System Probe: system-probe.md
+    - Promotion & Deploy: promotion-and-deploy-runbook.md
+    - Capsule Strategy: portable-gateway-capsule-strategy.md
+  - Communication:
+    - WhatsApp Setup: WHATSAPP_GATEWAY_SETUP.md
+    - Proton Drive: proton-drive-filesystem-architecture.md
+    - Proton Mail Channel: proton-mail-openclaw-channel.md
+  - Reference:
+    - References: references.md
+    - Approval Lane: approval-lane.md
+    - Android Node: android-node-registration.md
+    - Remote Access: remote-access-findings.md
+    - Nothing Restore: nothing-stock-restore.md
+    - Security Toolkit: security-toolkit-roadmap.md
+  - Generated:
+    - System Registry: generated/system-registry.md

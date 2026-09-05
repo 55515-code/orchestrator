@@ -167,7 +167,7 @@ def render(registry: dict) -> str:
     version = registry.get("version")
     lines = [
         _md_frontmatter(version),
-        f"# System Registry\n\n",
+        "# System Registry\n\n",
         f"> Auto-generated from `system_registry.yaml` v{version}.\n"
         "> Edit the YAML; run `just generate-docs` or `python scripts/generate_system_docs.py`.\n\n",
         _render_ports(registry),

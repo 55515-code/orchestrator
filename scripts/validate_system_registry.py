@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import socket
 import subprocess
 import sys
 from pathlib import Path

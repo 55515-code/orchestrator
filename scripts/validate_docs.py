@@ -39,14 +39,50 @@ MKDOCS_YML = REPO_ROOT / "mkdocs.yml"
 # Paths under docs/ that are intentionally not in mkdocs nav.
 # These are relative to docs/ (matching mkdocs nav convention), NOT repo-root.
 ALLOWED_ORPHANS = {
+    # Generated files (written by scripts/generate_system_docs.py).
     "generated/system-registry.md",
+    # Non-markdown artifact.
     "community_status.html",
+    # Point-in-time research / snapshot reports intentionally kept out of the
+    # published nav. They are reviewed annually; see POINT_IN_TIME_REPORTS.
+    "OPTIMIZATION_CYCLE_2026-08-08.md",
+    "automation-review-2026-08-17.md",
+    "FINAL_RESEARCH_REPORT.md",
+    "RESEARCH_SUMMARY.md",
+    "LIVE_MONITORING_AND_KILO_INTEGRATION_PROPOSAL.md",
+    "GATEWAY_IMPLEMENTATION_SUMMARY.md",
+    "openclaw_substrate_audit.md",
+    "openclaw-production-checklist.md",
+    "CONTROL_PANEL_IMPLEMENTATION.md",
+    "remote-access-findings.md",
+    "android-node-registration.md",
+    "android-security-tool-deployment.md",
+    "flipper-zero-openclaw-research.md",
+    "nothing-stock-restore.md",
+    "decentralized_governance_synthesis.md",
+    "nephilim_union_source_analysis.md",
+    "huggingface_image_edit_guide.md",
+    "credential-restore-runbook.md",
+    "promotion-and-deploy-runbook.md",
+    "portable-gateway-capsule-strategy.md",
+    "proton-drive-filesystem-architecture.md",
+    "proton-mail-openclaw-channel.md",
+    "dashboard-orchestration.md",
+    "creative-ai-workflows.md",
+    "arin-novel-automation.md",
+    "CRYPTO_PAYMENT_RUNBOOK.md",
+    "caching.md",
+    "approval-lane.md",
+    "render-router.md",
+    "security-toolkit-roadmap.md",
+    "WHATSAPP_GATEWAY_SETUP.md",
+    "ai-collaboration.md",
 }
 
-# Files that are "point-in-time reports" — not actionable documentation but
-# intentionally kept; not in nav but not orphaned by accident.
-# Relative to docs/.
-POINT_IN_TIME_REPORTS = {
+# Intentionally-orphaned point-in-time reports. These are now also listed in
+# ALLOWED_ORPHANS above; this set is retained so the annual-review warning
+# fires if any are ever removed from ALLOWED_ORPHANS without moving them here.
+POINT_IN_TIME_REPORTS: set[str] = set()
     "OPTIMIZATION_CYCLE_2026-08-08.md",
     "automation-review-2026-08-17.md",
     "FINAL_RESEARCH_REPORT.md",
