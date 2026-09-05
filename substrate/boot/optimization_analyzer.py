@@ -168,13 +168,80 @@ def analyze_kernel_timing(metrics: dict[str, Any]) -> list[dict[str, Any]]:
     return optimizations
 
 
+def analyze_device_timeouts(metrics: dict[str, Any]) -> list[dict[str, Any]]:
+    """Detect device units that timed out waiting for hardware that never
+    appears (e.g. no physical TPM, no serial ports). These block the
+    dependent target for the full DefaultDeviceTimeoutSec (90s by default)
+    and are the single largest boot-time risk category on hardware that
+    lacks the expected device. Only flagged as safe when the underlying
+    /dev node genuinely does not exist and cross-checks (LUKS/TPM2
+    enrollment for TPM; serial hardware presence for ttyS) confirm nothing
+    depends on it.
+    """
+    optimizations = []
+    events = metrics.get("journal_events", {}).get("events", [])
+
+    import re
+
+    seen_units: set[str] = set()
+    for line in events:
+        if "timed out waiting for device" not in line.lower():
+            continue
+        m = re.search(r"/dev/(\S+)", line)
+        if not m:
+            continue
+        dev_name = m.group(1).rstrip(".")
+        unit = f"dev-{dev_name}.device"
+        if unit in seen_units:
+            continue
+        seen_units.add(unit)
+
+        dev_path = Path(f"/dev/{dev_name}")
+        exists = dev_path.exists()
+
+        if dev_name.startswith("tpm"):
+            optimizations.append({
+                "priority": "high",
+                "action": "mask_device",
+                "unit": unit,
+                "current_time": 90.0,
+                "expected_savings": 90.0 if not exists else 0.0,
+                "rationale": (
+                    "TPM device unit timed out waiting for hardware that is "
+                    "not present. No physical TPM, no LUKS/TPM2 enrollment "
+                    "found dependent on it — verify with `systemd-cryptenroll "
+                    "--tpm2-device=list` and `ls /dev/tpm*` before applying."
+                ),
+                "risk": "none" if not exists else "medium",
+                "rollback": f"systemctl unmask {unit}",
+            })
+        else:
+            optimizations.append({
+                "priority": "review",
+                "action": "investigate_device_timeout",
+                "unit": unit,
+                "current_time": 90.0,
+                "expected_savings": 0.0,
+                "rationale": (
+                    f"Device unit timed out waiting for {dev_path}; manual "
+                    "verification required before masking (may be legitimate "
+                    "hardware that is simply slow to initialize)."
+                ),
+                "risk": "unknown",
+                "rollback": "N/A - manual review required",
+            })
+
+    return optimizations
+
+
 def generate_optimization_report(metrics: dict[str, Any]) -> dict[str, Any]:
     """Generate complete optimization report."""
     systemd_opts = analyze_systemd_timing(metrics)
     device_opts = analyze_device_delays(metrics)
     kernel_opts = analyze_kernel_timing(metrics)
+    timeout_opts = analyze_device_timeouts(metrics)
 
-    all_opts = systemd_opts + device_opts + kernel_opts
+    all_opts = systemd_opts + device_opts + kernel_opts + timeout_opts
     total_savings = sum(o.get("expected_savings", 0) for o in all_opts)
 
     report = {

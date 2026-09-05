@@ -27,7 +27,7 @@ from typing import Any
 ROOT_DIR = Path("/home/ahron/codespace")
 STATE_DIR = ROOT_DIR / "state" / "boot"
 DEFAULT_OUTPUT = STATE_DIR / "latest.json"
-JOURNAL_BOOT_ID_FILE = "/proc/1/boot_id"
+JOURNAL_BOOT_ID_FILE = "/proc/sys/kernel/random/boot_id"
 BOOT_TIME_FILE = "/proc/stat"
 
 # ---------------------------------------------------------------------------
@@ -132,13 +132,11 @@ def get_journal_boot_events() -> dict[str, Any]:
     }
 
     boot_id = result["boot_id"]
-    if not boot_id:
-        return result
 
     # Get all journal entries for this boot, focusing on service boundaries
     proc = run([
         "journalctl",
-        f"--boot={boot_id}",
+        "--boot",
         "-o", "short-iso",
         "--no-pager",
         "-n", "5000",
@@ -151,7 +149,14 @@ def get_journal_boot_events() -> dict[str, Any]:
     service_events: dict[str, dict[str, Any]] = {}
     for line in proc.stdout.splitlines():
         # Look for systemd service start/stop messages
-        if ": Starting " in line or ": Started " in line or ": Stopped " in line or ": Reached " in line:
+        if (
+            ": Starting " in line
+            or ": Started " in line
+            or ": Stopped " in line
+            or ": Reached " in line
+            or "timed out" in line.lower()
+            or "timeout" in line.lower()
+        ):
             result["events"].append(line)
 
         # Extract service timestamps
@@ -288,14 +293,10 @@ def get_grub_timing() -> dict[str, Any]:
         "kernel_handoff": None,
     }
 
-    boot_id = get_boot_id()
-    if not boot_id:
-        return result
-
     # Look for GRUB and kernel handoff messages
     proc = run([
         "journalctl",
-        f"--boot={boot_id}",
+        "--boot",
         "-o", "short-iso",
         "--no-pager",
         "-g", "grub|kernel|linux|initrd|boot",
@@ -325,17 +326,13 @@ def get_display_manager_timing() -> dict[str, Any]:
         "login_prompt_time": None,
     }
 
-    boot_id = get_boot_id()
-    if not boot_id:
-        return result
-
     # Common display managers
     dm_services = ["gdm.service", "sddm.service", "lightdm.service", "getty@tty1.service"]
 
     for dm in dm_services:
         proc = run([
             "journalctl",
-            f"--boot={boot_id}",
+            "--boot",
             "-u", dm,
             "-o", "short-iso",
             "--no-pager",
