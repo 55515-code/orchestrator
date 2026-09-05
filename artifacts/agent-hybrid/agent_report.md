@@ -1,6 +1,6 @@
 # Agent Hybrid Report
 
-- Generated at: 2026-09-05T07:39:26.258223+00:00
+- Generated at: 2026-09-05T07:39:30.891292+00:00
 - Session: `20260905-f05173c`
 - Mode: `deep`
 - Loop count: `6`
@@ -18,11 +18,14 @@
 - Loop 3: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
 - Loop 4: 1 command(s) failed during mode 'deep'.
 - Loop 4: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
+- Loop 5: 1 command(s) failed during mode 'deep'.
+- Loop 5: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)
 
 ## Deep research findings with sources/risks
 
 - Source anchors reviewed: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
 - Strategic direction reviewed: `docs/security-toolkit-roadmap.md`.
+- Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 - Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
@@ -48,12 +51,14 @@
 | 1 | partial_failure | deterministic | 1 | pr_create_failed |
 | 2 | partial_failure | deterministic | 1 | pr_create_failed |
 | 3 | partial_failure | deterministic | 1 | pr_create_failed |
-| 4 | partial_failure | deterministic | 1 | n/a |
+| 4 | partial_failure | deterministic | 1 | pr_create_failed |
+| 5 | partial_failure | deterministic | 1 | n/a |
 
 - Loop 1 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 2 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 3 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 - Loop 4 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
+- Loop 5 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
 
@@ -67,6 +72,7 @@
 - Loop 2 executed 3 commands.
 - Loop 3 executed 3 commands.
 - Loop 4 executed 3 commands.
+- Loop 5 executed 3 commands.
 
 ## Compatibility notes
 
@@ -81,7 +87,7 @@
 
 - Current branch: `agent/swarm-20260905-f05173c`
 - Target branch: `main`
-- Ahead: `3` | Behind: `0` | Diverged: `False`
+- Ahead: `4` | Behind: `0` | Diverged: `False`
 - PR URL: `n/a`
 - Final merge state: `not_attempted`
 
@@ -96,7 +102,7 @@
   "allow_write": true,
   "session_id": "20260905-f05173c",
   "loop_count": 6,
-  "generated_at": "2026-09-05T07:39:26.258223+00:00",
+  "generated_at": "2026-09-05T07:39:30.891292+00:00",
   "started_at": "2026-09-05T07:39:08.059200+00:00",
   "findings": [
     "Loop 1: 1 command(s) failed during mode 'deep'.",
@@ -106,9 +112,12 @@
     "Loop 3: 1 command(s) failed during mode 'deep'.",
     "Loop 3: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)",
     "Loop 4: 1 command(s) failed during mode 'deep'.",
-    "Loop 4: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+    "Loop 4: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)",
+    "Loop 5: 1 command(s) failed during mode 'deep'.",
+    "Loop 5: Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
   ],
   "risks": [
+    "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
     "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.",
@@ -175,6 +184,13 @@
       "return_code": 0,
       "duration_seconds": 1.175,
       "loop": 4
+    },
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 1.15,
+      "loop": 5
     }
   ],
   "assumptions": [
@@ -560,6 +576,103 @@
           "return_code": 0,
           "duration_seconds": 1.175
         }
+      ],
+      "publish_result": {
+        "action": "pr_create_failed",
+        "ok": false,
+        "branch": "agent/swarm-20260905-f05173c",
+        "pr_number": 0,
+        "pr_url": "",
+        "merge_attempted": false,
+        "merged": false,
+        "merge_attempts": 0,
+        "message": "Failed to create PR from rolling branch.",
+        "rebase_ok": true,
+        "push_ok": true,
+        "loop_index": 4
+      }
+    },
+    {
+      "loop_index": 5,
+      "started_at": "2026-09-05T07:39:29.426739+00:00",
+      "generated_at": "2026-09-05T07:39:30.672434+00:00",
+      "route": "deterministic",
+      "cloud_attempted": false,
+      "cloud_success": false,
+      "cloud_note": "Cloud command not configured; skipping cloud route.",
+      "findings": [
+        "1 command(s) failed during mode 'deep'.",
+        "Failed: uv run --with ruff ruff check substrate scripts tests (rc=1)"
+      ],
+      "risks": [
+        "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 1,
+          "ok": false,
+          "duration_seconds": 0.037,
+          "stdout_tail": "e `exc`\n    |\n691 |                         base_names.add(ip)\n    -         except Exception as exc:  # noqa: BLE001 - tailscale may be absent or offline\n692 +         except Exception:  # noqa: BLE001 - tailscale may be absent or offline\n693 |             logger.debug(\"tailscale lookup failed\", exc_info=True)\n    |\n\nE402 Module level import not at top of file\n    --> substrate/web.py:2386:1\n     |\n2384 | # The root \"/\" redirects to the legacy dashboard which provides the full\n2385 | # operational overview (repositories, runs, standards, tooling, integrations).\n2386 | from starlette.responses import RedirectResponse\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n2387 |\n2388 | # Include dashboard and pipelines routers\n     |\nhelp: Move module level imports to top of file\n\nE402 Module level import not at top of file\n    --> substrate/web.py:2398:1\n     |\n2397 | # iPhone webapp panel extensions (automations + live system stream). Additive.\n2398 | from .iphone_panel import router as iphone_panel_router\n     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n2399 |\n2400 | app.include_router(iphone_panel_router)\n     |\nhelp: Move module level imports to top of file\n\nE402 Module level import not at top of file\n  --> tests/test_change_snapshot.py:18:1\n   |\n16 |     sys.path.insert(0, str(ROOT))\n17 |\n18 | from substrate.snapshots import SNAPSHOT_BRANCH, SnapshotEngine, _line_is_suspicious\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nhelp: Move module level imports to top of file\n\nE402 Module level import not at top of file\n   --> tests/test_encrypted_chain.py:144:1\n    |\n144 | import tempfile\n    | ^^^^^^^^^^^^^^^\n145 |\n146 | if __name__ == \"__main__\":\n    |\nhelp: Move module level imports to top of file\n\nF401 [*] `substrate.vault` imported but unused\n  --> tests/test_panel_integration.py:18:23\n   |\n16 | from pathlib import Path\n17 |\n18 | from substrate import vault\n   |                       ^^^^^\n19 | from substrate.registry import SubstrateRuntime\n20 | from substrate.web import app\n   |\nhelp: Remove unused import: `substrate.vault`\n   |\n17 |\n   - from substrate import vault\n18 | from substrate.registry import SubstrateRuntime\n   |\n\nF401 [*] `substrate.registry.SubstrateRuntime` imported but unused\n  --> tests/test_panel_integration.py:19:32\n   |\n18 | from substrate import vault\n19 | from substrate.registry import SubstrateRuntime\n   |                                ^^^^^^^^^^^^^^^^\n20 | from substrate.web import app\n   |\nhelp: Remove unused import: `substrate.registry.SubstrateRuntime`\n   |\n18 | from substrate import vault\n   - from substrate.registry import SubstrateRuntime\n19 | from substrate.web import app\n   |\n\nF401 [*] `substrate.web.app` imported but unused\n  --> tests/test_panel_integration.py:20:27\n   |\n18 | from substrate import vault\n19 | from substrate.registry import SubstrateRuntime\n20 | from substrate.web import app\n   |                           ^^^\n21 |\n22 | CLIENT_KWARGS = {\"base_url\": \"http://127.0.0.1:8090\"}\n   |\nhelp: Remove unused import: `substrate.web.app`\n   |\n19 | from substrate.registry import SubstrateRuntime\n   - from substrate.web import app\n20 |\n   |\n\nE402 Module level import not at top of file\n  --> tests/test_settings_policy.py:28:1\n   |\n26 | sys.path.insert(0, str(ROOT))\n27 |\n28 | from substrate.models import PolicyConfig\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n29 | from substrate.settings import WORKSPACE_FILE, load_workspace_config\n   |\nhelp: Move module level imports to top of file\n\nE402 Module level import not at top of file\n  --> tests/test_settings_policy.py:29:1\n   |\n28 | from substrate.models import PolicyConfig\n29 | from substrate.settings import WORKSPACE_FILE, load_workspace_config\n   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nhelp: Move module level imports to top of file\n\nFound 34 errors.\n[*] 19 fixable with the `--fix` option (3 hidden fixes can be enabled with the `--unsafe-fixes` option).\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.059,
+          "stdout_tail": "Listing 'substrate'...\nListing 'substrate/agents'...\nListing 'substrate/assets'...\nListing 'substrate/boot'...\nListing 'substrate/chatbot'...\nListing 'substrate/chatbot/static'...\nListing 'substrate/credentials'...\nListing 'substrate/crypto'...\nListing 'substrate/dashboard'...\nListing 'substrate/gateway'...\nListing 'substrate/gateway/plugins'...\nListing 'substrate/gh_sync'...\nListing 'substrate/monitoring'...\nListing 'substrate/pipelines'...\nListing 'substrate/render_engines'...\nListing 'substrate/resources'...\nListing 'substrate/security'...\nListing 'substrate/static'...\nListing 'substrate/templates'...\nListing 'substrate/watchdog'...\nListing 'scripts'...\nListing 'scripts/crypto'...\nListing 'scripts/templates'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/test_decentralized_governance.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 1.15,
+          "stdout_tail": ".............                                                            [100%]\n13 passed in 0.28s\n",
+          "stderr_tail": ""
+        }
+      ],
+      "failing_count": 1,
+      "loop_status": "partial_failure",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 1.15
+        }
       ]
     }
   ],
@@ -605,6 +718,20 @@
       "rebase_ok": true,
       "push_ok": true,
       "loop_index": 3
+    },
+    {
+      "action": "pr_create_failed",
+      "ok": false,
+      "branch": "agent/swarm-20260905-f05173c",
+      "pr_number": 0,
+      "pr_url": "",
+      "merge_attempted": false,
+      "merged": false,
+      "merge_attempts": 0,
+      "message": "Failed to create PR from rolling branch.",
+      "rebase_ok": true,
+      "push_ok": true,
+      "loop_index": 4
     }
   ],
   "final_pr_url": "",
@@ -612,9 +739,9 @@
   "git_context": {
     "current_branch": "agent/swarm-20260905-f05173c",
     "target_branch": "main",
-    "head_sha": "8beaa49053ca0387ad28f4e7fba4e6ba697077d3",
+    "head_sha": "916e943c5adea81a5da6be0d27debe438e2cb7ce",
     "target_sha": "f05173c54c82c020d709b74af58519c85d7774db",
-    "ahead_count": 3,
+    "ahead_count": 4,
     "behind_count": 0,
     "diverged": false,
     "working_tree_clean_start": true,
@@ -1154,6 +1281,122 @@
       "return_code": 0,
       "ok": true,
       "duration_seconds": 0.005,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/agent_hybrid_publish.sh",
+        "true",
+        "main",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json",
+        "/home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md",
+        "4",
+        "6",
+        "20260905-f05173c",
+        "safe_gate",
+        "1",
+        "false"
+      ],
+      "command_text": "bash scripts/agent_hybrid_publish.sh true main /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md 4 6 20260905-f05173c safe_gate 1 false",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 3.166,
+      "stdout_tail": "M\tartifacts/agent-hybrid/agent_report.md\nM\tartifacts/agent-hybrid/agent_summary.json\nYour branch is up to date with 'origin/agent/swarm-20260905-f05173c'.\n[agent/swarm-20260905-f05173c 916e943] chore(agent): swarm loop 4/6 session 20260905-f05173c\n 2 files changed, 491 insertions(+), 11 deletions(-)\nCurrent branch agent/swarm-20260905-f05173c is up to date.\nbranch 'agent/swarm-20260905-f05173c' set up to track 'origin/agent/swarm-20260905-f05173c'.\nAGENT_PUBLISH_ACTION=pr_create_failed\nAGENT_PUBLISH_OK=false\nAGENT_PUBLISH_BRANCH=agent/swarm-20260905-f05173c\nAGENT_PUBLISH_PR_NUMBER=\nAGENT_PUBLISH_PR_URL=\nAGENT_PUBLISH_MERGE_ATTEMPTED=false\nAGENT_PUBLISH_MERGED=false\nAGENT_PUBLISH_MERGE_ATTEMPTS=0\nAGENT_PUBLISH_REBASE_OK=true\nAGENT_PUBLISH_PUSH_OK=true\nAGENT_PUBLISH_MESSAGE=Failed to create PR from rolling branch.\n",
+      "stderr_tail": "From https://github.com/55515-code/orchestrator\n * branch            main       -> FETCH_HEAD\nAlready on 'agent/swarm-20260905-f05173c'\nTo https://github.com/55515-code/orchestrator\n   8beaa49..916e943  agent/swarm-20260905-f05173c -> agent/swarm-20260905-f05173c\nscripts/agent_hybrid_publish.sh: line 64: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_summary.json\\: No such file or directory\nscripts/agent_hybrid_publish.sh: line 65: /home/runner/work/orchestrator/orchestrator/artifacts/agent-hybrid/agent_report.md\\: No such file or directory\npull request create failed: GraphQL: GitHub Actions is not permitted to create or approve pull requests (createPullRequest)\n"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.199,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "agent/swarm-20260905-f05173c\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "916e943c5adea81a5da6be0d27debe438e2cb7ce\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "f05173c54c82c020d709b74af58519c85d7774db\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "4\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.006,
       "stdout_tail": "",
       "stderr_tail": ""
     }
