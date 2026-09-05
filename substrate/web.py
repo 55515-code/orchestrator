@@ -79,7 +79,7 @@ from .tooling import ensure_tool_profile, tooling_snapshot
 from .vault import delete_secret as vault_delete_secret
 from .vault import put_secret as vault_put_secret
 from .vault import vault_status
-from .proton_support import proton_status_payload, store_proton_credentials
+from .proton_support import proton_status_payload
 
 logger = logging.getLogger(__name__)
 
@@ -286,7 +286,7 @@ def _submit(run_id: str, fn, *args, **kwargs) -> None:
             RUN_FUTURES.pop(run_id, None)
         try:
             completed.result()
-        except Exception as exc:
+        except Exception:
             logger.debug("_cleanup future result failed", exc_info=True)
             # Errors are persisted by orchestrator run records.
             pass
@@ -499,7 +499,7 @@ def _config_files_index() -> list[dict[str, Any]]:
             str(entry.get("source_path") or ""): entry
             for entry in sync_payload.get("entries", [])
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         logger.debug("config sync entries lookup failed", exc_info=True)
         entries_by_path = {}
     for relative in CONFIG_FILES_WHITELIST:
@@ -689,7 +689,7 @@ def _tailnet_self_hosts() -> set[str]:
                     ip = str(addr).split("/")[0].strip().lower()
                     if ip:
                         base_names.add(ip)
-        except Exception as exc:  # noqa: BLE001 - tailscale may be absent or offline
+        except Exception:  # noqa: BLE001 - tailscale may be absent or offline
             logger.debug("tailscale lookup failed", exc_info=True)
             pass
 

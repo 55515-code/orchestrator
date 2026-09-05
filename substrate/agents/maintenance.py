@@ -8,19 +8,15 @@ delegated work instead of polling other agents/sessions/processes.
 
 from __future__ import annotations
 
-import json
 import shutil
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .. import _utils
 from ..research import source_facts_ready
 from .core import (
-    TIER_AUTO,
     TIER_AUTO_IF_GREEN,
-    TIER_HUMAN,
     agent_branch_name,
     bounded_validation_limits,
     check_action_permission,

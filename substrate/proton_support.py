@@ -20,10 +20,8 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
-import sys
 import threading
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
 from .credentials import CredentialStore

@@ -16,7 +16,6 @@ config overwrite) always leave a restore point behind.
 import argparse
 import json
 import os
-import subprocess
 import sys
 from pathlib import Path
 

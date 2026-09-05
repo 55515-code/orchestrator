@@ -35,7 +35,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import secrets as _secrets
 import subprocess
 import sys
 import time
@@ -462,7 +461,7 @@ def cmd_connect(email: str | None, totp: str | None, password_file: Path | None)
     _write_state({"status": "running", "stage": "register", "started_at": _now(), "email": _redact(email)})
     reg_ok, reg_detail = wait_imap_registered(email, password)
     if not reg_ok:
-        payload = _fail("register", f"Bridge login initiated but the account did not register on IMAP. {reg_detail}")
+        _fail("register", f"Bridge login initiated but the account did not register on IMAP. {reg_detail}")
         _update_integrations_state(email, connected=False)
         _audit("proton_connect_failed", {"email": _redact(email), "stage": "register"})
         print(json.dumps({"ok": False, "stage": "register", "detail": detail, "reg_detail": reg_detail}, indent=2, ensure_ascii=False))

@@ -15,7 +15,6 @@ import json
 import os
 import subprocess
 import sys
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -130,8 +129,6 @@ def get_journal_boot_events() -> dict[str, Any]:
         "events": [],
         "service_timestamps": {},
     }
-
-    boot_id = result["boot_id"]
 
     # Get all journal entries for this boot, focusing on service boundaries
     proc = run([

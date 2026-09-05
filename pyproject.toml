@@ -96,10 +96,13 @@ select = ["E4", "E7", "E9", "F"]
 # in reviewed batches, not as a side effect of a lint config change.
 
 [tool.ruff.lint.per-file-ignores]
-# Standalone scripts bootstrap sys.path before importing the substrate package;
-# imports after that setup are intentional (E402).
-"scripts/serve_dashboard.py" = ["E402"]
-"scripts/serve_pipelines.py" = ["E402"]
-"scripts/crypto/backup_proton.py" = ["E402"]
-"scripts/crypto/wallet_gen.py" = ["E402"]
-"scripts/crypto/export_site_data.py" = ["E402"]
+# Standalone scripts and tests bootstrap sys.path before importing the substrate
+# package; imports after that setup are intentional (E402).
+"scripts/*.py" = ["E402"]
+"scripts/**/*.py" = ["E402"]
+"tests/test_change_snapshot.py" = ["E402"]
+"tests/test_encrypted_chain.py" = ["E402"]
+"tests/test_settings_policy.py" = ["E402"]
+# web.py contains inline imports inside the live YAML validator (lines 2386,
+# 2398) to avoid importing yaml at module load when the validator is unused.
+"substrate/web.py" = ["E402"]

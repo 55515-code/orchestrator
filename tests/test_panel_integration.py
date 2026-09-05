@@ -15,9 +15,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from substrate import vault
-from substrate.registry import SubstrateRuntime
-from substrate.web import app
 
 CLIENT_KWARGS = {"base_url": "http://127.0.0.1:8090"}
 

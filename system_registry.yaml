@@ -465,3 +465,29 @@ known_issues:
     recommendation: >-
       Investigate why the 30-day reaper is not keeping up before raising the
       threshold.
+
+  lint_backlog:
+    severity: medium
+    summary: >-
+      The lint gate selects only ["E4","E7","E9","F"] (classic pyflakes +
+      pycodestyle error subsets). Broader rule families surface ~300 further
+      findings (BLE001 blind-except, S110 try-except-pass, DTZ naive datetimes,
+      PLW1510 subprocess-without-check, TRY type-check-without-type-error,
+      ASYNC blocking-open-in-async).
+    rationale: >-
+      Many of these require deliberate exception-handling changes or
+      async/await refactors. Clearing them as a side effect of a lint-config
+      change would change runtime behaviour without review. Tracked here so
+      they are visible and can be cleared in reviewed batches.
+    tracked_findings_by_family:
+      BLE001: 71    # blind-except
+      S110:   61    # try-except-pass
+      EXE001: 35    # shebang-not-executable
+      TRY004: 29    # type-check-without-type-error
+      DTZ003: 9     # call-datetime-utcnow
+      DTZ005: 9     # call-datetime-now-without-tzinfo
+      S112:   9     # try-except-continue
+      PLW1510: 23   # subprocess-run-without-check
+    recommendation: >-
+      Progressively widen `select` in pyproject.toml and clear one family at a
+      time, with explicit approval per batch. Tier 1.

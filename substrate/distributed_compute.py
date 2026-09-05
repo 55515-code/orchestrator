@@ -20,10 +20,9 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any, Literal
 
-from .compute_nodes import ComputeNode, ComputeNodeRegistry, REGISTRY
+from .compute_nodes import ComputeNode, REGISTRY
 
 logger = logging.getLogger(__name__)
 

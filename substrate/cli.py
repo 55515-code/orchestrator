@@ -980,7 +980,7 @@ def _build_parser() -> argparse.ArgumentParser:
     cred_snap.add_argument("path", help="File or directory to snapshot.")
     cred_snap.add_argument("--reason", default="", help="Why this snapshot is taken.")
 
-    cred_list = subparsers.add_parser(
+    subparsers.add_parser(
         "credential-snapshots",
         help="List available credential/config snapshots.",
     )
