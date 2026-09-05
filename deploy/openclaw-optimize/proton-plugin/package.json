@@ -1,0 +1,23 @@
+{
+  "name": "proton-bridge-openclaw-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "OpenClaw extension plugin that manages the Proton Mail Bridge -> OpenClaw hook bridge settings and service (env file + systemd user unit).",
+  "type": "module",
+  "main": "./index.js",
+  "peerDependencies": {
+    "openclaw": ">=2026.8.2"
+  },
+  "engines": {
+    "node": ">=22.22.3"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.js"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.8.2",
+      "minGatewayVersion": "2026.8.2"
+    }
+  }
+}

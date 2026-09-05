@@ -1,0 +1,116 @@
+{
+  "id": "proton-bridge",
+  "name": "Proton Mail Bridge",
+  "description": "Manages the Proton Mail Bridge -> OpenClaw hook bridge settings and systemd user service from OpenClaw config.",
+  "version": "1.0.0",
+  "activation": {
+    "onConfigPaths": [
+      "plugins.entries.proton-bridge"
+    ],
+    "onCommands": [
+      "proton-bridge"
+    ]
+  },
+  "cliCommands": [
+    {
+      "name": "proton-bridge",
+      "description": "Manage the Proton Mail Bridge -> OpenClaw hook bridge integration",
+      "hasSubcommands": true
+    }
+  ],
+  "commandAliases": [
+    {
+      "name": "proton-bridge",
+      "kind": "cli"
+    }
+  ],
+  "configSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "type": "string",
+        "maxLength": 320
+      },
+      "bridgePassword": {
+        "type": "string",
+        "minLength": 1
+      },
+      "imapHost": {
+        "type": "string",
+        "minLength": 1
+      },
+      "imapPort": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "pollSeconds": {
+        "type": "integer",
+        "minimum": 5,
+        "maximum": 86400
+      },
+      "hookUrl": {
+        "type": "string",
+        "minLength": 1
+      },
+      "hookToken": {
+        "type": "string",
+        "minLength": 1
+      },
+      "envFilePath": {
+        "type": "string",
+        "minLength": 1
+      },
+      "hookServiceName": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "uiHints": {
+    "email": {
+      "label": "Proton email address",
+      "help": "Mailbox used by the bridge (PROTON_EMAIL)."
+    },
+    "bridgePassword": {
+      "label": "Mailbox password",
+      "help": "Proton Bridge mailbox password (PROTON_BRIDGE_PW). Stored in openclaw.json and written to the mode-600 env file.",
+      "placeholder": "leave empty to keep the current value",
+      "sensitive": true
+    },
+    "imapHost": {
+      "label": "IMAP host",
+      "help": "protonmail-bridge IMAP listener (PROTON_IMAP_HOST). Default: 127.0.0.1"
+    },
+    "imapPort": {
+      "label": "IMAP port",
+      "help": "protonmail-bridge IMAP port (PROTON_IMAP_PORT). Default: 1143"
+    },
+    "pollSeconds": {
+      "label": "Poll interval (s)",
+      "help": "Seconds between IMAP polls when IDLE is unavailable (PROTON_POLL_SECONDS).",
+      "advanced": true
+    },
+    "hookUrl": {
+      "label": "OpenClaw hook URL",
+      "help": "Gateway /hooks/proton URL (OPENCLAW_HOOK_URL). Default: http://127.0.0.1:8090/hooks/proton"
+    },
+    "hookToken": {
+      "label": "Hook token",
+      "help": "Secret for the gateway /hooks/proton route (OPENCLAW_HOOK_TOKEN).",
+      "sensitive": true
+    },
+    "envFilePath": {
+      "label": "Environment file path",
+      "help": "Absolute path to the mode-600 env file the systemd unit reads via EnvironmentFile.",
+      "advanced": true
+    },
+    "hookServiceName": {
+      "label": "Hook systemd service",
+      "help": "systemd user unit restarted after the env file is rewritten.",
+      "advanced": true
+    }
+  }
+}
