@@ -1,0 +1,24 @@
+[Unit]
+Description=OpenClaw Gateway Watchdog
+After=network.target openclaw-gateway.service
+Wants=openclaw-gateway.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/env uv run python /home/ahron/codespace/substrate/watchdog/gateway_watchdog.py
+WorkingDirectory=/home/ahron/codespace
+Restart=always
+RestartSec=10
+Environment=GATEWAY_WATCHDOG_INTERVAL=30
+Environment=GATEWAY_WATCHDOG_GRACE=20
+Environment=GATEWAY_WATCHDOG_MAX_RESTARTS=3
+Environment=GATEWAY_WATCHDOG_RESTART_WINDOW=600
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target
