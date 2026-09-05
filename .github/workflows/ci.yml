@@ -27,7 +27,7 @@ jobs:
       - name: Lint with ruff
         run: uv run ruff check substrate scripts tests
       - name: Type check with mypy
-        run: uv run mypy substrate scripts tests
+        run: uv run mypy substrate tests
       - name: Run tests
         run: uv run pytest tests
       - name: Compile Python

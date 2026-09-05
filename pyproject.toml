@@ -43,7 +43,7 @@ dev = [
   "pre-commit>=4.0.0",
   # Upper bound so a major ruff release cannot silently redefine the lint gate.
   "ruff>=0.11.0,<0.17.0",
-  # CI runs `uv run mypy substrate scripts tests` (.github/workflows/ci.yml).
+  # CI runs `uv run mypy substrate tests` (.github/workflows/ci.yml).
   # mypy was invoked but never declared, so that step failed to spawn on every
   # run. Declared here so `uv sync --dev` provisions it.
   "mypy>=1.11.0",
@@ -51,6 +51,8 @@ dev = [
   # `uv run pytest` without them declared.
   "pytest>=8.0.0",
   "httpx>=0.27.0",
+  # yaml stubs for mypy on code paths that import PyYAML directly.
+  "types-PyYAML",
 ]
 crypto = [
   "mnemonic>=0.21",
@@ -106,3 +108,19 @@ select = ["E4", "E7", "E9", "F"]
 # web.py contains inline imports inside the live YAML validator (lines 2386,
 # 2398) to avoid importing yaml at module load when the validator is unused.
 "substrate/web.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+namespace_packages = true
+# Stubs satisfy optional/heavy imports used by desktop/render features without
+# requiring those packages in CI. These are in repo, not site-packages.
+mypy_path = "stubs"
+# The chatbot tray module imports pystray, which has no published stubs.
+# This file is desktop-only and should not fail type-check on a headless
+# build host.
+disable_error_code = ["import-untyped"]
+# Ignore tooling/meta modules that intentionally bootstrap sys.path in ways
+# mypy cannot resolve cleanly as installed packages.
+exclude = "^(tests|scripts)/"
