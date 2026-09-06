@@ -219,8 +219,11 @@ _RATE_LIMITS: dict[str, list[float]] = {}
 _RATE_LIMITS_LOCK = Lock()
 
 # Short-lived cache of the machine's Tailscale host names/IPs (tailscale CLI
-# invocations are slow, so they only run on cache expiry).
-_TAILNET_HOSTS_CACHE: dict[str, Any] = {"at": 0.0, "hosts": set()}
+# invocations are slow, so they only run on cache expiry). The sentinel -inf
+# marks "never computed" so the first lookup always recomputes even when
+# time.monotonic() starts near 0 (e.g. a fresh runner or a service started
+# shortly after boot) — a 0.0 sentinel would be mistaken for a fresh cache.
+_TAILNET_HOSTS_CACHE: dict[str, Any] = {"at": float("-inf"), "hosts": set()}
 _TAILNET_HOSTS_TTL = 300.0
 _TAILNET_HOSTS_LOCK = Lock()
 
