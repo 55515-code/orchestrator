@@ -64,7 +64,7 @@ from .models import OPENCLAW_ALLOWED_DATA_CLASSES
 from .orchestrator import Orchestrator
 from .panel_settings import load_panel_settings, save_panel_settings
 from .pipelines import PipelineEngine, PipelineRegistry, create_pipelines_router
-from .providers import SUPPORTED_PROVIDERS, provider_diagnostics
+from .providers import DEFAULT_PROVIDER_MODELS, SUPPORTED_PROVIDERS, provider_diagnostics
 from .registry import SubstrateRuntime
 from .render import (
     render_catalog_payload,
@@ -1095,6 +1095,153 @@ def api_standards(track: str | None = None) -> dict[str, Any]:
 def api_tooling(profile: str | None = None) -> dict[str, Any]:
     profile_id = _normalize_slug(profile, "profile") if profile else None
     return tooling_snapshot(RUNTIME, profile_id=profile_id)
+
+
+# --- Live Kilo model catalog -------------------------------------------------
+# The Kilo CLI is the single source of truth for available models (300+).
+# We shell out to `kilo models --verbose`, parse the JSON blocks, group them by
+# provider, and cache the result for KILO_MODELS_CACHE_TTL seconds (default
+# 300) so the panel never blocks on the CLI and a Kilo outage degrades to the
+# last known-good catalog.
+
+KILO_MODELS_CACHE = RUNTIME.paths["state"] / "kilo-models.json"
+
+
+def _parse_kilo_models_output(raw: str) -> list[dict[str, Any]]:
+    """Parse `kilo models --verbose` output into model entries.
+
+    Output format: a line with the model id (`kilo/<provider>/<model>`),
+    followed by a pretty-printed JSON metadata block. We accumulate JSON
+    lines per model and attach metadata when the block closes.
+    """
+    entries: list[dict[str, Any]] = []
+    current_id: str | None = None
+    json_lines: list[str] = []
+
+    def _flush() -> None:
+        nonlocal current_id, json_lines
+        if current_id is None:
+            return
+        entry: dict[str, Any] = {"id": current_id}
+        if json_lines:
+            try:
+                meta = json.loads("\n".join(json_lines))
+                if isinstance(meta, dict):
+                    # Keep the fully-qualified id (`kilo/<provider>/<model>`)
+                    # as the canonical key; meta's bare id is demoted.
+                    meta.pop("id", None)
+                    entry.update(meta)
+            except json.JSONDecodeError:
+                pass
+        entries.append(entry)
+        current_id = None
+        json_lines = []
+
+    for line in raw.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("kilo/") and not stripped.startswith("kilo/ ") and current_id is None:
+            current_id = stripped
+            json_lines = []
+        elif current_id is not None:
+            if stripped == "":
+                continue
+            json_lines.append(line)
+            # Close the block when brace depth returns to zero.
+            joined = "\n".join(json_lines)
+            if joined.count("{") == joined.count("}") and joined.count("{") > 0:
+                _flush()
+    _flush()
+    return entries
+
+
+def _load_kilo_models_cache() -> dict[str, Any] | None:
+    try:
+        payload = json.loads(KILO_MODELS_CACHE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        return None
+    age = time.time() - float(payload.get("fetched_at", 0))
+    if age > int(os.getenv("KILO_MODELS_CACHE_TTL", "300")):
+        return None
+    return data
+
+
+@app.get("/api/kilo/models")
+def api_kilo_models(refresh: str = "false") -> dict[str, Any]:
+    """Live Kilo model catalog grouped by provider, with cost metadata."""
+    want_refresh = _parse_bool(refresh)
+    if not want_refresh:
+        cached = _load_kilo_models_cache()
+        if cached is not None:
+            return cached
+
+    try:
+        completed = subprocess.run(
+            ["kilo", "models", "--verbose"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired) as exc:
+        # Degrade to the last known-good cache even if stale.
+        try:
+            payload = json.loads(KILO_MODELS_CACHE.read_text(encoding="utf-8"))
+            data = payload.get("data")
+            if isinstance(data, dict):
+                data["stale"] = True
+                return data
+        except (OSError, json.JSONDecodeError):
+            pass
+        raise HTTPException(status_code=503, detail=f"kilo CLI unavailable: {exc}") from exc
+
+    entries = _parse_kilo_models_output(completed.stdout)
+    if not entries and completed.returncode != 0:
+        raise HTTPException(status_code=503, detail="kilo models returned no data")
+
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for entry in entries:
+        model_id = str(entry.get("id", ""))
+        parts = model_id.split("/", 2)
+        provider = parts[1] if len(parts) > 2 else "other"
+        grouped.setdefault(provider, []).append(entry)
+
+    data = {
+        "ok": True,
+        "count": len(entries),
+        "providers": sorted(grouped.keys()),
+        "models_by_provider": grouped,
+        "models": entries,
+        "cached_at": datetime.now(UTC).isoformat(),
+    }
+    try:
+        KILO_MODELS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        KILO_MODELS_CACHE.write_text(
+            json.dumps({"fetched_at": time.time(), "data": data}, ensure_ascii=False),
+            encoding="utf-8",
+        )
+    except OSError:
+        logger.warning("failed to cache kilo models")
+    return data
+
+
+@app.get("/api/providers")
+def api_providers() -> dict[str, Any]:
+    """Substrate-native providers plus the live Kilo catalog in one payload."""
+    diagnostics = provider_diagnostics()
+    try:
+        kilo = api_kilo_models()
+    except HTTPException:
+        kilo = {"ok": False, "count": 0, "providers": [], "models_by_provider": {}, "models": []}
+    return {
+        "ok": True,
+        "substrate_providers": sorted(ALLOWED_PROVIDERS),
+        "default_models": dict(DEFAULT_PROVIDER_MODELS),
+        "diagnostics": diagnostics,
+        "kilo": kilo,
+    }
 
 
 @app.get("/api/integrations")

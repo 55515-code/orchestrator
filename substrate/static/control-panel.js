@@ -352,6 +352,9 @@ class ControlPanel {
                 case 'learning':
                     await this.loadLearning();
                     break;
+                case 'kilo':
+                    await this.loadKiloModels();
+                    break;
                 case 'automations':
                     await this.loadAutomations();
                     break;
@@ -433,6 +436,70 @@ class ControlPanel {
     async loadLearning() {
         const data = await this.fetchAPI('/api/learning');
         this.renderLearning(data);
+    }
+
+    // --- Live Kilo model catalog (source of truth: `kilo models` via /api/kilo/models) ---
+
+    async loadKiloModels() {
+        const select = document.getElementById('kiloModel');
+        if (!select) return;
+        if (this._kiloModelsLoaded) { this.updateKiloModelMeta(); return; }
+        select.innerHTML = '<option value="">Loading models…</option>';
+        try {
+            const data = await this.fetchAPI('/api/kilo/models');
+            const byProvider = data.models_by_provider || {};
+            const providers = Object.keys(byProvider).sort();
+            const total = data.count || 0;
+            if (!total) {
+                select.innerHTML = '<option value="">No models available</option>';
+                return;
+            }
+            this._kiloModelIndex = {};
+            let html = '<option value="">Default (chatbot config)</option>';
+            for (const provider of providers) {
+                html += `<optgroup label="${escapeHtml(provider)}">`;
+                for (const m of (byProvider[provider] || [])) {
+                    const id = String(m.id || '');
+                    if (!id) continue;
+                    this._kiloModelIndex[id] = m;
+                    const name = escapeHtml(m.name || id);
+                    const freeTag = m.isFree ? ' · free' : '';
+                    html += `<option value="${escapeHtml(id)}">${name}${escapeHtml(freeTag)}</option>`;
+                }
+                html += '</optgroup>';
+            }
+            select.innerHTML = html;
+            this._kiloModelsLoaded = true;
+            select.removeEventListener('change', this._kiloModelChangeHandler);
+            this._kiloModelChangeHandler = () => this.updateKiloModelMeta();
+            select.addEventListener('change', this._kiloModelChangeHandler);
+            if (data.stale) {
+                const meta = document.getElementById('kiloModelMeta');
+                if (meta) meta.textContent = '⚠ showing cached list (kilo CLI unavailable)';
+            }
+            announceForScreenReader(`Loaded ${total} Kilo models across ${providers.length} providers.`);
+        } catch (e) {
+            select.innerHTML = '<option value="">Model list unavailable</option>';
+            console.error('Failed to load Kilo models:', e);
+        }
+    }
+
+    updateKiloModelMeta() {
+        const select = document.getElementById('kiloModel');
+        const meta = document.getElementById('kiloModelMeta');
+        if (!select || !meta) return;
+        const id = select.value;
+        this._kiloSelectedModel = id;
+        const model = (this._kiloModelIndex || {})[id];
+        if (!model) { meta.textContent = ''; return; }
+        const cost = model.cost || {};
+        const limit = model.limit || {};
+        const parts = [];
+        if (cost.input != null) parts.push(`in $${cost.input}/M`);
+        if (cost.output != null) parts.push(`out $${cost.output}/M`);
+        if (limit.context) parts.push(`${Math.round(limit.context / 1000)}k ctx`);
+        if (model.isFree) parts.push('free tier');
+        meta.textContent = parts.join(' · ');
     }
 
     // --- iPhone panel: Automations, System, Terminal ---

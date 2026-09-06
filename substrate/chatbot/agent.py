@@ -68,6 +68,8 @@ class AgentTask:
     created_at: str = ""
     started_at: str = ""
     finished_at: str = ""
+    model: str | None = None
+    agent: str | None = None
     events: queue.Queue[dict[str, Any] | str] = field(
         default_factory=queue.Queue
     )
@@ -84,6 +86,8 @@ class AgentTask:
             "created_at": self.created_at,
             "started_at": self.started_at,
             "finished_at": self.finished_at,
+            "model": self.model,
+            "agent": self.agent,
         }
 
 
@@ -115,13 +119,20 @@ class KiloAgent:
         self._last_session: dict[str, str] = {}
 
     def submit(
-        self, session_id: str, message: str, task_id: str | None = None
+        self,
+        session_id: str,
+        message: str,
+        task_id: str | None = None,
+        model: str | None = None,
+        agent: str | None = None,
     ) -> AgentTask:
         task = AgentTask(
             task_id=task_id or uuid.uuid4().hex,
             session_id=session_id,
             message=message,
             created_at=_utc_iso(),
+            model=model or None,
+            agent=agent or None,
         )
         self._queue.put(task)
         with self._lock:
@@ -242,10 +253,14 @@ class KiloAgent:
 
     def _spawn(self, task: AgentTask) -> subprocess.Popen[str]:
         command = [self.config.kilo_binary, "run", "--auto", "--format", "json"]
-        if self.config.agent:
-            command.extend(["--agent", self.config.agent])
-        if self.config.model:
-            command.extend(["--model", self.config.model])
+        # Per-task overrides win over the chatbot config defaults; this is how
+        # the panel's live Kilo model selector reaches the CLI.
+        agent = task.agent or self.config.agent
+        model = task.model or self.config.model
+        if agent:
+            command.extend(["--agent", agent])
+        if model:
+            command.extend(["--model", model])
         session_id = self._last_session.get(task.session_id)
         if session_id:
             command.extend(["--session", session_id])

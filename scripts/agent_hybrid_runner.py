@@ -276,8 +276,8 @@ def run_single_loop(
                         "httpx",
                         "pytest",
                         "-q",
-                        "tests/studio/test_connection.py",
-                        "tests/studio/test_api.py",
+                        "tests/test_gateway_health.py",
+                        "tests/test_web_hybrid_compat.py",
                     ],
                 ]
                 for command in fallback_commands:

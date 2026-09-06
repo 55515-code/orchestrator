@@ -43,7 +43,7 @@ dev = [
   "pre-commit>=4.0.0",
   # Upper bound so a major ruff release cannot silently redefine the lint gate.
   "ruff>=0.11.0,<0.17.0",
-  # CI runs `uv run mypy substrate tests` (.github/workflows/ci.yml).
+  # CI runs `uv run mypy substrate` (.github/workflows/ci.yml).
   # mypy was invoked but never declared, so that step failed to spawn on every
   # run. Declared here so `uv sync --dev` provisions it.
   "mypy>=1.11.0",
