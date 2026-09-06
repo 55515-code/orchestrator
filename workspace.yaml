@@ -404,12 +404,8 @@ repositories:
         mode: observe
         command:
           default:
-            - uv
-            - --project
-            - .
+            - npm
             - run
-            - python
-            - scripts/site_content.py
             - check
       site_queue_list:
         description: List community moderation inbox.

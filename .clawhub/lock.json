@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "skills": {
+    "kilocode-model-sync": {
+      "version": "1.0.0",
+      "registry": "https://clawhub.ai",
+      "ownerHandle": "guillaumemaka",
+      "installedAt": 1788682988330,
+      "artifact": {
+        "kind": "archive",
+        "sha256": "ff73124134ecdb484cbc0d3b93653fa4ab056900cba6e79885a68b5fd38a0799",
+        "integrity": "sha256-/3MSQTTs20hMvA07k2U/pKsFaQDLpueYhaaLX9OKB5k="
+      },
+      "skillFile": {
+        "path": "SKILL.md",
+        "sha256": "d8938a8c654f9d2ed97bdbe269c8e79b1a32b66095e31cfc867f3bf16f18692e"
+      },
+      "fileTreeSha256": "sha256:00403dc6a9d6eaa9dc628ee9f9f43bf1192641b47286530fbde60144fffad39e",
+      "verification": {
+        "schema": "clawhub.skill.verify.v1",
+        "ok": false,
+        "decision": "fail",
+        "reasons": [
+          "security.status_not_clean"
+        ],
+        "card": {
+          "available": true,
+          "path": "skill-card.md",
+          "url": "https://wry-manatee-359.convex.site/api/v1/skills/kilocode-model-sync/card?ownerHandle=guillaumemaka&version=1.0.0",
+          "sha256": "3e1bf4146bfeaa99600b310f46cf48c460ec3786728d3f5061b81fd472d6cf59",
+          "size": 2165,
+          "contentType": "text/markdown; charset=utf-8"
+        },
+        "artifact": {
+          "sourceFingerprint": "76d80389d78e17f3b6e1a5adbf941c5cedd585703b5d3e3249fff27881194baa",
+          "bundleFingerprints": [
+            "0e06ff9c9cd89fff9734f26b9db5c55201deddc10a4efd8a28a43612865957fd"
+          ],
+          "files": [
+            {
+              "path": "SKILL.md",
+              "size": 4696,
+              "sha256": "d8938a8c654f9d2ed97bdbe269c8e79b1a32b66095e31cfc867f3bf16f18692e",
+              "contentType": "text/markdown"
+            },
+            {
+              "path": "scripts/apply_patch.py",
+              "size": 4868,
+              "sha256": "974c3a94a1332f879182da1e0713116311596da09710cda80518ed5a4b84aac1",
+              "contentType": "text/plain"
+            },
+            {
+              "path": "scripts/sync_models.py",
+              "size": 6875,
+              "sha256": "5a3b322c9818e46bd0fcc262007d0515e8c839db2a9db4773350cb14233bd281",
+              "contentType": "text/plain"
+            }
+          ]
+        },
+        "provenance": {
+          "source": "unavailable",
+          "reason": "No server-resolved GitHub import provenance is stored for this version."
+        },
+        "security": {
+          "status": "suspicious",
+          "passed": false,
+          "rawStatus": "suspicious",
+          "verdict": "suspicious",
+          "confidence": "high",
+          "summary": "This deprecated skill is not malware, but it can change OpenClaw configuration and restart the gateway after loosely scoped approval signals.",
+          "model": "gpt-5.5",
+          "checkedAt": 1779976622741,
+          "signals": {
+            "staticScan": {
+              "status": "clean",
+              "rawStatus": "clean",
+              "reasonCodes": [],
+              "summary": "No suspicious patterns detected.",
+              "engineVersion": "v2.4.5",
+              "checkedAt": 1777526592289
+            },
+            "virusTotal": {
+              "status": "clean",
+              "rawStatus": "clean",
+              "verdict": null,
+              "analysis": null,
+              "source": "engines",
+              "scanner": null,
+              "engineStats": {
+                "harmless": 0,
+                "malicious": 0,
+                "suspicious": 0,
+                "undetected": 67
+              },
+              "checkedAt": 1780090080908
+            },
+            "skillSpector": {
+              "status": "suspicious",
+              "rawStatus": "suspicious",
+              "score": 65,
+              "severity": "HIGH",
+              "recommendation": "DO_NOT_INSTALL",
+              "issueCount": 5,
+              "scannerVersion": "2.0.0",
+              "summary": null,
+              "error": null,
+              "checkedAt": 1779976600145
+            },
+            "dependencyRegistry": null
+          }
+        },
+        "signature": {
+          "status": "unsigned"
+        }
+      }
+    }
+  }
+}

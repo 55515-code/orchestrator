@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "registry": "https://clawhub.ai",
+  "slug": "kilocode-model-sync",
+  "ownerHandle": "guillaumemaka",
+  "installedAt": 1788682988330,
+  "artifact": {
+    "kind": "archive",
+    "sha256": "ff73124134ecdb484cbc0d3b93653fa4ab056900cba6e79885a68b5fd38a0799",
+    "integrity": "sha256-/3MSQTTs20hMvA07k2U/pKsFaQDLpueYhaaLX9OKB5k="
+  },
+  "skillFile": {
+    "path": "SKILL.md",
+    "sha256": "d8938a8c654f9d2ed97bdbe269c8e79b1a32b66095e31cfc867f3bf16f18692e"
+  },
+  "fileTreeSha256": "sha256:00403dc6a9d6eaa9dc628ee9f9f43bf1192641b47286530fbde60144fffad39e",
+  "installedVersion": "1.0.0"
+}
