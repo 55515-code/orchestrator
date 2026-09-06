@@ -566,12 +566,11 @@
                         </div>
                         <div class="kilo-sidebar">
                             <div class="model-selector">
-                                <label>Model</label>
-                                <select id="kiloModel">
-                                    <option value="claude-sonnet-4.5">Claude Sonnet 4.5</option>
-                                    <option value="gpt-5.5">GPT-5.5</option>
-                                    <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+                                <label for="kiloModel">Model</label>
+                                <select id="kiloModel" aria-label="Kilo model">
+                                    <option value="">Loading models…</option>
                                 </select>
+                                <div class="model-meta" id="kiloModelMeta" aria-live="polite"></div>
                             </div>
                             <div class="context-panel">
                                 <h4>Context</h4>
