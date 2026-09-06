@@ -27,7 +27,13 @@ jobs:
       - name: Lint with ruff
         run: uv run ruff check substrate scripts tests
       - name: Type check with mypy
-        run: uv run mypy substrate tests
+        run: |
+          uv run mypy substrate
+          if [ -d tests ] && find tests -maxdepth 2 \( -name '*.py' -o -name '*.pyi' \) | grep -q .; then
+            uv run mypy tests
+          else
+            echo "Skipping mypy for tests: no .py/.pyi files found"
+          fi
       - name: Run tests
         run: uv run pytest tests
       - name: Compile Python
