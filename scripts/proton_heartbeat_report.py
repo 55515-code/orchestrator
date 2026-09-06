@@ -75,7 +75,12 @@ def main() -> int:
 
     now = time.time()
     out: list[str] = []
-    new_state: dict = {"last_status": status}
+    # Preserve prior alert metadata; only overwrite fields on a fresh alert.
+    # Rebuilding the dict from scratch here would silently clear
+    # last_alert_at/last_alert_kind on every silent heartbeat, resetting the
+    # re-alert throttle (degraded 24h / down 6h) to fire on the very next run.
+    new_state: dict = dict(prev)
+    new_state["last_status"] = status
 
     def _ts(iso: str | None) -> float:
         if not iso:
