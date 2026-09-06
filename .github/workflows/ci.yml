@@ -27,13 +27,10 @@ jobs:
       - name: Lint with ruff
         run: uv run ruff check substrate scripts tests
       - name: Type check with mypy
-        run: |
-          uv run mypy substrate
-          if [ -d tests ] && find tests -maxdepth 2 \( -name '*.py' -o -name '*.pyi' \) | grep -q .; then
-            uv run mypy tests
-          else
-            echo "Skipping mypy for tests: no .py/.pyi files found"
-          fi
+        # `tests/` is excluded from mypy via `[tool.mypy] exclude` in
+        # pyproject.toml (the suite has pre-existing typing issues), so
+        # running `mypy tests` would match zero files and exit 2.
+        run: uv run mypy substrate
       - name: Run tests
         run: uv run pytest tests
       - name: Compile Python
