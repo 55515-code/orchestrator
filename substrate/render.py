@@ -90,10 +90,10 @@ def select_engine(
     specs: dict[str, EngineSpec] = {}
     for raw in _utils.ensure_list(source.get("engines"), "engines"):
         try:
-            spec = EngineSpec.from_mapping(raw)
+            candidate = EngineSpec.from_mapping(raw)
         except ValueError:
             continue
-        specs[spec.id] = spec
+        specs[candidate.id] = candidate
 
     if forced_engine is not None:
         spec = specs.get(forced_engine)
@@ -230,6 +230,10 @@ def render_dispatch(
             record_execution(
                 runtime,
                 run_type=run_type,
+                run_id=None,
+                repo_slug=None,
+                stage="local",
+                command=f"render {spec.id}",
                 status="success",
                 exit_code=0,
                 stdout=json_dumps(result.to_dict()),
@@ -270,6 +274,10 @@ def render_dispatch(
         record_execution(
             runtime,
             run_type=run_type,
+            run_id=None,
+            repo_slug=None,
+            stage="local",
+            command=f"render {spec.id}",
             status="failed",
             exit_code=1,
             stderr=result.error or "",

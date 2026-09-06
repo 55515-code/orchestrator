@@ -90,7 +90,7 @@ class GitHubSyncService:
             List of branch names.
         """
         client = await self._get_client()
-        branches = []
+        branches: list[str] = []
         page = 1
 
         while True:
@@ -116,7 +116,7 @@ class GitHubSyncService:
             List of tag names.
         """
         client = await self._get_client()
-        tags = []
+        tags: list[str] = []
         page = 1
 
         while True:

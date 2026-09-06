@@ -24,6 +24,7 @@ class HostedAPIEngine(RenderEngine):
     """Base for all hosted API engines."""
 
     api_base: str = ""
+    _timeout: float = 120
 
     def _headers(self) -> dict[str, str]:
         return {}
@@ -172,7 +173,7 @@ class OpenAIGPTImageEngine(HostedAPIEngine):
             raise unavailable(self.spec.id, f"missing httpx: {exc}") from exc
         key = os.environ.get(self.spec.api_key_env or "", "")
         headers = {"Authorization": f"Bearer {key}"}
-        multipart = httpx.MultipartData()
+        multipart = getattr(httpx, "MultipartData")()
         fields: dict[str, Any] = {}
         for k, v in payload.items():
             if k == "image" and hasattr(v, "read"):

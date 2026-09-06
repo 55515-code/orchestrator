@@ -110,7 +110,7 @@ class AuditTrail:
                 errors.append(f"record {index}: hash mismatch")
             if record.get("seq") != index + 1:
                 errors.append(f"record {index}: seq mismatch")
-            expected_prev = record.get("hash")
+            expected_prev = record.get("hash") or GENESIS_HASH
         return {"ok": not errors, "count": len(records), "errors": errors}
 
     def tail(self, limit: int = 20) -> list[dict[str, Any]]:

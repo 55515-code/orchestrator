@@ -35,13 +35,12 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
     service_id = str(raw.get("id") or "").strip()
     if not service_id:
         raise ValueError("integration service id is required.")
-    auth = raw.get("auth") if isinstance(raw.get("auth"), dict) else {}
-    read_profile = (
-        raw.get("read_profile") if isinstance(raw.get("read_profile"), dict) else {}
-    )
-    write_profile = (
-        raw.get("write_profile") if isinstance(raw.get("write_profile"), dict) else {}
-    )
+    raw_auth = raw.get("auth")
+    auth = raw_auth if isinstance(raw_auth, dict) else {}
+    raw_read_profile = raw.get("read_profile")
+    read_profile = raw_read_profile if isinstance(raw_read_profile, dict) else {}
+    raw_write_profile = raw.get("write_profile")
+    write_profile = raw_write_profile if isinstance(raw_write_profile, dict) else {}
     return {
         "id": service_id,
         "name": str(raw.get("name") or service_id),
@@ -110,9 +109,8 @@ def _normalize_service(raw: dict[str, Any]) -> dict[str, Any]:
 
 def _catalog(runtime: SubstrateRuntime) -> dict[str, Any]:
     source = _utils.load_yaml(runtime.paths["integrations"])
-    defaults = (
-        source.get("defaults") if isinstance(source.get("defaults"), dict) else {}
-    )
+    raw_defaults = source.get("defaults")
+    defaults = raw_defaults if isinstance(raw_defaults, dict) else {}
     services = [
         _normalize_service(raw)
         for raw in _utils.ensure_list(source.get("services"), "services")

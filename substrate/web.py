@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import httpx
@@ -276,14 +276,14 @@ def _parse_bool(value: str | None) -> bool:
     return value.lower() in {"1", "true", "on", "yes"}
 
 
-def _submit(run_id: str, fn, *args, **kwargs) -> None:
+def _submit(future_key: str, fn, *args, **kwargs) -> None:
     future = EXECUTOR.submit(fn, *args, **kwargs)
     with RUN_FUTURES_LOCK:
-        RUN_FUTURES[run_id] = future
+        RUN_FUTURES[future_key] = future
 
     def _cleanup(completed: Future[Any]) -> None:
         with RUN_FUTURES_LOCK:
-            RUN_FUTURES.pop(run_id, None)
+            RUN_FUTURES.pop(future_key, None)
         try:
             completed.result()
         except Exception:
@@ -825,8 +825,8 @@ def _rate_limited(request: Request) -> int:
     cutoff = now - RATE_LIMIT_WINDOW_SECONDS
     with _RATE_LIMITS_LOCK:
         if len(_RATE_LIMITS) > 1024:
-            for stale_key, timestamps in list(_RATE_LIMITS.items()):
-                if not timestamps or timestamps[-1] <= cutoff:
+            for stale_key, stale_timestamps in list(_RATE_LIMITS.items()):
+                if not stale_timestamps or stale_timestamps[-1] <= cutoff:
                     _RATE_LIMITS.pop(stale_key, None)
         timestamps = _RATE_LIMITS.get(key)
         if timestamps is None:
@@ -1277,7 +1277,7 @@ def api_proton_connect(
     from .proton_support import launch_proton_connect
 
     try:
-        return launch_proton_connect(RUNTIME, email=email or None, totp=totp)
+        return launch_proton_connect(RUNTIME, email=email or "", totp=totp)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
 
@@ -1337,9 +1337,8 @@ def api_learning_resolve(
     try:
         note = record_resolution_note(
             RUNTIME,
-            signature=normalized_signature,
-            resolution=normalized_resolution,
-            path_reference=path_reference.strip() or None,
+            command=path_reference.strip() or normalized_signature,
+            note=normalized_resolution,
         )
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1478,8 +1477,8 @@ def api_render_catalog(engine_id: str | None = None) -> dict[str, Any]:
 
 
 @app.post("/api/render/run")
-def api_render_run(request: Request) -> dict[str, Any]:
-    body = request.json() or {}
+async def api_render_run(request: Request) -> dict[str, Any]:
+    body = await request.json() or {}
     try:
         req = RenderRequest(
             prompt=body.get("prompt", ""),
@@ -1877,7 +1876,7 @@ async def gateway_webhook_verify(service_id: str, request: Request):
     params = dict(request.query_params)
 
     # Verify webhook challenge
-    challenge = plugin.verify_webhook_challenge(params)
+    challenge = cast(Any, plugin).verify_webhook_challenge(params)
     if challenge is None:
         append_log(RUNTIME.root, "webhook", f"verification failed for {service_id}")
         raise HTTPException(status_code=403, detail="Webhook verification failed")
@@ -1903,7 +1902,7 @@ async def gateway_webhook_receive(service_id: str, request: Request):
     
     # Verify signature
     signature = request.headers.get("x-hub-signature-256", "")
-    if not plugin.verify_webhook_signature(body, signature):
+    if not cast(Any, plugin).verify_webhook_signature(body, signature):
         append_log(RUNTIME.root, "webhook", f"signature validation failed for {service_id}")
         raise HTTPException(status_code=403, detail="Invalid signature")
 
@@ -1929,7 +1928,7 @@ async def gateway_webhook_receive(service_id: str, request: Request):
             response = await GATEWAY_ROUTER.process_inbound(message)
             if response:
                 # Send response back via plugin
-                await plugin.send_text(message.user_id, response)
+                await cast(Any, plugin).send_text(message.user_id, response)
                 responses.append({"message_id": message.message_id, "status": "responded"})
             else:
                 responses.append({"message_id": message.message_id, "status": "processed"})
@@ -1964,7 +1963,7 @@ async def gateway_send_message(service_id: str, request: Request):
     
     # Send message
     try:
-        result = await plugin.send_text(user_id, text)
+        result = await cast(Any, plugin).send_text(user_id, text)
         append_log(RUNTIME.root, "send", f"outbound message to {user_id} via {service_id}")
         return JSONResponse({"status": "sent", "result": result})
     except Exception as e:
@@ -2287,8 +2286,9 @@ async def api_config_files_save(request: Request) -> dict[str, Any]:
     try:
         import yaml
 
+        YAMLError = getattr(yaml, "YAMLError", Exception)
         parsed = yaml.safe_load(content)
-    except yaml.YAMLError as exc:
+    except YAMLError as exc:
         raise HTTPException(
             status_code=422, detail=f"YAML validation failed: {exc}"
         ) from exc

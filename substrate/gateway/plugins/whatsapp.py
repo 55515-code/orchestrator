@@ -190,7 +190,7 @@ class WhatsAppPlugin:
         Returns:
             List of parsed inbound messages.
         """
-        messages = []
+        messages: list[InboundMessage] = []
         
         # Validate payload structure
         if payload.get("object") != "whatsapp_business_account":
@@ -331,7 +331,7 @@ class WhatsAppPlugin:
         Returns:
             WhatsApp API request payload.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "messaging_product": "whatsapp",
             "recipient_type": "individual",
             "to": message.user_id,
@@ -427,7 +427,7 @@ class WhatsAppPlugin:
         Returns:
             API response.
         """
-        template = {
+        template: dict[str, Any] = {
             "name": template_name,
             "language": {"code": language}
         }

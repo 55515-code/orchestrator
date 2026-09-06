@@ -169,6 +169,10 @@ def create_dashboard_router(
             "request": request,
             "node_count": len(collector.collectors),
         }
-        return templates.TemplateResponse("dashboard.html", context)
+        return templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context=context,
+        )
 
     return router

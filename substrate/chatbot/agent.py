@@ -7,6 +7,7 @@ into normalized events suitable for a chat UI and SSE streaming.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import queue
 import shlex
@@ -23,6 +24,8 @@ from .config import ChatbotConfig
 
 DONE_MARKER = "__done__"
 CANCEL_MARKER = "__cancel__"
+
+logger = logging.getLogger(__name__)
 
 # Timeout for the prefill-proxy health probe. Deliberately short: the probe sits
 # in the hot path of every chat task, and a missing proxy must degrade to
@@ -296,12 +299,12 @@ class KiloAgent:
                 port=self.config.prefill_proxy_port,
             )
         except Exception as exc:  # noqa: BLE001
-            self._log(f"[prefill-proxy] failed to start: {exc}")
+            logger.warning("[prefill-proxy] failed to start: %s", exc)
             return None
         if _proxy_healthy(base):
             return base
-        self._log(
-            f"[prefill-proxy] not healthy on {base}; continuing without it"
+        logger.warning(
+            "[prefill-proxy] not healthy on %s; continuing without it", base
         )
         return None
 

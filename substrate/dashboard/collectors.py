@@ -200,6 +200,9 @@ class SubstrateNodeCollector:
         if self._started_at is None:
             self._started_at = time.time()
 
+        health: dict[str, Any] | BaseException
+        chain: dict[str, Any] | BaseException
+        version: dict[str, Any] | BaseException
         health, chain, version = await asyncio.gather(
             self.collect_health(),
             self.collect_chain(),
@@ -210,9 +213,9 @@ class SubstrateNodeCollector:
         return {
             "node_id": self.node_id,
             "network": self.network,
-            "health": health if not isinstance(health, Exception) else {"error": str(health)},
-            "chain": chain if not isinstance(chain, Exception) else {"error": str(chain)},
-            "version": version if not isinstance(version, Exception) else {"error": str(version)},
+            "health": health if not isinstance(health, BaseException) else {"error": str(health)},
+            "chain": chain if not isinstance(chain, BaseException) else {"error": str(chain)},
+            "version": version if not isinstance(version, BaseException) else {"error": str(version)},
             "collected_at": time.time(),
         }
 
@@ -272,9 +275,9 @@ class MultiNodeCollector:
         tasks = [collector.collect_all() for collector in self.collectors.values()]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        output = {}
+        output: dict[str, dict[str, Any]] = {}
         for node_id, result in zip(self.collectors.keys(), results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 output[node_id] = {"error": str(result)}
             else:
                 output[node_id] = result

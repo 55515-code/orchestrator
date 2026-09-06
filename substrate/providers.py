@@ -8,6 +8,8 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
+from pydantic import SecretStr
+
 FREE_FIRST_PROVIDER_ORDER = (
     "local",
     "community-compute",
@@ -203,7 +205,7 @@ def build_model(provider: str, model: str):
     if normalized == "anthropic":
         from langchain_anthropic import ChatAnthropic
 
-        return ChatAnthropic(model=model, temperature=0)
+        return ChatAnthropic(model_name=model, temperature=0, timeout=None, stop=None)
     if normalized == "ollama":
         from langchain_ollama import ChatOllama
 
@@ -220,7 +222,7 @@ def build_model(provider: str, model: str):
             model=model,
             temperature=0,
             base_url="https://api-inference.huggingface.co/v1/",
-            api_key=api_key,
+            api_key=SecretStr(api_key),
         )
     if normalized == "gcloud":
         return GoogleGatewayChatModel(model)
@@ -349,7 +351,7 @@ def _build_openai_compatible(
         model=model,
         temperature=0,
         base_url=base_url,
-        api_key=api_key or "local",
+        api_key=SecretStr(api_key or "local"),
     )
 
 

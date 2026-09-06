@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from langchain_core.prompts import ChatPromptTemplate
@@ -39,8 +39,10 @@ from .reliability import (
 )
 from .research import run_openclaw_research_assist, source_facts_ready
 from .resource_orchestration import (
+    CapabilityClass,
     ElasticScaleHooks,
     HardwareProfile,
+    SafetyTier,
     WorkloadPressure,
     WorkloadRequest,
     hardware_profile_from_probe,
@@ -1102,15 +1104,15 @@ class Orchestrator:
                         or step.get("resource_class")
                         or scheduler.infer_capability_for_provider(provider_name)
                     ).strip()
-                    capability = (
-                        raw_capability
+                    capability: CapabilityClass = (
+                        cast(CapabilityClass, raw_capability)
                         if raw_capability in {"cpu", "gpu", "model", "api", "encrypted"}
                         else scheduler.infer_capability_for_provider(provider_name)
                     )
                     step_encryption = step.get("encryption")
                     if step_encryption and step_encryption not in {"fhe", "mpc", "aes"}:
                         step_encryption = None
-                    safety_tier = (
+                    safety_tier: SafetyTier = (
                         "strict" if bool(step.get("strict_safety", False)) else "standard"
                     )
                     allow_degrade = bool(step.get("allow_degrade", True))
@@ -1969,7 +1971,6 @@ class Orchestrator:
             break
 
         if launch_error is not None:
-            exc = launch_error
             self._checkpoint_store.create_checkpoint(
                 run_id=run_id,
                 scope="run",
@@ -1977,15 +1978,15 @@ class Orchestrator:
                 stage=stage,
                 step_id=task_id,
                 idempotency_key=idempotency_key,
-                payload={"error": str(exc)},
+                payload={"error": str(launch_error)},
             )
             self.runtime.db.complete_run(
-                run_id=run_id, status="failed", exit_code=1, error_text=str(exc)
+                run_id=run_id, status="failed", exit_code=1, error_text=str(launch_error)
             )
             self.runtime.db.add_event(
                 run_id=run_id,
                 level="error",
-                message=f"Task launch failed: {exc}",
+                message=f"Task launch failed: {launch_error}",
             )
             record_execution(
                 self.runtime,
@@ -1996,7 +1997,7 @@ class Orchestrator:
                 command=command,
                 status="failed",
                 exit_code=1,
-                stderr=str(exc),
+                stderr=str(launch_error),
                 note=f"Task launch failed: {task_id}",
             )
             raise

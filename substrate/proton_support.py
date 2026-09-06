@@ -290,7 +290,7 @@ def verify_proton(runtime: SubstrateRuntime) -> dict[str, Any]:
             password = val
             break
 
-    surfaces = {
+    surfaces: dict[str, dict[str, Any]] = {
         "mail": {"ok": False, "detail": "no stored credentials"},
         "drive": {"ok": bool(_drive_remotes()), "detail": _drive_remotes() or "no rclone Proton Drive remote configured"},
     }

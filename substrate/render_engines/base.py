@@ -606,11 +606,12 @@ def _detect_gpu_torch() -> dict[str, Any] | None:
     except Exception:  # noqa: BLE001  - ImportError or broken CUDA init
         return None
     try:
-        if not torch.cuda.is_available():
+        cuda = getattr(torch, "cuda", None)
+        if cuda is None or not cuda.is_available():
             return None
-        index = torch.cuda.current_device()
-        properties = torch.cuda.get_device_properties(index)
-        free_bytes, total_bytes = torch.cuda.mem_get_info(index)
+        index = cuda.current_device()
+        properties = cuda.get_device_properties(index)
+        free_bytes, total_bytes = cuda.mem_get_info(index)
         return {
             "available": True,
             "name": str(properties.name),

@@ -94,6 +94,8 @@ def _decrypt_aes_gcm(ciphertext: bytes, key: bytes) -> bytes:
 
 def encrypt_for_peer(plaintext: bytes, peer_public_key_pem: bytes) -> bytes:
     peer_public_key = serialization.load_pem_public_key(peer_public_key_pem)
+    if not isinstance(peer_public_key, rsa.RSAPublicKey):
+        raise EncryptionError("Peer public key is not an RSA key")
     aes_key = os.urandom(_AES_KEY_SIZE)
     encrypted_aes_key = peer_public_key.encrypt(
         aes_key,
@@ -109,6 +111,8 @@ def encrypt_for_peer(plaintext: bytes, peer_public_key_pem: bytes) -> bytes:
 
 def decrypt_with_private(ciphertext: bytes, private_key_pem: bytes) -> bytes:
     private_key = serialization.load_pem_private_key(private_key_pem, password=None)
+    if not isinstance(private_key, rsa.RSAPrivateKey):
+        raise DecryptionError("Private key is not an RSA key")
     aes_key_size = private_key.key_size // 8
     if len(ciphertext) < aes_key_size:
         raise DecryptionError("Ciphertext too short for RSA-encrypted AES key")

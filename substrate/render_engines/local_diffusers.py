@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .base import (
     RenderEngine,
@@ -58,7 +58,15 @@ class LocalDiffusersEngine(RenderEngine):
 
         return pipe_cls.from_pretrained(self.spec.model_id, **kwargs)
 
-    def _call_pipe(self, pipe: Any, request: RenderRequest, generator: Any) -> list[Any]:
+    def _call_pipe(
+        self,
+        pipe: Any,
+        request: RenderRequest,
+        generator: Any,
+        source_image: Any,
+        steps: int,
+        guidance: float,
+    ) -> list[Any]:
         raise NotImplementedError
 
     def render(self, request: RenderRequest) -> RenderResult:
@@ -86,7 +94,7 @@ class LocalDiffusersEngine(RenderEngine):
 
         generator = None
         if request.seed is not None:
-            generator = torch.Generator(device="cuda").manual_seed(request.seed)
+            generator = cast(Any, torch.Generator)(device="cuda").manual_seed(request.seed)
 
         source_image = None
         if request.mode in {"image_to_image", "edit", "inpaint", "upscale"} and request.source_image:

@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from random import Random
-from typing import Any
+from typing import Any, cast
 
 from .learning import record_execution
 from .providers import DEFAULT_PROVIDER_MODELS as PROVIDER_DEFAULT_MODELS
@@ -924,7 +924,7 @@ def _aggregate_pr_throughput(actor_sessions: list[dict[str, Any]]) -> dict[str, 
             for squad, values in bottleneck_index.items()
             if values
         ),
-        key=lambda item: item["median_review_latency_hours"],
+        key=lambda item: cast(float, item["median_review_latency_hours"]),
         reverse=True,
     )
 

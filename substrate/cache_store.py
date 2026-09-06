@@ -8,7 +8,7 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import AbstractSet, Any
 
 
 @dataclass(slots=True)
@@ -129,7 +129,8 @@ class CacheStore:
         if row is None:
             return None
         blob_path, expires_at = row
-        if expires_at is not None and datetime.now(UTC) > self._parse_iso(expires_at):
+        expires = self._parse_iso(expires_at)
+        if expires is not None and datetime.now(UTC) > expires:
             return None
         path = Path(blob_path)
         if not path.is_absolute():
@@ -157,7 +158,8 @@ class CacheStore:
         if row is None:
             return None
         summary, expires_at = row
-        if expires_at is not None and datetime.now(UTC) > self._parse_iso(expires_at):
+        expires = self._parse_iso(expires_at)
+        if expires is not None and datetime.now(UTC) > expires:
             return None
         return summary
 
@@ -226,7 +228,7 @@ class CacheStore:
         self,
         *,
         kind: str | None = None,
-        tags: list[str] | set[str] | frozenset[str] | None = None,
+        tags: list[str] | AbstractSet[str] | frozenset[str] | None = None,
         older_than_days: int | None = None,
     ) -> int:
         """Remove matching entries and return the number deleted."""

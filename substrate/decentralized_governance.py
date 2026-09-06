@@ -26,7 +26,7 @@ import hashlib
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import Any, Callable, Literal, cast
 
 # ------------------------------------------------------------------
 # Pattern A: Dignity Stack — Six-Layer Governance Overlay
@@ -362,7 +362,7 @@ class LiberationStackDeployment:
 
     def _validate_dag(self) -> None:
         for spec in LIBERATION_LAYER_SPEC:
-            deps = set(spec["dependencies"])
+            deps = set(cast(list[int], spec["dependencies"]))
             self.dependency_graph_valid = deps.issubset(self.active_layers)
             if not self.dependency_graph_valid:
                 break
@@ -371,7 +371,7 @@ class LiberationStackDeployment:
         spec = next((s for s in LIBERATION_LAYER_SPEC if s["index"] == layer_index), None)
         if spec is None:
             return False
-        gate_key = spec["gate"]
+        gate_key = cast(str, spec["gate"])
         # Qualitative gates evaluated against context; numerical thresholds deferred to pilot.
         metric = context_metrics.get(gate_key, 0.0)
         # For substrate: gate is considered met when metric > 0 (operational evidence exists).
@@ -418,7 +418,7 @@ class EcologicalBudgetConstraint:
     def add_request_profile(self, agent_id: str, footprint_mapping: dict[str, float]) -> None:
         self.request_profiles[agent_id] = footprint_mapping
 
-    def is_feasible(self, footprint_phi: callable) -> bool:
+    def is_feasible(self, footprint_phi: Callable[[dict[str, float]], float]) -> bool:
         total = sum(
             footprint_phi(profile) for profile in self.request_profiles.values()
         )

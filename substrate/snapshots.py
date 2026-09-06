@@ -133,7 +133,7 @@ class SnapshotEngine:
         explicit = set(runtime.workspace.repositories.keys())
         default = getattr(runtime.workspace.scheduler, "default_repo_slug", None)
         slugs: list[str] = []
-        if default in explicit:
+        if isinstance(default, str) and default in explicit:
             slugs.append(default)
         slugs += sorted(explicit - {default})
 
@@ -211,7 +211,7 @@ class SnapshotEngine:
         explicit = set(runtime.workspace.repositories.keys())
         default = getattr(runtime.workspace.scheduler, "default_repo_slug", None)
         slugs: list[str] = []
-        if default in explicit:
+        if isinstance(default, str) and default in explicit:
             slugs.append(default)
         slugs += sorted(explicit - {default})
         out: list[dict[str, Any]] = []

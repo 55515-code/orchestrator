@@ -32,7 +32,7 @@ class GatewayManager:
         Returns:
             List of discovered plugin module names.
         """
-        discovered = []
+        discovered: list[str] = []
         
         if not self.plugins_dir.exists():
             logger.warning(f"Plugins directory not found: {self.plugins_dir}")

@@ -1,5 +1,8 @@
+from typing import Any
+
 float16: Any
 bfloat16: Any
+cuda: Any
 
 class Generator:
     def manual_seed(self, seed: int) -> "Generator": ...

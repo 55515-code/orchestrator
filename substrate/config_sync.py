@@ -579,6 +579,9 @@ def _entry_metadata(
     family = _detect_family(path)
     relative_path = _relative_source_path(path).as_posix()
     hint_payload = hint or {}
+    managed_by = hint_payload.get("managed_by")
+    if not isinstance(managed_by, list):
+        managed_by = existing.get("managed_by", []) if existing else []
     metadata = {
         "source_path": str(path.expanduser()),
         "relative_path": relative_path,
@@ -639,13 +642,7 @@ def _entry_metadata(
             hint_payload.get("classification")
             or ("dotfile" if path.name.startswith(".") else "app-config")
         ),
-        "managed_by": list(
-            hint_payload.get("managed_by")
-            if isinstance(hint_payload.get("managed_by"), list)
-            else existing.get("managed_by", [])
-            if existing
-            else []
-        ),
+        "managed_by": list(managed_by),
     }
     if path.is_dir():
         metadata["file_count"] = sum(1 for child in path.rglob("*") if child.is_file())

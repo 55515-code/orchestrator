@@ -238,7 +238,7 @@ def run(runtime: Any, orchestrator: Any, agent: Any, *, directive: str = "") -> 
         }
     )
 
-    health_check = {"result": "unknown", "failures": []}
+    health_check: dict[str, Any] = {"result": "unknown", "failures": []}
     if shutil.which("bash") and (repo_path / "scripts" / "health_check.sh").exists():
         health_result = _run_plain(["bash", "scripts/health_check.sh"], work_root)
         health_check = {

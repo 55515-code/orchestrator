@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from .agents import (
     AgentConfigError,
@@ -254,7 +255,7 @@ def _build_discount_swarm_plan(
     }
 
 
-def _pinch_report(port: int, repo_slug: str | None = None) -> dict[str, object]:
+def _pinch_report(port: int, repo_slug: str | None = None) -> dict[str, Any]:
     base_url = f"http://127.0.0.1:{port}"
     tools = _detect_access_tools()
     access = [
@@ -1161,25 +1162,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             watch_once,
         )
 
+        lane_result: dict[str, Any] | list[dict[str, Any]]
         if args.approval_lane_command == "send-test":
-            result = send_test_message(runtime, args.channel)
+            lane_result = send_test_message(runtime, args.channel)
         elif args.approval_lane_command == "verify":
-            result = verify_channel(runtime, args.channel, args.code)
+            lane_result = verify_channel(runtime, args.channel, args.code)
         elif args.approval_lane_command == "request":
-            result = request_approval(
+            lane_result = request_approval(
                 runtime,
                 subject=args.subject,
                 body=args.body,
                 channel=args.channel or None,
             )
         elif args.approval_lane_command == "resolve":
-            result = resolve_approval(runtime, args.id, args.code, args.decision)
+            lane_result = resolve_approval(runtime, args.id, args.code, args.decision)
         elif args.approval_lane_command == "poll":
-            result = poll_for_replies(runtime)
+            lane_result = poll_for_replies(runtime)
         elif args.approval_lane_command == "watch":
-            result = watch_once(runtime)
+            lane_result = watch_once(runtime)
         else:  # status
-            result = approval_lane_status(runtime)
+            lane_result = approval_lane_status(runtime)
         record_execution(
             runtime,
             run_type="approval-lane",
@@ -1192,10 +1194,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             ).strip(),
             status="success",
             exit_code=0,
-            stdout=json.dumps(result, ensure_ascii=False),
+            stdout=json.dumps(lane_result, ensure_ascii=False),
             note="Approval lane operation",
         )
-        print(json.dumps(result, indent=2, ensure_ascii=False))
+        print(json.dumps(lane_result, indent=2, ensure_ascii=False))
         return 0
 
     if args.command == "scan":
@@ -1431,9 +1433,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             note = record_resolution_note(
                 runtime,
-                signature=args.signature,
-                resolution=args.resolution,
-                path_reference=args.path,
+                command=args.path or args.signature,
+                note=args.resolution,
             )
         except KeyError as exc:
             parser.error(str(exc))
@@ -1774,14 +1775,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         results = []
         for agent in matches:
-            result = run_agent(
+            agent_result = run_agent(
                 runtime,
                 orchestrator,
                 agent,
                 directive=args.directive,
                 force=args.force,
             )
-            results.append(result.to_dict())
+            results.append(agent_result.to_dict())
         print(
             json.dumps(
                 results[0] if len(results) == 1 else results,
@@ -1887,7 +1888,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         else:
             results = engine.snapshot_all(runtime)
 
-        failed = any(r["status"] in {"error", "blocked"} for r in results)
+        has_failed = any(r["status"] in {"error", "blocked"} for r in results)
         record_execution(
             runtime,
             run_type="snapshot",
@@ -1895,13 +1896,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             repo_slug=args.repo or None,
             stage="local",
             command=f"snapshot --repo {args.repo}" if args.repo else "snapshot",
-            status="failure" if failed else "success",
-            exit_code=1 if failed else 0,
+            status="failure" if has_failed else "success",
+            exit_code=1 if has_failed else 0,
             stdout=json.dumps(results, ensure_ascii=False),
             note="Working-tree change snapshot",
         )
         print(json.dumps(results, indent=2, ensure_ascii=False))
-        return 1 if failed else 0
+        return 1 if has_failed else 0
 
     if args.command in {
         "credential-snapshot",
@@ -1917,18 +1918,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
         try:
+            cred_result: dict[str, Any] | list[dict[str, Any]]
             if args.command == "credential-snapshot":
-                result = cred_snapshot(args.path, reason=args.reason, root=runtime.root)
+                cred_result = cred_snapshot(args.path, reason=args.reason, root=runtime.root)
             elif args.command == "credential-snapshots":
-                result = list_snapshots(root=runtime.root)
+                cred_result = list_snapshots(root=runtime.root)
             elif args.command == "credential-restore":
-                result = restore(args.snapshot_dir, root=runtime.root)
+                cred_result = restore(args.snapshot_dir, root=runtime.root)
             else:
-                result = {"removed": prune(args.days, root=runtime.root)}
+                cred_result = {"removed": prune(args.days, root=runtime.root)}
         except (FileNotFoundError, ValueError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
-        print(json.dumps(result, indent=2, ensure_ascii=False))
+        print(json.dumps(cred_result, indent=2, ensure_ascii=False))
         return 0
 
     if args.command == "swarm-control":

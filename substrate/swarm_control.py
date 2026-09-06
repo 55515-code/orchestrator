@@ -557,7 +557,7 @@ QA_SQUADS = {
                "keywords": ("deploy", "monitor", "rollback", "service")},
 }
 
-SEVERITY_RULES: list[tuple[str, str]] = [
+SEVERITY_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("critical", ("core", "broken", "stream", "panel UI", "dashboard", "security")),
     ("high", ("broken", "action", "scan", "missing", "automations", "terminal")),
     ("medium", ("unintuitive", "metrics", "standards", "integrations")),
@@ -817,7 +817,7 @@ def deploy_production(base_url: str = DEFAULT_BASE_URL) -> dict[str, Any]:
     ensure_state_dir()
     smoke = smoke_tests(base_url)
     service = check_service()
-    monitoring = {
+    monitoring: dict[str, Any] = {
         "endpoint": "/healthz",
         "stream_endpoint": "/stream/metrics",
         "checks": [

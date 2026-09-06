@@ -108,6 +108,11 @@ KEYRING_ACCOUNT = "proton-bridge-smtp"
 CODE_RE = re.compile(rf"\b[{CODE_ALPHABET}]{{{CODE_LEN}}}\b")
 
 
+def _smtp_error_text(error: bytes | str) -> str:
+    """Render an SMTP response as text (responses are bytes at runtime)."""
+    return error.decode(errors="replace") if isinstance(error, bytes) else error
+
+
 def utc_now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
@@ -309,7 +314,7 @@ def email_backend_send(
             conn.quit()
             return True, frm, "email accepted by bridge SMTP relay"
         except smtplib.SMTPDataError as exc:
-            last = f"from={frm} bridge rejected: {exc.smtp_error.decode(errors='replace')[:120]}"
+            last = f"from={frm} bridge rejected: {_smtp_error_text(exc.smtp_error)[:120]}"
         except smtplib.SMTPServerDisconnected as exc:
             last = f"from={frm} server disconnected: {exc}"
         except OSError as exc:
@@ -367,7 +372,9 @@ def smtp_backend_send(to: str, subject: str, body: str, cfg: dict[str, Any]) -> 
     try:
         if port == 465:
             import ssl
-            conn = smtplib.SMTP_SSL(host, port, timeout=15, context=ssl.create_default_context())
+            conn: smtplib.SMTP = smtplib.SMTP_SSL(
+                host, port, timeout=15, context=ssl.create_default_context()
+            )
         else:
             conn = smtplib.SMTP(host, port, timeout=15)
             conn.ehlo()
@@ -389,9 +396,9 @@ def smtp_backend_send(to: str, subject: str, body: str, cfg: dict[str, Any]) -> 
         conn.quit()
         return True, f"sent via SMTP {host}:{port}"
     except smtplib.SMTPAuthenticationError as exc:
-        return False, f"SMTP auth failed ({host}): {exc.smtp_error.decode(errors='replace')[:80]}"
+        return False, f"SMTP auth failed ({host}): {_smtp_error_text(exc.smtp_error)[:80]}"
     except smtplib.SMTPDataError as exc:
-        return False, f"SMTP {host} rejected: {exc.smtp_error.decode(errors='replace')[:120]}"
+        return False, f"SMTP {host} rejected: {_smtp_error_text(exc.smtp_error)[:120]}"
     except Exception as exc:  # noqa: BLE001
         return False, f"SMTP {host} failed: {type(exc).__name__}: {exc}"
 
@@ -712,10 +719,13 @@ def poll_for_replies(runtime: Any) -> list[dict[str, Any]]:
             conn.logout()
             return results
         for num in (data[0] or b"").split():
-            typ, msg_data = conn.fetch(num, "(RFC822)")
+            typ, msg_data = conn.fetch(num.decode(), "(RFC822)")
             if typ != "OK":
                 continue
-            msg = email.message_from_bytes(msg_data[0][1])
+            response_part = msg_data[0]
+            if not isinstance(response_part, tuple):
+                continue
+            msg = email.message_from_bytes(response_part[1])
             text = _message_text(msg)
             results.extend(_scan_message_for_codes(runtime, lane, primary, text))
         conn.logout()
@@ -735,13 +745,13 @@ def _message_text(msg: email.message.Message) -> str:
             if part.get_content_type() == "text/plain":
                 try:
                     payload = part.get_payload(decode=True)
-                    if payload:
+                    if isinstance(payload, bytes) and payload:
                         parts.append(payload.decode(errors="replace"))
                 except Exception:  # noqa: BLE001
                     continue
         return "\n".join(parts)
     payload = msg.get_payload(decode=True)
-    return payload.decode(errors="replace") if payload else ""
+    return payload.decode(errors="replace") if isinstance(payload, bytes) else ""
 
 
 def _scan_message_for_codes(

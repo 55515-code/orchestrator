@@ -502,11 +502,12 @@ class DistributedComputeFacade:
 
     def summary(self) -> dict[str, Any]:
         nodes = COMMUNITY_REGISTRY.all_nodes()
+        kinds: tuple[CommunityKind, ...] = ("boinc", "mesh-llm", "local-donor")
         return {
             "total_nodes": len(nodes),
             "by_kind": {
                 kind: len(COMMUNITY_REGISTRY.nodes_by_kind(kind))
-                for kind in ["boinc", "mesh-llm", "local-donor"]
+                for kind in kinds
             },
             "available_for_work": len(COMMUNITY_REGISTRY.available_for_work()),
             "donation_status": self.local_donor.donate_status(),

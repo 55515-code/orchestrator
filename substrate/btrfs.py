@@ -227,8 +227,8 @@ def detect_btrfs(path: Path | str) -> dict[str, Any]:
     }
 
 
-def _read_mounts() -> list[dict[str, str]]:
-    entries: list[dict[str, str]] = []
+def _read_mounts() -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
     for filename in ("/proc/self/mounts", "/proc/mounts"):
         try:
             raw = Path(filename).read_text(encoding="utf-8", errors="replace")
@@ -716,13 +716,17 @@ def run_maintenance(
     if dedup and tool_available("duperemove"):
         duperemove = shutil.which("duperemove")
         command = [
-            duperemove,
-            "-r",
-            "-h",
-            "-d",  # actually submit dedupes (btrfs/xfs only; guarded above)
-            "-B",  # batched dedupe for large trees (ISOs, model weights)
-            f"--hashfile={hashfile_path}",
-            str(root_path / "artifacts"),
+            part
+            for part in (
+                duperemove,
+                "-r",
+                "-h",
+                "-d",  # actually submit dedupes (btrfs/xfs only; guarded above)
+                "-B",  # batched dedupe for large trees (ISOs, model weights)
+                f"--hashfile={hashfile_path}",
+                str(root_path / "artifacts"),
+            )
+            if part is not None
         ]
         if not apply:
             result["steps"].append(
@@ -809,7 +813,7 @@ def apply_nodatacow(paths: list[Path | str], *, apply: bool = False) -> dict[str
     if not apply:
         return {"apply": False, "actions": actions}
 
-    results = []
+    results: list[dict[str, Any]] = []
     for action in actions:
         path = Path(action["path"])
         if not path.is_dir():
