@@ -198,7 +198,10 @@ def main() -> int:
 
     print(json.dumps({"status": status, "checks": {k: v["ok"] for k, v in checks.items()},
                       "changed": changed}, indent=1))
-    return 0 if status == "ok" else 1
+    # Exit semantics: ok=0, degraded=0 (informational), down=1 (real failure).
+    # A transient degraded state (e.g. outbox draining during a gateway restart)
+    # must not surface as a systemd failure.
+    return 1 if status == "down" else 0
 
 
 if __name__ == "__main__":
