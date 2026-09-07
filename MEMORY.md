@@ -1,5 +1,12 @@
 # MEMORY.md
 
+## Proton Mail subsystem (stable as of 2026-09-06) — see docs/proton-mail-subsystem.md
+
+- Durable outbox in `proton_bridge_hook.py`: email is only marked delivered after the hook returns 2xx; failures queue to `~/.local/state/proton-bridge-hook/outbox/` and are retried before new mail. No silent email loss (proven during the 16:40 gateway restart).
+- Watchdog: `proton-health-check.timer` (15 min) → `scripts/proton_health_check.py` → `state/proton-health.json` (ok|degraded|down).
+- Heartbeat spam prevention: `scripts/proton_heartbeat_report.py` prints SILENT unless a real transition (alert on degraded/down entry, recovery notice, re-alert ≤24h/≤6h). Heartbeat should run this instead of re-deriving state.
+- Hook agent runs use kilo-auto/free with local fallbacks; transient provider 503s are absorbed by fallback or the outbox — not by user-facing alerts.
+
 ## WhatsApp messaging boundary (2026-08-30)
 
 - Reply only to Ahron at `+17163528536`.

@@ -66,8 +66,14 @@ def test_cross_origin_state_changing_requests_rejected() -> None:
 
 
 def test_tailnet_https_origin_allowed(monkeypatch) -> None:
-    # Reset the cached tailnet host list so the TAILSCALE_HOST override applies.
-    _TAILNET_HOSTS_CACHE["at"] = 0.0
+    # Force a tailnet host-list refresh so the TAILSCALE_HOST override applies.
+    # Resetting only the timestamp was unreliable: on a fresh runner
+    # time.monotonic() starts near 0, so `now - 0.0 < TTL` treated the cached
+    # (empty) host set as fresh and the override was ignored, returning 403.
+    # Reset to the "never computed" sentinel (-inf) so a recompute is forced
+    # regardless of clock offset.
+    _TAILNET_HOSTS_CACHE["at"] = float("-inf")
+    _TAILNET_HOSTS_CACHE["hosts"] = set()
     monkeypatch.setenv("TAILSCALE_HOST", "myhost.tail1234.ts.net")
     with TestClient(app, **CLIENT_KWARGS) as client:
         resp = client.post(

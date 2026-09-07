@@ -54,12 +54,30 @@ def load_json(path: Path, default: dict[str, Any] | None = None) -> dict[str, An
 
     The *default* is returned as-is; callers that mutate it are responsible for
     copying it if mutation must not affect future defaults.
+
+    Corrupt files are quarantined to ``<path>.corrupt-<timestamp>`` and the
+    default is returned, so a torn/partial write (e.g. from a crash or a
+    concurrent writer) never wedges callers. Quarantine preserves the evidence
+    for diagnosis instead of silently discarding it.
     """
+    import time as _time
+
     if default is None:
         default = {}
     if not path.exists():
         return default
-    payload = json.loads(path.read_text(encoding="utf-8") or "{}")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8") or "{}")
+    except (OSError, ValueError):
+        # Torn/partial/corrupt file: quarantine and fall back to default.
+        try:
+            stamp = _time.strftime("%Y%m%d-%H%M%S")
+            corrupt = path.with_name(f"{path.name}.corrupt-{stamp}")
+            if not corrupt.exists():
+                path.replace(corrupt)
+        except OSError:
+            pass
+        return default
     if not isinstance(payload, dict):
         return default
     return payload
