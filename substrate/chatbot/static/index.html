@@ -182,6 +182,7 @@
     <div class="subtitle" id="subtitle">connecting…</div>
   </div>
   <div class="spacer"></div>
+  <select id="model-picker" title="Kilo model" style="display:none"></select>
   <select id="session-picker" title="Switch session" style="display:none"></select>
   <button id="new-chat" title="Start a new conversation">+ New chat</button>
   <span class="status-pill"><span class="dot" id="status-dot"></span><span id="status-text">idle</span></span>
@@ -295,6 +296,44 @@ async function refreshSessions() {
   }
 }
 
+let selectedModel = localStorage.getItem("substrate-kilo-model") || "";
+
+async function loadModelPicker() {
+  const picker = $("model-picker");
+  if (!picker) return;
+  try {
+    const res = await fetch("/api/kilo/models");
+    if (!res.ok) return;
+    const data = await res.json();
+    const byProvider = data.models_by_provider || {};
+    const providers = Object.keys(byProvider).sort();
+    if (!providers.length) return;
+    picker.innerHTML = '<option value="">Default model</option>';
+    for (const provider of providers) {
+      const group = document.createElement("optgroup");
+      group.label = provider;
+      for (const m of (byProvider[provider] || [])) {
+        const opt = document.createElement("option");
+        opt.value = m.id || "";
+        opt.textContent = (m.name || m.id || "") + (m.isFree ? " · free" : "");
+        if (opt.value === selectedModel) opt.selected = true;
+        group.appendChild(opt);
+      }
+      picker.appendChild(group);
+    }
+    picker.style.display = "inline-block";
+  } catch (e) {
+    // Model list is optional; chat still works with the configured default.
+    console.warn("model picker unavailable", e);
+  }
+}
+
+function onModelChange(e) {
+  selectedModel = e.target.value || "";
+  if (selectedModel) localStorage.setItem("substrate-kilo-model", selectedModel);
+  else localStorage.removeItem("substrate-kilo-model");
+}
+
 async function loadSession(sessionId) {
   currentSession = sessionId;
   $("messages").innerHTML = "";
@@ -353,7 +392,7 @@ async function send() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, session_id: currentSession }),
+      body: JSON.stringify({ message: text, session_id: currentSession, model: selectedModel || null }),
     });
     if (!res.ok) {
       const detail = (await res.json()).detail || ("HTTP " + res.status);
@@ -444,10 +483,12 @@ $("stop").addEventListener("click", async () => {
 });
 $("new-chat").addEventListener("click", newChat);
 $("session-picker").addEventListener("change", (e) => loadSession(e.target.value));
+$("model-picker").addEventListener("change", onModelChange);
 $("input").addEventListener("input", autoGrow);
 $("input").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
 });
+loadModelPicker();
 init();
 </script>
 </body>

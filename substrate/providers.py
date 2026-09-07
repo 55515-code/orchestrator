@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import SecretStr
 
 FREE_FIRST_PROVIDER_ORDER = (
+    "kilo",
     "local",
     "community-compute",
     "roo-router",
@@ -28,6 +29,7 @@ FREE_FIRST_PROVIDER_ORDER = (
 
 
 DEFAULT_PROVIDER_MODELS: dict[str, str] = {
+    "kilo": "kilo/kilo-auto/balanced",
     "mock": "mock-model",
     "local": "roo-router",
     "roo-router": "roo-router",
@@ -246,6 +248,17 @@ def build_model(provider: str, model: str):
         )
     if normalized == "replicate":
         raise RuntimeError("replicate provider temporarily unavailable: direct adapter not configured")
+    if normalized == "kilo":
+        base_url = os.getenv("KILO_API_URL") or os.getenv("KILO_OPENROUTER_BASE") or "https://api.kilo.ai/api/openrouter/"
+        api_key = os.getenv("KILO_API_KEY") or os.getenv("OPENROUTER_API_KEY") or "local"
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            model=model,
+            temperature=0,
+            base_url=base_url,
+            api_key=SecretStr(api_key),
+        )
     if normalized == "openai":
         from langchain_openai import ChatOpenAI
 

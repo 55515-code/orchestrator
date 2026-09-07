@@ -23,6 +23,8 @@ STATIC_DIR = Path(__file__).parent / "static"
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1)
     session_id: str | None = None
+    model: str | None = Field(default=None, max_length=128)
+    agent: str | None = Field(default=None, max_length=64)
 
 
 class SessionCreateRequest(BaseModel):
@@ -135,7 +137,12 @@ class ChatbotApp:
             session_id = request.session_id or self.store.new_session()
             if not self.store.session_exists(session_id):
                 raise HTTPException(status_code=404, detail="Session not found")
-            task = self.agent.submit(session_id, request.message)
+            task = self.agent.submit(
+                session_id,
+                request.message,
+                model=request.model,
+                agent=request.agent,
+            )
             self.store.append_message(
                 session_id,
                 ChatMessage(

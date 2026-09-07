@@ -81,7 +81,10 @@ jobs:
           if [ "${MODE}" = "release-readiness" ]; then
             uv run --with pytest --with httpx pytest -q tests
           else
-            uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py
+            # `tests/studio/` (the old codex connection smoke tests) was removed
+            # on 2026-08-08; the ops-panel smoke tests below are its current
+            # equivalent and must stay in sync with any module renames.
+            uv run --with pytest --with httpx pytest -q tests/test_gateway_health.py tests/test_web_hybrid_compat.py
           fi
 
   deep_cycle:

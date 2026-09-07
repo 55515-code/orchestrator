@@ -117,7 +117,7 @@ Always run:
 - `uv run python -m compileall substrate scripts`
 
 Run targeted suite by default:
-- `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py`
+- `uv run --with pytest --with httpx pytest -q tests/test_gateway_health.py tests/test_web_hybrid_compat.py`
 
 Run full suite when any high-risk core changes or release-readiness mode:
 - `uv run --with pytest --with httpx pytest -q tests`
