@@ -1,0 +1,43 @@
+[Unit]
+Description=OpenClaw Gateway (personal AI assistant + Control UI)
+After=network-online.target
+Wants=network-online.target
+
+# Crash-loop breaker: allow at most 5 starts per 5 minutes. If the gateway
+# crashes faster than that, systemd stops relaunching and marks the unit
+# failed instead of amplifying a broken config/port conflict into a hot loop.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# Render the real binary path before installing (see
+# scripts/install_openclaw_gateway_unit.sh). Default matches the npm-global
+# install on the canonical dev box.
+ExecStart=/home/ahron/.npm-global/bin/openclaw gateway --bind lan --port 8090
+Environment=HOME=/home/ahron
+Environment=OPENCLAW_STATE_DIR=/home/ahron/.openclaw
+Environment=NODE_OPTIONS=--max-old-space-size=1536
+
+# Restart on ANY exit (including a clean SIGTERM from the built-in
+# channel health monitor), not just on non-zero exits. A clean exit is still
+# "down" for an always-on gateway.
+Restart=always
+RestartSec=3
+
+# Exit code 78 means "invalid configuration" — do NOT relaunch in a loop;
+# wait for an operator to fix the config.
+RestartPreventExitStatus=78
+
+# Give the gateway time to flush state on stop before SIGKILL.
+TimeoutStopSec=30
+KillSignal=SIGTERM
+SendSIGKILL=yes
+
+# Note: no systemd WatchdogSec here. A hung-but-alive gateway (process up,
+# HTTP down) is detected and restarted by the external watchdog
+# (scripts/openclaw_gateway_watchdog.sh + openclaw-gateway-watchdog.timer),
+# which does a real HTTP health probe rather than relying on sd_notify.
+
+[Install]
+WantedBy=default.target

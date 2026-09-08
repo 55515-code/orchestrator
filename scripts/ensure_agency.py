@@ -40,6 +40,13 @@ PANEL_HOST = "127.0.0.1"
 PANEL_PORT = 8090
 TAILSCALE_HTTPS_PORT = 10000
 TTYD_PORT = 8765
+GATEWAY_UNIT = "openclaw-gateway.service"
+# Native gateway answers /health ({"ok":true}); the container image answers
+# /healthz. Probe both so a hung-but-alive gateway is detected either way.
+GATEWAY_HEALTH_PATHS = ("/health", "/healthz")
+GATEWAY_RESTART_STATE = STATE_DIR / "gateway-restarts.json"
+GATEWAY_MAX_RESTARTS = 5
+GATEWAY_RESTART_WINDOW_SECONDS = 600
 
 # (unit, required)
 # openclaw-gateway is the primary UI on 8090; substrate-panel.service is
@@ -91,6 +98,80 @@ def _http_ok(path: str = "/health", timeout: int = 4) -> tuple[bool, str]:
             return resp.status == 200, f"{resp.status} {url}"
     except Exception as exc:  # noqa: BLE001
         return False, f"{type(exc).__name__}: {exc}"
+
+
+def _gateway_http_ok(timeout: int = 5) -> tuple[bool, str]:
+    """Deep probe of the OpenClaw Gateway HTTP surface.
+
+    A gateway whose unit is `active` but whose HTTP endpoint no longer answers
+    is hung (wedged event loop / stale socket) and must be restarted. This is
+    the failure mode a plain `is-active` + TCP-connect check misses.
+    """
+    for path in GATEWAY_HEALTH_PATHS:
+        ok, detail = _http_ok(path, timeout=timeout)
+        if ok:
+            return True, detail
+    return False, f"no gateway health path answered: {GATEWAY_HEALTH_PATHS}"
+
+
+def _gateway_restart_allowed() -> bool:
+    """Crash-loop breaker for gateway restarts triggered by this script."""
+    now = time.time()
+    try:
+        data = json.loads(GATEWAY_RESTART_STATE.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = []
+    cutoff = now - GATEWAY_RESTART_WINDOW_SECONDS
+    recent = [ts for ts in data if isinstance(ts, (int, float)) and ts >= cutoff]
+    return len(recent) < GATEWAY_MAX_RESTARTS
+
+
+def _gateway_record_restart() -> None:
+    now = time.time()
+    try:
+        data = json.loads(GATEWAY_RESTART_STATE.read_text())
+    except (OSError, json.JSONDecodeError):
+        data = []
+    cutoff = now - GATEWAY_RESTART_WINDOW_SECONDS
+    recent = [ts for ts in data if isinstance(ts, (int, float)) and ts >= cutoff]
+    recent.append(now)
+    GATEWAY_RESTART_STATE.parent.mkdir(parents=True, exist_ok=True)
+    GATEWAY_RESTART_STATE.write_text(json.dumps(recent))
+
+
+def ensure_gateway_health() -> dict[str, Any]:
+    """Restart the gateway when the unit is active but HTTP is not serving."""
+    out: dict[str, Any] = {"ok": False, "action": None}
+
+    ok, detail = _gateway_http_ok()
+    out["http"] = {"ok": ok, "detail": detail}
+    if ok:
+        out["ok"] = True
+        return out
+
+    active = run(["systemctl", "--user", "is-active", GATEWAY_UNIT])
+    out["unit_state"] = active.stdout.strip()
+
+    if not _gateway_restart_allowed():
+        out["error"] = (
+            f"gateway restart limit reached ({GATEWAY_MAX_RESTARTS} in "
+            f"{GATEWAY_RESTART_WINDOW_SECONDS}s); skipping restart"
+        )
+        return out
+
+    log(f"Gateway unit is '{active.stdout.strip()}' but HTTP is down; restarting")
+    restart = run(["systemctl", "--user", "restart", GATEWAY_UNIT])
+    out["action"] = "restart"
+    if restart.returncode != 0:
+        out["error"] = restart.stderr.strip()
+        return out
+
+    _gateway_record_restart()
+    time.sleep(4)
+    ok, detail = _gateway_http_ok()
+    out["http"] = {"ok": ok, "detail": detail}
+    out["ok"] = ok
+    return out
 
 
 def ensure_systemd() -> dict[str, Any]:
@@ -233,6 +314,7 @@ def main() -> int:
         "generated_at": utc_now(),
         "host": os.uname().nodename,
         "systemd": {},
+        "gateway_health": {},
         "tailscale": {},
         "kilo_remote": {},
         "panel_http": {},
@@ -241,6 +323,9 @@ def main() -> int:
 
     log("Agency bootstrap: repairing systemd units")
     report["systemd"] = ensure_systemd()
+
+    log("Agency bootstrap: deep-checking gateway HTTP health")
+    report["gateway_health"] = ensure_gateway_health()
 
     log("Agency bootstrap: checking panel HTTP")
     report["panel_port_open"] = _is_port_open(PANEL_HOST, PANEL_PORT)
@@ -257,6 +342,7 @@ def main() -> int:
     unit_ok = all(u["ok"] for u in report["systemd"].get("units", {}).values())
     report["healthy"] = (
         unit_ok
+        and report["gateway_health"].get("ok", False)
         and report["panel_http"].get("ok", False)
         and report["kilo_remote"].get("ok", False)
     )
