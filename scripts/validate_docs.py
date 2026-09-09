@@ -43,46 +43,15 @@ ALLOWED_ORPHANS = {
     "generated/system-registry.md",
     # Non-markdown artifact.
     "community_status.html",
-    # Point-in-time research / snapshot reports intentionally kept out of the
-    # published nav. They are reviewed annually; see POINT_IN_TIME_REPORTS.
-    "OPTIMIZATION_CYCLE_2026-08-08.md",
-    "automation-review-2026-08-17.md",
-    "FINAL_RESEARCH_REPORT.md",
-    "RESEARCH_SUMMARY.md",
-    "LIVE_MONITORING_AND_KILO_INTEGRATION_PROPOSAL.md",
-    "GATEWAY_IMPLEMENTATION_SUMMARY.md",
-    "openclaw_substrate_audit.md",
-    "openclaw-production-checklist.md",
-    "CONTROL_PANEL_IMPLEMENTATION.md",
-    "remote-access-findings.md",
-    "android-node-registration.md",
-    "android-security-tool-deployment.md",
-    "flipper-zero-openclaw-research.md",
-    "nothing-stock-restore.md",
-    "decentralized_governance_synthesis.md",
-    "nephilim_union_source_analysis.md",
-    "huggingface_image_edit_guide.md",
-    "credential-restore-runbook.md",
-    "promotion-and-deploy-runbook.md",
-    "portable-gateway-capsule-strategy.md",
-    "proton-drive-filesystem-architecture.md",
-    "proton-mail-openclaw-channel.md",
-    "dashboard-orchestration.md",
-    "creative-ai-workflows.md",
-    "arin-novel-automation.md",
-    "CRYPTO_PAYMENT_RUNBOOK.md",
-    "caching.md",
-    "approval-lane.md",
-    "render-router.md",
-    "security-toolkit-roadmap.md",
-    "WHATSAPP_GATEWAY_SETUP.md",
-    "ai-collaboration.md",
+    # Point-in-time reports are handled separately by POINT_IN_TIME_REPORTS
+    # so they produce an annual-review warning rather than a hard failure.
 }
 
-# Intentionally-orphaned point-in-time reports. These are now also listed in
-# ALLOWED_ORPHANS above; this set is retained so the annual-review warning
-# fires if any are ever removed from ALLOWED_ORPHANS without moving them here.
-POINT_IN_TIME_REPORTS: set[str] = {
+# Point-in-time reports: intentionally not in nav (one-off dated reports,
+# design specs, audit logs). These produce an annual-review warning instead of
+# failing CI. Living docs (caching, approval-lane, render-router, etc.) are
+# NOT in this list.
+POINT_IN_TIME_REPORTS = {
     "OPTIMIZATION_CYCLE_2026-08-08.md",
     "automation-review-2026-08-17.md",
     "FINAL_RESEARCH_REPORT.md",
@@ -90,28 +59,20 @@ POINT_IN_TIME_REPORTS: set[str] = {
     "LIVE_MONITORING_AND_KILO_INTEGRATION_PROPOSAL.md",
     "GATEWAY_IMPLEMENTATION_SUMMARY.md",
     "openclaw_substrate_audit.md",
-    "openclaw-production-checklist.md",
     "CONTROL_PANEL_IMPLEMENTATION.md",
+    "proton-drive-filesystem-architecture.md",
+    "creative-ai-workflows.md",
+    "arin-novel-automation.md",
+    "decentralized_governance_synthesis.md",
+    "nephilim_union_source_analysis.md",
+    "huggingface_image_edit_guide.md",
     "remote-access-findings.md",
     "android-node-registration.md",
     "android-security-tool-deployment.md",
     "flipper-zero-openclaw-research.md",
     "nothing-stock-restore.md",
-    "decentralized_governance_synthesis.md",
-    "nephilim_union_source_analysis.md",
-    "huggingface_image_edit_guide.md",
-    "credential-restore-runbook.md",
-    "promotion-and-deploy-runbook.md",
-    "portable-gateway-capsule-strategy.md",
-    "proton-drive-filesystem-architecture.md",
-    "proton-mail-openclaw-channel.md",
-    "dashboard-orchestration.md",
-    "creative-ai-workflows.md",
-    "arin-novel-automation.md",
+    "openclaw-production-checklist.md",
     "CRYPTO_PAYMENT_RUNBOOK.md",
-    "caching.md",
-    "approval-lane.md",
-    "render-router.md",
     "security-toolkit-roadmap.md",
     "WHATSAPP_GATEWAY_SETUP.md",
     "ai-collaboration.md",
@@ -162,11 +123,15 @@ def _load_mkdocs_nav() -> list[str]:
         if isinstance(entry, dict):
             for section_items in entry.values():
                 if isinstance(section_items, list):
+                    # Nested section: [{'Setup': 'setup.md'}, ...]
                     for item in section_items:
                         if isinstance(item, dict):
                             paths.extend(p for p in item.values() if isinstance(p, str))
                         elif isinstance(item, str):
                             paths.append(item)
+                elif isinstance(section_items, str):
+                    # Flat page entry: {'Overview': 'index.md'}
+                    paths.append(section_items)
     # Normalise to docs-relative paths (strip a leading docs/ if present).
     normalised: list[str] = []
     for p in paths:
@@ -194,13 +159,13 @@ def _check_nav_coverage(nav_paths: list[str], all_md: set[str]) -> int:
         if not full.exists():
             _fail(f"mkdocs nav points at missing file: {p}")
             failures += 1
-    # 2. Every .md in docs/ is either in nav or in the allowed-orphan set.
+    # 2. Every .md in docs/ is either in nav or explicitly allowed.
     nav_set = set(nav_paths)
     unexpected_orphans = all_md - nav_set - ALLOWED_ORPHANS
     for orphan in sorted(unexpected_orphans):
         basename = Path(orphan).name
         if basename in POINT_IN_TIME_REPORTS:
-            _warn(f"point-in-time report not in nav (intentional but review later): {orphan}")
+            _warn(f"point-in-time report not in nav (intentional, review annually): {orphan}")
         else:
             _fail(f"orphaned from mkdocs nav: {orphan}")
             failures += 1
@@ -296,38 +261,46 @@ def check_all() -> int:
 
     failures += _check_nav_coverage(nav_paths, all_md)
 
-    md_files = sorted(all_md - ALLOWED_ORPHANS)
-    for md_path in md_files:
-        full = DOCS_DIR / md_path
-        try:
-            content = full.read_text(encoding="utf-8")
-        except OSError as exc:
-            _fail(f"{md_path}: unreadable: {exc}")
-            failures += 1
-            continue
+        md_files = sorted(all_md - ALLOWED_ORPHANS)
+        for md_path in md_files:
+            full = DOCS_DIR / md_path
+            try:
+                content = full.read_text(encoding="utf-8")
+            except OSError as exc:
+                _fail(f"{md_path}: unreadable: {exc}")
+                failures += 1
+                continue
 
-        # Balanced fences.
-        fence_errors = _check_fences(md_path, content)
-        for err in fence_errors:
-            _fail(f"{md_path}: {err}")
-            failures += 1
+            basename = Path(md_path).name
+            is_point_in_time = basename in POINT_IN_TIME_REPORTS
 
-        # Internal links.
-        link_errors = _check_internal_links(md_path, content)
-        for err in link_errors:
-            _fail(f"{md_path}: {err}")
-            failures += 1
+            # Balanced fences.
+            fence_errors = _check_fences(md_path, content)
+            for err in fence_errors:
+                _fail(f"{md_path}: {err}")
+                failures += 1
 
-        # Forbidden port references.
-        port_issues = _check_forbidden_port_references(md_path, content)
-        for issue in port_issues:
-            _warn(f"{md_path}: {issue}")
+            # Internal links (skip for frozen point-in-time reports whose links
+            # may point to historical structure that no longer exists).
+            if not is_point_in_time:
+                link_errors = _check_internal_links(md_path, content)
+                for err in link_errors:
+                    _fail(f"{md_path}: {err}")
+                    failures += 1
 
-        # Backtick paths.
-        path_errors = _check_backtick_paths(md_path, content)
-        for err in path_errors:
-            _fail(f"{md_path}: {err}")
-            failures += 1
+            # Forbidden port references (still checked for point-in-time docs
+            # so historical claims are flagged during review).
+            port_issues = _check_forbidden_port_references(md_path, content)
+            for issue in port_issues:
+                _warn(f"{md_path}: {issue}")
+
+            # Backtick paths only for living docs (point-in-time reports may
+            # reference historical paths that have been deleted/renamed).
+            if not is_point_in_time:
+                path_errors = _check_backtick_paths(md_path, content)
+                for err in path_errors:
+                    _fail(f"{md_path}: {err}")
+                    failures += 1
 
     return failures
 

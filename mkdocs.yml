@@ -27,26 +27,23 @@ nav:
     - Integrations: integrations.md
     - Caching: caching.md
     - Render Router: render-router.md
+    - Approval Lane: approval-lane.md
   - Operations:
     - Orchestrator: orchestrator.md
     - Community Cycle: community-cycle.md
     - Learning: learning.md
     - Backup & Sync: dotfiles.md
-    - Credential Restore: credential-restore-runbook.md
-    - Btrfs Storage: btrfs-optimization.md
-    - System Probe: system-probe.md
+    - Proton Mail Subsystem: proton-mail-subsystem.md
     - Promotion & Deploy: promotion-and-deploy-runbook.md
     - Capsule Strategy: portable-gateway-capsule-strategy.md
+    - Btrfs Storage: btrfs-optimization.md
+    - System Probe: system-probe.md
+    - Credential Restore: credential-restore-runbook.md
   - Communication:
     - WhatsApp Setup: WHATSAPP_GATEWAY_SETUP.md
-    - Proton Drive: proton-drive-filesystem-architecture.md
     - Proton Mail Channel: proton-mail-openclaw-channel.md
+    - Proton Drive: proton-drive-filesystem-architecture.md
   - Reference:
     - References: references.md
-    - Approval Lane: approval-lane.md
-    - Android Node: android-node-registration.md
-    - Remote Access: remote-access-findings.md
-    - Nothing Restore: nothing-stock-restore.md
-    - Security Toolkit: security-toolkit-roadmap.md
   - Generated:
     - System Registry: generated/system-registry.md
