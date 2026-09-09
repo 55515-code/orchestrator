@@ -1,75 +1,429 @@
+# Agent Hybrid Report
+
+- Generated at: 2026-09-09T08:07:34.460728+00:00
+- Session: `20260909-79f9381c`
+- Mode: `deep`
+- Loop count: `6`
+- Route: `cloud_agent`
+- Target branch: `main`
+- Allow write: `True`
+
 ## Repo health + failing surfaces
-- Git workspace status: valid repository on branch `work`; working tree started clean.
-- Remote status: `git remote -v` returned no remotes, so `origin/main` comparisons are unavailable.
-- Required context docs read: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
-- Missing required docs from prompt contract: `docs/ai-collaboration.md`, `docs/security-toolkit-roadmap.md` (not present in `docs/`).
-- Baseline failing surfaces:
-  - Ruff check fails (3 findings across `scripts/`).
-  - Targeted Studio pytest command fails because `tests/studio/test_connection.py` does not exist.
+
+- Loop 1: All deterministic checks in this loop succeeded.
 
 ## Deep research findings with sources/risks
-1. **Lifecycle policy is explicitly stage/pass ordered** (local -> hosted_dev -> production and research -> development -> testing), so QA command drift directly weakens policy enforcement.
-   - Risk: release-readiness confidence is overstated when default targeted tests point to missing files.
-2. **Community-cycle documentation promises deterministic artifact generation**, but repo-operational contract in this run was degraded (no `gh` CLI, no remote).
-   - Risk: collaboration and triage visibility is reduced for external contributors.
-3. **Contribution guidance emphasizes test evidence and small reviewable changes**, which aligns with this run producing structured artifacts and evidence logs despite fallback mode.
-   - Risk: missing AI-collaboration roadmap docs create protocol ambiguity for agent operators.
 
-Sources consulted:
-- `README.md`
-- `docs/community-cycle.md`
-- `docs/lifecycle.md`
-- `CONTRIBUTING.md`
+- Source anchors reviewed: `README.md`, `docs/community-cycle.md`, `docs/lifecycle.md`, `CONTRIBUTING.md`.
+- Strategic direction reviewed: `docs/security-toolkit-roadmap.md`.
+- Risk: AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent.
 
 ## Development plan with prioritized tasks
-- **[P1] core_reliability** Restore missing docs referenced by operator workflows.
-  - Acceptance criteria: add/restore `docs/ai-collaboration.md` and `docs/security-toolkit-roadmap.md` (or update required-context list) and link from docs index.
-- **[P1] qa_release** Fix ruff baseline issues in scripts.
-  - Acceptance criteria: `uv run --with ruff ruff check substrate scripts tests` exits 0.
-- **[P2] qa_release** Realign targeted Studio pytest command to actual test topology.
-  - Acceptance criteria: targeted command runs existing tests and passes in CI.
-- **[P2] docs_community** Document degraded-mode behavior for missing `gh` / remote tracking.
-  - Acceptance criteria: runbook includes exact fallback steps and expected artifact semantics.
+
+- P1 | qa_release | Investigate failing command surfaces and publish deterministic repro notes. | Acceptance: Each failure has a reproducible command and captured stdout/stderr evidence path.
+- P1 | core_reliability | Translate validated findings into minimal, test-backed reliability patches. | Acceptance: Patches include targeted tests and preserve stage/policy safeguards.
+- P2 | docs_community | Update collaboration queue with owner-tagged next tasks. | Acceptance: At least 3 queued tasks include owner, priority, and labels.
+- P1 | security_tooling | Prioritize sanctioned defensive tool integrations and normalized evidence output. | Acceptance: Top adapters include maintenance status and risk notes.
+- P1 | ux_operator | Improve explainable security-run UX and learner-safe remediation guidance. | Acceptance: Operator flow clearly shows finding, confidence, and next safe step.
 
 ## Implemented changes + test evidence
-Implemented (minimal/high-signal):
-- Added `artifacts/agent-hybrid/agent_summary.json` with required schema contract and run evidence.
-- Added `artifacts/agent-hybrid/agent_report.md` with required heading contract, command transcript summary, compatibility notes, unresolved questions, and git sync posture summary.
 
-Deterministic checks run:
-- `uv run --with ruff ruff check substrate scripts tests` => **FAIL (rc=1)**
-- `uv run python -m compileall substrate scripts` => **PASS (rc=0)**
-- `uv run --with pytest --with httpx pytest -q tests/studio/test_connection.py tests/studio/test_api.py` => **FAIL (rc=4, missing path)**
+- Changed files detected in runner workspace: `0`
+- Session summary is included in the raw JSON section below.
 
-Command transcript summary:
-- Git bootstrap commands were run per contract; origin base SHA and diff could not be computed due to absent remotes.
-- GitHub intake commands attempted with `gh`; both failed because CLI is not installed.
-- Required docs read attempted; 2 required files are missing.
+### Loop execution table
 
-Compatibility notes:
-- No CLI/API behavior changed; run produced documentation artifacts only.
+| Loop | Status | Route | Failing commands | Merge action |
+| --- | --- | --- | --- | --- |
+| 1 | success | deterministic | 0 | n/a |
 
-Unresolved questions:
-1. Should the required context file list be updated to match current docs inventory?
-2. What is the canonical Studio targeted test command for this repository?
-3. Should lint errors in `scripts/` be treated as blocking for merges?
-
-Git sync posture summary:
-- current branch: `work`
-- target branch: `main`
-- ahead/behind/diverged: unavailable to compute against `origin/main` because no remote exists.
-- PR link: unavailable in fallback mode (`allow_write=false`, no GitHub CLI).
+- Loop 1 test `uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py` -> ok=True rc=0
 
 ## Collaboration tasks for external bots (issues/labels/entry points)
-- `[P1] [core_reliability] Restore missing collaboration docs`
-  - Acceptance criteria: required docs exist, are linked, and reviewed.
-  - Evidence paths: `artifacts/agent-hybrid/agent_summary.json`, `artifacts/agent-hybrid/agent_report.md`.
-  - Suggested labels: `ai-ready`, `help-wanted`, `research-needed`.
-- `[P1] [qa_release] Make baseline lint clean`
-  - Acceptance criteria: ruff command returns 0 on `substrate scripts tests`.
-  - Evidence paths: command output in this run + next green run artifacts.
-  - Suggested labels: `ai-ready`, `good-first-task`.
-- `[P2] [qa_release] Repair targeted Studio test entrypoints`
-  - Acceptance criteria: update docs/CI command to existing test files and pass.
-  - Evidence paths: updated workflow file/docs + green pytest log.
-  - Suggested labels: `needs-repro`, `help-wanted`.
+
+- Label recommendations: `ai-ready`, `help-wanted`, `good-first-task`, `needs-repro`, `research-needed`.
+- Primary entry points: `docs/ai-collaboration.md`, `prompts/cloud_agent_hybrid_operator.md`, and the pinned collaboration issue.
+- Queue updates should include owner, priority, and acceptance criteria.
+
+## Command transcript summary
+
+- Loop 1 executed 3 commands.
+
+## Compatibility notes
+
+- Existing CLI/API compatibility remains required; no direct-merge-to-main bypass is used.
+- Safe-gate merge requires clean rebase/push and successful loop checks.
+
+## Unresolved questions
+
+- None recorded by this automated cycle.
+
+## Git sync posture summary
+
+- Current branch: `main`
+- Target branch: `main`
+- Ahead: `0` | Behind: `0` | Diverged: `False`
+- PR URL: `n/a`
+- Final merge state: `not_attempted`
+
+## Raw summary JSON
+
+```json
+{
+  "status": "partial_failure",
+  "mode": "deep",
+  "route": "cloud_agent",
+  "target_branch": "main",
+  "allow_write": true,
+  "session_id": "20260909-79f9381c",
+  "loop_count": 6,
+  "generated_at": "2026-09-09T08:07:34.460728+00:00",
+  "started_at": "2026-09-09T08:07:28.593290+00:00",
+  "findings": [
+    "Loop 1: All deterministic checks in this loop succeeded."
+  ],
+  "risks": [
+    "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
+  ],
+  "tasks": [
+    {
+      "priority": "P1",
+      "owner": "qa_release",
+      "task": "Investigate failing command surfaces and publish deterministic repro notes.",
+      "acceptance_criteria": "Each failure has a reproducible command and captured stdout/stderr evidence path."
+    },
+    {
+      "priority": "P1",
+      "owner": "core_reliability",
+      "task": "Translate validated findings into minimal, test-backed reliability patches.",
+      "acceptance_criteria": "Patches include targeted tests and preserve stage/policy safeguards."
+    },
+    {
+      "priority": "P2",
+      "owner": "docs_community",
+      "task": "Update collaboration queue with owner-tagged next tasks.",
+      "acceptance_criteria": "At least 3 queued tasks include owner, priority, and labels."
+    },
+    {
+      "priority": "P1",
+      "owner": "security_tooling",
+      "task": "Prioritize sanctioned defensive tool integrations and normalized evidence output.",
+      "acceptance_criteria": "Top adapters include maintenance status and risk notes."
+    },
+    {
+      "priority": "P1",
+      "owner": "ux_operator",
+      "task": "Improve explainable security-run UX and learner-safe remediation guidance.",
+      "acceptance_criteria": "Operator flow clearly shows finding, confidence, and next safe step."
+    }
+  ],
+  "changed_files": [],
+  "test_results": [
+    {
+      "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+      "ok": true,
+      "return_code": 0,
+      "duration_seconds": 3.822,
+      "loop": 1
+    }
+  ],
+  "assumptions": [
+    "Target merge branch defaults to main.",
+    "Rolling PR model uses one branch and one PR for the full session.",
+    "Safe gate merge requires loop checks and rebase/push success."
+  ],
+  "next_cycle_focus": [
+    "Increase cloud execution reliability and Kilo/OpenClaw readiness.",
+    "Expand defensive-tool evidence normalization coverage.",
+    "Improve UX explainability for learner-safe security runs."
+  ],
+  "loop_results": [
+    {
+      "loop_index": 1,
+      "started_at": "2026-09-09T08:07:29.098389+00:00",
+      "generated_at": "2026-09-09T08:07:33.993924+00:00",
+      "route": "deterministic",
+      "cloud_attempted": false,
+      "cloud_success": false,
+      "cloud_note": "Cloud command not configured; skipping cloud route.",
+      "findings": [
+        "All deterministic checks in this loop succeeded."
+      ],
+      "risks": [
+        "AGENT_CLOUD_COMMAND is not set; deep mode ran without cloud agent."
+      ],
+      "command_results": [
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "ruff",
+            "ruff",
+            "check",
+            "substrate",
+            "scripts",
+            "tests"
+          ],
+          "command_text": "uv run --with ruff ruff check substrate scripts tests",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.656,
+          "stdout_tail": "All checks passed!\n",
+          "stderr_tail": "Downloading ruff (9.8MiB)\n Downloaded ruff\nInstalled 1 package in 2ms\n"
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "compileall",
+            "substrate",
+            "scripts"
+          ],
+          "command_text": "uv run python -m compileall substrate scripts",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 0.418,
+          "stdout_tail": "engine.py'...\nCompiling 'substrate/pipelines/expansion_trigger.py'...\nCompiling 'substrate/pipelines/models.py'...\nCompiling 'substrate/pipelines/quality_gate.py'...\nCompiling 'substrate/pipelines/registry.py'...\nCompiling 'substrate/pipelines/resource_pipeline.py'...\nCompiling 'substrate/pipelines/triggers.py'...\nCompiling 'substrate/prefill_proxy.py'...\nCompiling 'substrate/proton_support.py'...\nCompiling 'substrate/providers.py'...\nCompiling 'substrate/registry.py'...\nCompiling 'substrate/reliability.py'...\nCompiling 'substrate/render.py'...\nListing 'substrate/render_engines'...\nCompiling 'substrate/render_engines/__init__.py'...\nCompiling 'substrate/render_engines/base.py'...\nCompiling 'substrate/render_engines/hosted.py'...\nCompiling 'substrate/render_engines/local_diffusers.py'...\nCompiling 'substrate/research.py'...\nCompiling 'substrate/resource_orchestration.py'...\nListing 'substrate/resources'...\nCompiling 'substrate/resources/__init__.py'...\nCompiling 'substrate/resources/api_access.py'...\nListing 'substrate/security'...\nCompiling 'substrate/security/__init__.py'...\nCompiling 'substrate/security/abuse_detection.py'...\nCompiling 'substrate/security/audit_trail.py'...\nCompiling 'substrate/settings.py'...\nCompiling 'substrate/site_content.py'...\nCompiling 'substrate/snapshots.py'...\nCompiling 'substrate/standards.py'...\nListing 'substrate/static'...\nCompiling 'substrate/stats.py'...\nCompiling 'substrate/swarm_control.py'...\nCompiling 'substrate/task_cache.py'...\nListing 'substrate/templates'...\nCompiling 'substrate/tooling.py'...\nCompiling 'substrate/vault.py'...\nListing 'substrate/watchdog'...\nCompiling 'substrate/watchdog/__init__.py'...\nCompiling 'substrate/watchdog/gateway_watchdog.py'...\nCompiling 'substrate/web.py'...\nListing 'scripts'...\nCompiling 'scripts/agent_hybrid_runner.py'...\nCompiling 'scripts/approval_lane_watch.py'...\nCompiling 'scripts/auto_approve_pairing.py'...\nCompiling 'scripts/bridge_fix_login.py'...\nCompiling 'scripts/bridge_login.py'...\nCompiling 'scripts/bridge_login_gui.py'...\nCompiling 'scripts/bridge_setup.py'...\nCompiling 'scripts/chat_image_edit.py'...\nCompiling 'scripts/chat_image_edit_local.py'...\nCompiling 'scripts/chatbot.py'...\nCompiling 'scripts/credential_snapshots.py'...\nListing 'scripts/crypto'...\nCompiling 'scripts/crypto/backup_proton.py'...\nCompiling 'scripts/crypto/create_cf_dns_token.py'...\nCompiling 'scripts/crypto/export_site_data.py'...\nCompiling 'scripts/crypto/publish_custom_domain.py'...\nCompiling 'scripts/crypto/wallet_gen.py'...\nCompiling 'scripts/da_cookies.py'...\nCompiling 'scripts/daily_security_report.py'...\nCompiling 'scripts/ensure_agency.py'...\nCompiling 'scripts/generate_cosmic_wallpapers.py'...\nCompiling 'scripts/generate_status_page.py'...\nCompiling 'scripts/generate_system_docs.py'...\nCompiling 'scripts/inject_foundation_archive.py'...\nCompiling 'scripts/kilo_proxy.py'...\nCompiling 'scripts/original_render.py'...\nCompiling 'scripts/original_render_xl.py'...\nCompiling 'scripts/package_substrate.py'...\nCompiling 'scripts/probe_system.py'...\nCompiling 'scripts/proton_bridge_hook.py'...\nCompiling 'scripts/proton_connect.py'...\nCompiling 'scripts/proton_health_check.py'...\nCompiling 'scripts/proton_heartbeat_report.py'...\nCompiling 'scripts/remaster_pipeline.py'...\nCompiling 'scripts/run_chain.py'...\nCompiling 'scripts/send_research_report.py'...\nCompiling 'scripts/serve_dashboard.py'...\nCompiling 'scripts/serve_pipelines.py'...\nCompiling 'scripts/setup_gmail_lane.py'...\nCompiling 'scripts/site_content.py'...\nCompiling 'scripts/snapshot_guard.py'...\nCompiling 'scripts/substrate_cli.py'...\nCompiling 'scripts/substrate_lister.py'...\nListing 'scripts/templates'...\nCompiling 'scripts/test_gateway.py'...\nCompiling 'scripts/test_openclaw_ui.py'...\nCompiling 'scripts/test_openclaw_ui_exec.py'...\nCompiling 'scripts/unlock_bridge.py'...\nCompiling 'scripts/validate_docs.py'...\nCompiling 'scripts/validate_system_registry.py'...\nCompiling 'scripts/wait_for_mail_sync.py'...\n",
+          "stderr_tail": ""
+        },
+        {
+          "command": [
+            "uv",
+            "run",
+            "--with",
+            "pytest",
+            "--with",
+            "httpx",
+            "pytest",
+            "-q",
+            "tests/test_decentralized_governance.py"
+          ],
+          "command_text": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "return_code": 0,
+          "ok": true,
+          "duration_seconds": 3.822,
+          "stdout_tail": ".............                                                            [100%]\n13 passed in 0.87s\n",
+          "stderr_tail": "Installed 12 packages in 10ms\n"
+        }
+      ],
+      "failing_count": 0,
+      "loop_status": "success",
+      "test_results": [
+        {
+          "command": "uv run --with pytest --with httpx pytest -q tests/test_decentralized_governance.py",
+          "ok": true,
+          "return_code": 0,
+          "duration_seconds": 3.822
+        }
+      ]
+    }
+  ],
+  "merge_history": [],
+  "final_pr_url": "",
+  "final_merge_state": "not_attempted",
+  "git_context": {
+    "current_branch": "main",
+    "target_branch": "main",
+    "head_sha": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb",
+    "target_sha": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb",
+    "ahead_count": 0,
+    "behind_count": 0,
+    "diverged": false,
+    "working_tree_clean_start": true,
+    "working_tree_clean_end": true
+  },
+  "git_actions": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.453,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "main\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "0\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.044,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "--is-inside-work-tree"
+      ],
+      "command_text": "git rev-parse --is-inside-work-tree",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "true\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "fetch",
+        "--all",
+        "--prune"
+      ],
+      "command_text": "git fetch --all --prune",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.448,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "branch",
+        "--show-current"
+      ],
+      "command_text": "git branch --show-current",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "main\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "command_text": "git rev-parse HEAD",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "origin/main"
+      ],
+      "command_text": "git rev-parse origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.001,
+      "stdout_tail": "79f9381cc0b52edbe53c30a87d2e4f90ca51b1fb\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        "HEAD...origin/main"
+      ],
+      "command_text": "git rev-list --left-right --count HEAD...origin/main",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.002,
+      "stdout_tail": "0\t0\n",
+      "stderr_tail": ""
+    },
+    {
+      "command": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "command_text": "git status --porcelain",
+      "return_code": 0,
+      "ok": true,
+      "duration_seconds": 0.005,
+      "stdout_tail": "",
+      "stderr_tail": ""
+    }
+  ]
+}
+```
