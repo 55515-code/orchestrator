@@ -6,8 +6,20 @@ bootstrap:
 probe:
     python scripts/probe_system.py docs/system-probe.md
 
+generate-docs:
+    uv run python scripts/generate_system_docs.py
+
+validate-docs:
+    uv run python scripts/validate_docs.py
+
+validate-registry:
+    uv run python scripts/validate_system_registry.py
+
+docs-check: generate-docs validate-docs validate-registry
+    @echo "All docs/generator checks passed"
+
 sync:
-    uv sync --python 3.12
+    uv sync --python 3.12 --extra dev
 
 chain objective="Repository audit":
     uv run python scripts/run_chain.py --objective "{{objective}}" --dry-run
@@ -27,8 +39,10 @@ polish-schedule:
 sources:
     uv run python scripts/substrate_cli.py sources-refresh
 
+# Ops panel: OpenClaw Gateway owns 8090. Use 8096 for ad-hoc local dev
+# to avoid a collision. See system_registry.yaml -> port_policy.
 ops:
-    uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8090
+    uv run python scripts/substrate_cli.py serve --host 127.0.0.1 --port 8096
 
 community cycle="0" provider="mock":
     uv run python scripts/substrate_cli.py community-cycle --cycle "{{cycle}}" --agent-provider "{{provider}}"

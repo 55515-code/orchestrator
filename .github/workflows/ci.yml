@@ -41,6 +41,13 @@ jobs:
         run: uv run python -c "from substrate.pipelines import PipelineRegistry, PipelineEngine, create_pipelines_router; print('Pipelines module OK')"
       - name: Verify gh_sync module
         run: uv run python -c "from substrate.gh_sync import GitHubSyncService; print('GitHub sync module OK')"
+      - name: Validate system registry
+        run: uv run python scripts/validate_system_registry.py
+      - name: Validate and regenerate documentation
+        run: |
+          uv run python scripts/generate_system_docs.py
+          uv run python scripts/validate_docs.py
+          git diff --exit-code docs/generated/system-registry.md
       - name: Infrastructure health check
         run: bash scripts/health_check.sh
       - name: Substrate scan

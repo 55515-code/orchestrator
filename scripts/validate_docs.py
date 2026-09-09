@@ -43,8 +43,9 @@ ALLOWED_ORPHANS = {
     "generated/system-registry.md",
     # Non-markdown artifact.
     "community_status.html",
-    # Point-in-time reports are handled separately by POINT_IN_TIME_REPORTS
-    # so they produce an annual-review warning rather than a hard failure.
+    # Living strategy doc, mode 0600 (not world-readable), not published in the
+    # public site. See docs/portable-gateway-capsule-strategy.md.
+    "portable-gateway-capsule-strategy.md",
 }
 
 # Point-in-time reports: intentionally not in nav (one-off dated reports,
@@ -67,6 +68,7 @@ POINT_IN_TIME_REPORTS = {
     "nephilim_union_source_analysis.md",
     "huggingface_image_edit_guide.md",
     "remote-access-findings.md",
+    "promotion-and-deploy-runbook.md",
     "android-node-registration.md",
     "android-security-tool-deployment.md",
     "flipper-zero-openclaw-research.md",
@@ -261,46 +263,46 @@ def check_all() -> int:
 
     failures += _check_nav_coverage(nav_paths, all_md)
 
-        md_files = sorted(all_md - ALLOWED_ORPHANS)
-        for md_path in md_files:
-            full = DOCS_DIR / md_path
-            try:
-                content = full.read_text(encoding="utf-8")
-            except OSError as exc:
-                _fail(f"{md_path}: unreadable: {exc}")
-                failures += 1
-                continue
+    md_files = sorted(all_md - ALLOWED_ORPHANS)
+    for md_path in md_files:
+        full = DOCS_DIR / md_path
+        try:
+            content = full.read_text(encoding="utf-8")
+        except OSError as exc:
+            _fail(f"{md_path}: unreadable: {exc}")
+            failures += 1
+            continue
 
-            basename = Path(md_path).name
-            is_point_in_time = basename in POINT_IN_TIME_REPORTS
+        basename = Path(md_path).name
+        is_point_in_time = basename in POINT_IN_TIME_REPORTS
 
-            # Balanced fences.
-            fence_errors = _check_fences(md_path, content)
-            for err in fence_errors:
+        # Balanced fences.
+        fence_errors = _check_fences(md_path, content)
+        for err in fence_errors:
+            _fail(f"{md_path}: {err}")
+            failures += 1
+
+        # Internal links (skip for frozen point-in-time reports whose links
+        # may point to historical structure that no longer exists).
+        if not is_point_in_time:
+            link_errors = _check_internal_links(md_path, content)
+            for err in link_errors:
                 _fail(f"{md_path}: {err}")
                 failures += 1
 
-            # Internal links (skip for frozen point-in-time reports whose links
-            # may point to historical structure that no longer exists).
-            if not is_point_in_time:
-                link_errors = _check_internal_links(md_path, content)
-                for err in link_errors:
-                    _fail(f"{md_path}: {err}")
-                    failures += 1
+        # Forbidden port references (still checked for point-in-time docs
+        # so historical claims are flagged during review).
+        port_issues = _check_forbidden_port_references(md_path, content)
+        for issue in port_issues:
+            _warn(f"{md_path}: {issue}")
 
-            # Forbidden port references (still checked for point-in-time docs
-            # so historical claims are flagged during review).
-            port_issues = _check_forbidden_port_references(md_path, content)
-            for issue in port_issues:
-                _warn(f"{md_path}: {issue}")
-
-            # Backtick paths only for living docs (point-in-time reports may
-            # reference historical paths that have been deleted/renamed).
-            if not is_point_in_time:
-                path_errors = _check_backtick_paths(md_path, content)
-                for err in path_errors:
-                    _fail(f"{md_path}: {err}")
-                    failures += 1
+        # Backtick paths only for living docs (point-in-time reports may
+        # reference historical paths that have been deleted/renamed).
+        if not is_point_in_time:
+            path_errors = _check_backtick_paths(md_path, content)
+            for err in path_errors:
+                _fail(f"{md_path}: {err}")
+                failures += 1
 
     return failures
 
