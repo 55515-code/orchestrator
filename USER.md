@@ -2,15 +2,19 @@
 
 _Learn about the person you're helping. Update this as you go._
 
-- **Name:**
-- **What to call them:**
+- **Name:** Ahron D
+- **What to call them:** Ahron
 - **Pronouns:** _(optional)_
-- **Timezone:**
-- **Notes:**
+- **Timezone:** America/New_York (EST/EDT)
+- **Notes:** Works in Remote IT Systems with focus on Security, Compliance & Platform Operations. Tech stack: Microsoft 365, Entra ID, Intune, AWS, Terraform, Automation. Based in Buffalo, NY area. Receives LinkedIn job alerts for "Consultant" remote roles.
 
 ## Context
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+- **Current focus:** Security consulting roles, particularly Microsoft security stack (Entra, Intune, Defender, Purview)
+- **Background:** Platform operations, compliance, infrastructure automation
+- **Job search preferences:** Remote consultant roles, Microsoft security ecosystem
+- **Location preference:** Remote / Buffalo, NY area
+- **Receives:** LinkedIn job alert digests for "Consultant" keyword with 25-mile radius from Buffalo (geoId 103676418)
 
 ---
 

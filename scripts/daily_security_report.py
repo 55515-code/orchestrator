@@ -37,7 +37,6 @@ EMAIL_TO = os.environ.get("SECURITY_REPORT_TO", "ahronzombi@protonmail.com")
 EMAIL_FROM_CANDIDATES = [
     os.environ.get("SECURITY_REPORT_FROM", ""),
     "ahronzombi@protonmail.com",
-    "ahronzombi@proton.me",
 ]
 SMTP_HOST = os.environ.get("SECURITY_REPORT_SMTP_HOST", "127.0.0.1")
 SMTP_PORT = int(os.environ.get("SECURITY_REPORT_SMTP_PORT", "1025"))
