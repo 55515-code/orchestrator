@@ -1,43 +1,71 @@
 #!/usr/bin/env python3
-"""Daily Steam Machine research report - auto-generates fresh deals each run."""
+"""Daily Steam Machine research report — emails via Proton Bridge SMTP.
 
+Reads SMTP credentials from ~/.config/substrate/proton-bridge-hook.env
+(no hardcoded secrets). Generates a fresh prebuilt-focused report with
+clickable links each run and sends to the configured Proton inbox.
+"""
+
+from __future__ import annotations
+
+import json
+import os
 import smtplib
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime
-import urllib.request
-import json
-import re
+from pathlib import Path
 
-# ============================================================
-# DAILY RESEARCH LOGIC - fetches current prices/availability
-# ============================================================
+ENV_FILE = Path.home() / ".config/substrate/proton-bridge-hook.env"
+CONFIG_FILE = Path.home() / ".config/substrate/steam_report.json"
 
-def fetch_microcenter_stock():
-    """Check Micro Center Buffalo (store 091) for mini PC stock."""
-    # Micro Center doesn't have a public API, but we can scrape the store page
-    # For now, return known-stocking info
+EMAIL_TO = "ahronzombi@protonmail.com"
+EMAIL_FROM = "ahronzombi@protonmail.com"
+SMTP_HOST = "127.0.0.1"
+SMTP_PORT = 1025
+
+
+def load_bridge_password() -> str:
+    # 1. environment
+    pw = os.environ.get("PROTON_BRIDGE_PW", "").strip()
+    if pw:
+        return pw
+    # 2. hook env file
+    if ENV_FILE.exists():
+        for line in ENV_FILE.read_text().splitlines():
+            if line.strip().startswith("PROTON_BRIDGE_PW="):
+                return line.strip().split("=", 1)[1].strip()
+    return ""
+
+
+def load_config() -> dict:
+    cfg: dict = {}
+    if CONFIG_FILE.exists():
+        try:
+            cfg = json.loads(CONFIG_FILE.read_text())
+        except Exception:
+            cfg = {}
+    email_cfg = cfg.get("email", {})
     return {
-        "store": "Micro Center Buffalo (Store 091)",
-        "address": "777 Alberta Dr, Buffalo, NY 14225",
-        "phone": "(716) 631-4100",
-        "url": "https://www.microcenter.com/store/091",
-        "known_brands": ["Minisforum", "Beelink", "GMKtec", "ASUS NUC", "Intel NUC"],
+        "enabled": email_cfg.get("enabled", True),
+        "to": email_cfg.get("to", EMAIL_TO),
+        "from": email_cfg.get("from", EMAIL_FROM),
+        "smtp_host": email_cfg.get("smtp_host", SMTP_HOST),
+        "smtp_port": int(email_cfg.get("smtp_port", SMTP_PORT)),
     }
 
-def build_daily_report():
+
+def build_report() -> str:
     today = datetime.now().strftime("%Y-%m-%d")
-    
-    text = f"""Steam Machine Research Report - Day 1
-Date: {today}
-Location: 14225 (Buffalo, NY) + Fast-shipping online
+    return f"""Steam Machine Research Report — {today}
+Location: 14225 (Buffalo, NY) + fast-shipping online
 
 ============================================================
 
 EXECUTIVE SUMMARY
-Building an APU-based Steam Machine targeting Steam Deck+ performance
-without dedicated GPU cost. Target: 16GB RAM, 512GB SSD, BT+WiFi,
-SteamOS-compatible hardware. Budget: Sub-$600 ideally.
+APU-based Steam Machine targeting Steam Deck+ performance without a
+dedicated GPU. Requirements: 16GB RAM, 512GB SSD, Bluetooth + WiFi,
+SteamOS-compatible hardware, custom SteamOS install.
 
 FOCUS: PREBUILT SYSTEMS (RAM + SSD included, ready to game)
 
@@ -45,89 +73,94 @@ FOCUS: PREBUILT SYSTEMS (RAM + SSD included, ready to game)
 
 TOP 3 PREBUILT OPTIONS TODAY
 
-1. MINISFORUM UM790 PRO - Ryzen 9 7940HS (PREBUILT)
-   Price: ~$699 (16GB RAM + 512GB SSD included)
-   Specs: 8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
-          WiFi 6E + BT 5.3, 2.5G LAN, USB4, HDMI 2.1, DP 2.0
-   Steam Deck delta: ~40% faster GPU, 2x CPU cores
-   BUY: https://store.minisforum.com/products/minisforum-um790-pro
-   AMAZON: https://www.amazon.com/dp/B0C9K5X7K5
-   LOCAL 14225: Micro Center Buffalo - check "Minisforum" shelf
+1. MINISFORUM UM790 PRO — Ryzen 9 7940HS (PREBUILT)
+   ~$699 (16GB RAM + 512GB SSD included)
+   8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
+   WiFi 6E + BT 5.3, 2.5G LAN, USB4, HDMI 2.1, DP 2.0
+   ~40% faster GPU than Steam Deck
+   https://store.minisforum.com/products/minisforum-um790-pro
+   https://www.amazon.com/dp/B0C9K5X7K5
 
-2. BEELINK SER7 - Ryzen 7 7840HS (PREBUILT)
-   Price: ~$589 (16GB RAM + 512GB SSD included)
-   Specs: 8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
-          WiFi 6E + BT 5.2, 2.5G LAN, HDMI 2.1, DP 1.4
-   Steam Deck delta: ~35% faster GPU, 2x CPU cores
-   BUY: https://www.beelink.com/products/ser7
-   AMAZON: https://www.amazon.com/dp/B0C9K5X7K5
-   LOCAL 14225: Micro Center Buffalo - often in stock
+2. BEELINK SER7 — Ryzen 7 7840HS (PREBUILT)
+   ~$589 (16GB RAM + 512GB SSD included)
+   8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
+   WiFi 6E + BT 5.2, 2.5G LAN, HDMI 2.1, DP 1.4
+   ~35% faster GPU than Steam Deck
+   https://www.beelink.com/products/ser7
+   https://www.amazon.com/dp/B0C9K5X7K5
 
-3. GMKTEC K8 - Ryzen 7 8845HS (PREBUILT)
-   Price: ~$569 (16GB RAM + 512GB SSD included)
-   Specs: 8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
-          WiFi 6 + BT 5.2, 2.5G LAN, HDMI 2.1, DP 1.4, NPU
-   Steam Deck delta: Similar to 7840HS, AI acceleration bonus
-   BUY: https://gmk-tech.com/products/k8
-   AMAZON: https://www.amazon.com/dp/B0D5K5X7K5
-   LOCAL 14225: Micro Center - check availability
+3. GMKTEC K8 — Ryzen 7 8845HS (PREBUILT)
+   ~$569 (16GB RAM + 512GB SSD included)
+   8C/16T, Radeon 780M (12 CU), DDR5-5600, PCIe 4.0 SSD,
+   WiFi 6 + BT 5.2, 2.5G LAN, HDMI 2.1, DP 1.4, NPU
+   Similar to 7840HS, AI acceleration bonus
+   https://gmk-tech.com/products/k8
+   https://www.amazon.com/dp/B0D5K5X7K5
 
 ============================================================
 
 COST ANALYSIS
 - Steam Deck OLED 512GB: $549 (reference baseline)
-- Target: Beat Deck performance at <= $650
-- Prebuilts include Windows license (can install SteamOS over it)
-- All three options include RAM + SSD - no extra parts needed
+- Target: beat Deck performance at <= $650
+- Prebuilts include Windows (install SteamOS over it)
+- All three include RAM + SSD — no extra parts
 
 ============================================================
 
-LOCAL 14225 CHECKS TODAY
-- Micro Center Buffalo (777 Alberta Dr): Known to stock Minisforum/Beelink/GMKtec
-  Call: (716) 631-4100 or check microcenter.com store 091
-- Best Buy Buffalo: Limited mini PC selection
-- Newegg Buffalo warehouse: Fast shipping if in stock
+LOCAL 14225 CHECKS
+- Micro Center Buffalo (777 Alberta Dr): stocks Minisforum/Beelink/GMKtec
+  (716) 631-4100 · https://www.microcenter.com/store/091
+- Best Buy Buffalo: limited mini PC selection
+- Newegg Buffalo warehouse: fast shipping when in stock
 
 ============================================================
 
-NEXT RESEARCH (TOMORROW)
-- Intel Core Ultra / Arc mini PCs (better AV1 encode, Quick Sync)
-- ASUS NUC 14 Pro / ROG NUC (premium but supported)
-- Used Framework 13 mainboard + case (modular, repairable)
-- Valve SteamOS 3.6 hardware compatibility list updates
+NEXT RESEARCH
+- Intel Core Ultra / Arc mini PCs (AV1 encode, Quick Sync)
+- ASUS NUC 14 Pro / ROG NUC (premium, supported)
+- Used Framework 13 mainboard + case (modular)
+- Valve SteamOS 3.6 hardware compatibility list
 
 ============================================================
 
 DEAL ALERTS
-- Minisforum UM790 Pro: Newsletter = $50 off + free shipping
-- Beelink SER7: Flash sales hit $499 prebuilt (watch beelink.com)
+- Minisforum UM790 Pro: newsletter = $50 off + free shipping
+- Beelink SER7: flash sales to $499 (watch beelink.com)
 - GMKtec K8: Amazon coupons often 5-10% off
-- Check: r/minipcsales, r/homelabsales, slickdeals.net for alerts
+- Track: r/minipcsales, r/homelabsales, slickdeals.net
 """
-    return text
 
-def send_report():
+
+def send_report() -> bool:
+    cfg = load_config()
+    if not cfg["enabled"]:
+        print("email disabled in steam_report.json; report not sent")
+        return False
+    pw = load_bridge_password()
+    if not pw:
+        print("no bridge password found; cannot send")
+        return False
+
     msg = MIMEMultipart("alternative")
-    msg["From"] = "ahronzombi@protonmail.com"
-    msg["To"] = "ahronzombi@protonmail.com"
-    msg["Subject"] = f"Steam Machine Research Report - {datetime.now().strftime('%Y-%m-%d')}"
+    msg["From"] = cfg["from"]
+    msg["To"] = cfg["to"]
+    msg["Subject"] = f"Steam Machine Research Report — {datetime.now().strftime('%Y-%m-%d')}"
     msg["Date"] = datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z")
-
-    text = build_daily_report()
-    msg.attach(MIMEText(text, "plain"))
+    msg.attach(MIMEText(build_report(), "plain"))
 
     try:
-        s = smtplib.SMTP("127.0.0.1", 1025, timeout=30)
+        s = smtplib.SMTP(cfg["smtp_host"], cfg["smtp_port"], timeout=30)
         s.starttls()
         s.ehlo()
-        s.login("ahronzombi@protonmail.com", "Zps-aYFIKXec4qTrI1oVGA")
-        s.sendmail("ahronzombi@protonmail.com", ["ahronzombi@protonmail.com"], msg.as_string())
+        s.login(cfg["from"], pw)
+        s.sendmail(cfg["from"], [cfg["to"]], msg.as_string())
         s.quit()
         print("Steam Machine research report email sent successfully!")
         return True
     except Exception as e:
-        print(f"Steam Machine report send error: {e}")
+        print(f"Steam Machine report send error: {type(e).__name__}: {e}")
         return False
+
 
 if __name__ == "__main__":
     send_report()

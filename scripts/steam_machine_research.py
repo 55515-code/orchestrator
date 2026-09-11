@@ -30,7 +30,20 @@ STATE_DIR.mkdir(parents=True, exist_ok=True)
 EMAIL_TO = os.environ.get("STEAM_REPORT_TO", "ahronzombi@protonmail.com")
 SMTP_HOST = os.environ.get("STEAM_REPORT_SMTP_HOST", "127.0.0.1")
 SMTP_PORT = int(os.environ.get("STEAM_REPORT_SMTP_PORT", "1025"))
-BRIDGE_PASSWORD = "Zps-aYFIKXec4qTrI1oVGA"
+def _load_bridge_password() -> str:
+    """Read the Proton Bridge password from env or the hook env file."""
+    pw = os.environ.get("PROTON_BRIDGE_PW", "").strip()
+    if pw:
+        return pw
+    env_file = Path.home() / ".config/substrate/proton-bridge-hook.env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            if line.strip().startswith("PROTON_BRIDGE_PW="):
+                return line.strip().split("=", 1)[1].strip()
+    return ""
+
+
+BRIDGE_PASSWORD = _load_bridge_password()
 
 CONFIG_PATH = Path.home() / ".config/substrate/steam_report.json"
 
