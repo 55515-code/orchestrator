@@ -46,6 +46,20 @@ SMTP_PORT = int(os.environ.get("SECURITY_REPORT_SMTP_PORT", "1025"))
 #              "smtp_host": "127.0.0.1", "smtp_port": 1025}}
 CONFIG_PATH = Path(os.environ.get("SECURITY_REPORT_CONFIG", str(Path.home() / ".config/substrate/security_report.json")))
 
+BRIDGE_ENV_FILE = Path.home() / ".config/substrate/proton-bridge-hook.env"
+
+
+def _bridge_password() -> str:
+    """Read the Proton Bridge SMTP password from env or the hook env file."""
+    pw = os.environ.get("PROTON_BRIDGE_PW", "").strip()
+    if pw:
+        return pw
+    if BRIDGE_ENV_FILE.exists():
+        for line in BRIDGE_ENV_FILE.read_text().splitlines():
+            if line.strip().startswith("PROTON_BRIDGE_PW="):
+                return line.strip().split("=", 1)[1].strip()
+    return ""
+
 REPOS = [
     ("orchestrator", CODESPACE),
     ("ahrondarnell-site", CODESPACE / "ahrondarnell-site"),
@@ -370,12 +384,15 @@ def send_email(report: str) -> str:
         "Content-Type: text/plain; charset=utf-8\n\n"
         "{body}"
     )
+    bridge_pw = _bridge_password()
     for frm in [f for f in from_candidates if f]:
         try:
             s = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
             s.ehlo()
             s.starttls()
             s.ehlo()
+            if bridge_pw:
+                s.login(frm, bridge_pw)
             s.sendmail(
                 frm,
                 [to],
