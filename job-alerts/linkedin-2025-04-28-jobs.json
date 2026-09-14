@@ -1,0 +1,72 @@
+{
+  "source": "LinkedIn Job Alerts",
+  "received": "2025-04-28T02:56:32+00:00",
+  "processed": "2026-09-14T19:12:00+00:00",
+  "alert_criteria": {
+    "keyword": "Information Technology Consultant",
+    "location": "United States",
+    "geo_id": "103644278",
+    "radius": "25 miles from Buffalo, NY (geoId 103676418)"
+  },
+  "total_matches": "30+",
+  "jobs": [
+    {
+      "title": "Professional Services Consultant, Platform",
+      "company": "Rippling",
+      "location": "San Francisco, CA (Remote)",
+      "job_id": "4201593991",
+      "tags": ["Actively recruiting", "Fast growing"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4201593991/"
+    },
+    {
+      "title": "Consulting Departmental Applications Analyst - Tech Services",
+      "company": "Jobot Consulting",
+      "location": "Los Angeles, CA (Remote)",
+      "job_id": "4216059857",
+      "salary": "$23-$50/hour",
+      "tags": ["Easy Apply"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4216059857/"
+    },
+    {
+      "title": "Consulting Clinical Info Systems Analyst",
+      "company": "Jobot Consulting",
+      "location": "Los Angeles, CA (Remote)",
+      "job_id": "4216063357",
+      "salary": "$25-$60/hour",
+      "tags": ["Easy Apply"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4216063357/"
+    },
+    {
+      "title": "Cerner RadNet Consultant - Hybrid/Mainly Remote",
+      "company": "Jobot Consulting",
+      "location": "Los Angeles, CA (Remote)",
+      "job_id": "4216058833",
+      "salary": "$65-$90/hour",
+      "tags": ["Easy Apply"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4216058833/"
+    },
+    {
+      "title": "Technical Solutions Delivery Lead - ERP Specialist",
+      "company": "Jobot Consulting",
+      "location": "Houston, TX (Remote)",
+      "job_id": "4216064319",
+      "salary": "$80-$100/hour",
+      "tags": ["Easy Apply"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4216064319/"
+    },
+    {
+      "title": "Functional Consultant, Professional Services",
+      "company": "Icertis",
+      "location": "United States (Remote)",
+      "job_id": "4185054397",
+      "tags": ["Actively recruiting"],
+      "url": "https://www.linkedin.com/comm/jobs/view/4185054397/"
+    }
+  ],
+  "notes": [
+    "Most roles are remote-friendly",
+    "Jobot Consulting has multiple postings across different specialties",
+    "Rippling and Icertis are direct employer postings",
+    "Salary ranges vary significantly by role ($23-$100/hour)"
+  ]
+}
